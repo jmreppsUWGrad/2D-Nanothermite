@@ -106,59 +106,73 @@ class TwoDimPlanar:
             self.rho=settings['rho']
             self.T=numpy.zeros((self.Ny, self.Nx))
         
+        # Biasing options       
+        self.xbias=[settings['bias_type_x'], settings['bias_size_x']]
+        self.ybias=[settings['bias_type_y'], settings['bias_size_y']]
         self.isMeshed=False
-        
-        # Dictionaries to define biasing (smallest element)
-        self.xbias_elem={'OneWayUp': 0, 'OneWayDown': 0, 'TwoWayEnd': 0, 'TwoWayMid': 0}
-        self.ybias_elem={'OneWayUp': 0, 'OneWayDown': 0, 'TwoWayEnd': 0, 'TwoWayMid': 0}
-        
         # Other useful calculations (put elsewhere??)
         
         
     # Discretize domain and save dx and dy
     def mesh(self):
         # Discretize x
-        if self.xbias_elem['OneWayUp']!=0:
-            smallest=self.xbias_elem['OneWayUp']
-            self.dx=numpy.linspace(2*self.L/(self.Nx-1)-smallest,smallest,self.Nx-1)
+        if self.xbias[0]=='OneWayUp':
+            smallest=self.xbias[1]
+            self.dx[:-1]=numpy.linspace(2*self.L/(self.Nx-1)-smallest,smallest,self.Nx-1)
+            self.dx[-1]=self.dx[-2]
             print 'One way biasing in x: smallest element at x=%2f'%self.L
-        elif self.xbias_elem['OneWayDown']!=0:
-            smallest=self.xbias_elem['OneWayDown']
-            self.dx=numpy.linspace(smallest,2*self.L/(self.Nx-1)-smallest,self.Nx-1)
+            print 'Element size range: %2f, %2f'%(smallest, 2*self.L/(self.Nx-1)-smallest)
+        elif self.xbias[0]=='OneWayDown':
+            smallest=self.xbias[1]
+            self.dx[:-1]=numpy.linspace(smallest,2*self.L/(self.Nx-1)-smallest,self.Nx-1)
+            self.dx[-1]=self.dx[-2]
             print 'One way biasing in x: smallest element at x=0'
-        elif self.xbias_elem['TwoWayEnd']!=0:
-            smallest=self.xbias_elem['TwoWayEnd']
-            self.dx[:int(self.Nx/2)]=numpy.linspace(smallest,self.L/(self.Nx-1)-smallest,(self.Nx-1)/2)
-            self.dx[int(self.Nx/2):]=numpy.linspace(self.L/(self.Nx-1)-smallest,smallest,(self.Nx-1)/2)
+            print 'Element size range: %2f, %2f'%(smallest, 2*self.L/(self.Nx-1)-smallest)
+        elif self.xbias[0]=='TwoWayEnd':
+            smallest=self.xbias[1]
+            self.dx[:int(self.Nx/2)]=numpy.linspace(smallest,2*self.L/(self.Nx-1)-smallest,(self.Nx-1)/2)
+            self.dx[int(self.Nx/2):-1]=numpy.linspace(2*self.L/(self.Nx-1)-smallest,smallest,(self.Nx-1)/2)
+            self.dx[-1]=self.dx[-2]
             print 'Two way biasing in x: smallest elements at x=0 and %2f'%self.L
-        elif self.xbias_elem['TwoWayMid']!=0:
-            smallest=self.xbias_elem['TwoWayMid']
-            self.dx[:int(self.Nx/2)]=numpy.linspace(self.L/(self.Nx-1)-smallest,smallest,(self.Nx-1)/2)
-            self.dx[int(self.Nx/2):]=numpy.linspace(smallest,self.L/(self.Nx-1)-smallest,(self.Nx-1)/2)
+            print 'Element size range: %2f, %2f'%(smallest, 2*self.L/(self.Nx-1)-smallest)
+        elif self.xbias[0]=='TwoWayMid':
+            smallest=self.xbias[1]
+            self.dx[:int(self.Nx/2)]=numpy.linspace(2*self.L/(self.Nx-1)-smallest,smallest,(self.Nx-1)/2)
+            self.dx[int(self.Nx/2):-1]=numpy.linspace(smallest,2*self.L/(self.Nx-1)-smallest,(self.Nx-1)/2)
+            self.dx[-1]=self.dx[-2]
             print 'Two way biasing in x: smallest elements around x=%2f'%(self.L/2)
+            print 'Element size range: %2f, %2f'%(smallest, 2*self.L/(self.Nx-1)-smallest)
         else:
             self.dx[:]=self.L/(self.Nx-1)
             print 'No biasing schemes specified in x'
         
         # Discretize y
-        if self.ybias_elem['OneWayUp']!=0:
-            smallest=self.ybias_elem['OneWayUp']
-            self.dy=numpy.linspace(2*self.W/(self.Ny-1)-smallest,smallest,self.Ny-1)
+        if self.ybias[0]=='OneWayUp':
+            smallest=self.ybias[1]
+            self.dy[:-1]=numpy.linspace(2*self.W/(self.Ny-1)-smallest,smallest,self.Ny-1)
+            self.dy[-1]=self.dy[-2]
             print 'One way biasing in y: smallest element at y=%2f'%self.W
-        elif self.ybias_elem['OneWayDown']!=0:
-            smallest=self.ybias_elem['OneWayDown']
-            self.dy=numpy.linspace(smallest,2*self.W/(self.Ny-1)-smallest,self.Ny-1)
+            print 'Element size range: %2f, %2f'%(smallest, 2*self.W/(self.Ny-1)-smallest)
+        elif self.ybias[0]=='OneWayDown':
+            smallest=self.ybias[1]
+            self.dy[:-1]=numpy.linspace(smallest,2*self.W/(self.Ny-1)-smallest,self.Ny-1)
+            self.dy[-1]=self.dy[-2]
             print 'One way biasing in y: smallest element at y=0'
-        elif self.ybias_elem['TwoWayEnd']!=0:
-            smallest=self.ybias_elem['TwoWayEnd']
-            self.dy[:int(self.Ny/2)]=numpy.linspace(smallest,self.W/(self.Ny-1)-smallest,(self.Ny-1)/2)
-            self.dy[int(self.Ny/2):]=numpy.linspace(self.W/(self.Ny-1)-smallest,smallest,(self.Ny-1)/2)
+            print 'Element size range: %2f, %2f'%(smallest, 2*self.W/(self.Ny-1)-smallest)
+        elif self.ybias[0]=='TwoWayEnd':
+            smallest=self.ybias[1]
+            self.dy[:int(self.Ny/2)]=numpy.linspace(smallest,2*self.W/(self.Ny-1)-smallest,(self.Ny-1)/2)
+            self.dy[int(self.Ny/2):-1]=numpy.linspace(2*self.W/(self.Ny-1)-smallest,smallest,(self.Ny-1)/2)
+            self.dy[-1]=self.dy[-2]
             print 'Two way biasing in y: smallest elements at y=0 and %2f'%self.W
-        elif self.ybias_elem['TwoWayMid']!=0:
-            smallest=self.ybias_elem['TwoWayMid']
-            self.dy[:int(self.Ny/2)]=numpy.linspace(self.W/(self.Ny-1)-smallest,smallest,(self.Ny-1)/2)
-            self.dy[int(self.Ny/2):]=numpy.linspace(smallest,self.W/(self.Ny-1)-smallest,(self.Ny-1)/2)
+            print 'Element size range: %2f, %2f'%(smallest, 2*self.W/(self.Ny-1)-smallest)
+        elif self.ybias[0]=='TwoWayMid':
+            smallest=self.ybias[1]
+            self.dy[:int(self.Ny/2)]=numpy.linspace(2*self.W/(self.Ny-1)-smallest,smallest,(self.Ny-1)/2)
+            self.dy[int(self.Ny/2):-1]=numpy.linspace(smallest,2*self.W/(self.Ny-1)-smallest,(self.Ny-1)/2)
+            self.dy[-1]=self.dy[-2]
             print 'Two way biasing in y: smallest elements around y=%2f'%(self.W/2)
+            print 'Element size range: %2f, %2f'%(smallest, 2*self.W/(self.Ny-1)-smallest)
         else:
             self.dy[:]=self.W/(self.Ny-1)
             print 'No biasing schemes specified in y'
