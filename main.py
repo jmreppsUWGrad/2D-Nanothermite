@@ -51,9 +51,9 @@ settings['Cp']                      = 800
 settings['rho']                     = 8000
 
 # Meshing details
-settings['bias_type_x']             = 'OneWayDown'
+settings['bias_type_x']             = None
 settings['bias_size_x']             = 0.03 # Smallest element size (IN PROGRESS)
-settings['bias_type_y']             = 'OneWayDown'
+settings['bias_type_y']             = None
 settings['bias_size_y']             = 0.03 # Smallest element size (IN PROGRESS)
 
 # Boundary conditions
@@ -81,7 +81,7 @@ BCs['bc_north']                     = ['T',300,(0,-1)]
 
 # Time advancement
 settings['Fo']                      = 0.2
-settings['total_time_steps']        = 100
+settings['total_time_steps']        = 2000
 settings['Time_Scheme']             = 'Explicit'
 settings['Convergence']             = 0.0001
 settings['Max_iterations']          = 1000

@@ -90,7 +90,26 @@ class TwoDimPlanarSolve():
     
     # Time step check with dx, dy, T and CFL number
     def getdt(self):
-        dt=self.Fo*self.Domain.rho*self.Domain.Cv*self.dx*self.dy/self.Domain.k
+        dt=numpy.zeros_like(self.dx)
+        dt[1:-1,1:-1]=0.25*self.Fo*self.Domain.rho*self.Domain.Cv/self.Domain.k*\
+            (self.dx[1:-1,1:-1]+self.dx[1:-1,:-2])*(self.dy[1:-1,1:-1]+self.dy[:-2,1:-1])
+        dt[0,0]      =0.25*self.Fo*self.Domain.rho*self.Domain.Cv/self.Domain.k*\
+            (self.dx[0,0])*(self.dy[0,0])
+        dt[0,1:-1]   =0.25*self.Fo*self.Domain.rho*self.Domain.Cv/self.Domain.k*\
+            (self.dx[0,1:-1]+self.dx[0,:-2])*(self.dy[0,1:-1])
+        dt[1:-1,0]   =0.25*self.Fo*self.Domain.rho*self.Domain.Cv/self.Domain.k*\
+            (self.dx[1:-1,0])*(self.dy[1:-1,0]+self.dy[:-2,0])
+        dt[0,-1]     =0.25*self.Fo*self.Domain.rho*self.Domain.Cv/self.Domain.k*\
+            (self.dx[0,-1])*(self.dy[0,-1])
+        dt[-1,0]     =0.25*self.Fo*self.Domain.rho*self.Domain.Cv/self.Domain.k*\
+            (self.dx[-1,0])*(self.dy[-1,0])
+        dt[-1,1:-1]  =0.25*self.Fo*self.Domain.rho*self.Domain.Cv/self.Domain.k*\
+            (self.dx[-1,1:-1]+self.dx[-1,:-2])*(self.dy[-1,1:-1])
+        dt[1:-1,-1]   =0.25*self.Fo*self.Domain.rho*self.Domain.Cv/self.Domain.k*\
+            (self.dx[1:-1,-1])*(self.dy[1:-1,-1]+self.dy[:-2,-1])
+        dt[-1,-1]    =0.25*self.Fo*self.Domain.rho*self.Domain.Cv/self.Domain.k*\
+            (self.dx[-1,-1])*(self.dy[-1,-1])
+        
         return numpy.amin(dt)
 
     # Convergence checker
@@ -106,18 +125,37 @@ class TwoDimPlanarSolve():
     def get_Cond(self, T, dx, dy):
         qx=numpy.empty_like(T)
         qy=numpy.empty_like(T)
-        # Central difference at each face
-        qx[:,1:-1] =-dy[:,1:-1]*(T[:,1:-1]-T[:,:-2])/(dx[:,:-2])
-        qx[:,1:-1]-=-dy[:,1:-1]*(T[:,2:]-T[:,1:-1])/(dx[:,1:-1])
+        # Heat conduction in x direction (Central differences)
+        qx[1:-1,1:-1] =-0.5*(dy[1:-1,1:-1]+dy[:-2,1:-1])*(T[1:-1,1:-1]-T[1:-1,:-2])/(dx[1:-1,:-2])
+        qx[1:-1,1:-1]-=-0.5*(dy[1:-1,1:-1]+dy[:-2,1:-1])*(T[1:-1,2:]-T[1:-1,1:-1])/(dx[1:-1,1:-1])
+        # Area account for north/south bondary nodes
+        qx[0,1:-1]    =-0.5*(dy[0,1:-1])*(T[0,1:-1]-T[0,:-2])/(dx[0,:-2])
+        qx[0,1:-1]   -=-0.5*(dy[0,1:-1])*(T[0,2:]-T[0,1:-1])/(dx[0,1:-1])
+        qx[-1,1:-1]   =-0.5*(dy[-1,1:-1])*(T[-1,1:-1]-T[-1,:-2])/(dx[-1,:-2])
+        qx[-1,1:-1]  -=-0.5*(dy[-1,1:-1])*(T[-1,2:]-T[-1,1:-1])/(dx[-1,1:-1])
+        # Forward/backward difference for left/right boundaries
+        qx[0,0]       =0.5*(dy[0,0])*(T[0,1]-T[0,0])/dx[0,0]
+        qx[1:-1,0]    =0.5*(dy[1:-1,0]+dy[:-2,0])*(T[1:-1,1]-T[1:-1,0])/dx[1:-1,0]
+        qx[-1,0]      =0.5*(dy[-1,0])*(T[-1,1]-T[-1,0])/dx[-1,0]
+        qx[0,-1]      =-0.5*(dy[0,-1])*(T[0,-1]-T[0,-2])/dx[0,-1]
+        qx[1:-1,-1]   =-0.5*(dy[1:-1,-1]+dy[:-2,-1])*(T[1:-1,-1]-T[1:-1,-2])/dx[1:-1,-1]
+        qx[-1,-1]     =-0.5*(dy[-1,-1])*(T[-1,-1]-T[-1,-2])/dx[-1,-1]
         
-        qy[1:-1,:] =-dx[1:-1,:]*(T[1:-1,:]-T[:-2,:])/(dy[:-2,:])
-        qy[1:-1,:]-=-dx[1:-1,:]*(T[2:,:]-T[1:-1,:])/(dy[1:-1,:])
-        # Forward/backward difference for boundaries
-        qx[:,0]    =dy[:,0]*(T[:,1]-T[:,0])/dx[:,0]
-        qx[:,-1]   =-dy[:,-1]*(T[:,-1]-T[:,-2])/dx[:,-1]
-        
-        qy[0,:]    =dx[0,:]*(T[1,:]-T[0,:])/dy[0,:]
-        qy[-1,:]   =-dx[-1,:]*(T[-1,:]-T[-2,:])/dy[-1,:]
+        # Heat conduction in y direction (Central differences)
+        qy[1:-1,1:-1] =-0.5*(dx[1:-1,1:-1]+dx[1:-1,:-2])*(T[1:-1,1:-1]-T[:-2,1:-1])/(dy[:-2,1:-1])
+        qy[1:-1,1:-1]-=-0.5*(dx[1:-1,1:-1]+dx[1:-1,:-2])*(T[2:,1:-1]-T[1:-1,1:-1])/(dy[1:-1,1:-1])
+        # Area account for left/right boundary nodes
+        qy[1:-1,0]    =-0.5*(dx[1:-1,0])*(T[1:-1,0]-T[:-2,0])/(dy[:-2,0])
+        qy[1:-1,0]   -=-0.5*(dx[1:-1,0])*(T[2:,0]-T[1:-1,0])/(dy[1:-1,0])
+        qy[1:-1,-1]   =-0.5*(dx[1:-1,-1])*(T[1:-1,-1]-T[:-2,-1])/(dy[:-2,-1])
+        qy[1:-1,-1]  -=-0.5*(dx[1:-1,-1])*(T[2:,-1]-T[1:-1,-1])/(dy[1:-1,-1])
+        # Forward/backward difference for north/south boundaries
+        qy[0,0]       =0.5*dx[0,0]*(T[0,1]-T[0,0])/dy[0,0]
+        qy[0,1:-1]    =0.5*(dx[0,1:-1]+dx[0,:-2])*(T[1,1:-1]-T[0,1:-1])/dy[0,1:-1]
+        qy[0,-1]      =0.5*dx[0,-1]*(T[0,-1]-T[0,-2])/dy[0,-1]
+        qy[-1,0]      =-0.5*dx[-1,0]*(T[-1,0]-T[-2,0])/dy[-1,0]
+        qy[-1,1:-1]   =-0.5*(dx[0,1:-1]+dx[0,:-2])*(T[-1,1:-1]-T[-2,1:-1])/dy[-1,1:-1]
+        qy[-1,-1]     =-0.5*dx[-1,-1]*(T[-1,-1]-T[-2,-1])/dy[-1,-1]
         
         return qx+qy
     
@@ -235,10 +273,29 @@ class TwoDimPlanarSolve():
 #        T_0=self.Domain.T.copy()
         
         dt=self.getdt()
-        Fo=self.Domain.k*dt/(self.Domain.rho*self.Domain.Cv*self.dx*self.dy)
         if (numpy.isnan(dt)) or (dt<=0):
             print '*********Diverging time step***********'
             return 1
+        Fo=numpy.zeros_like(T_c)
+        Fo[1:-1,1:-1]=self.Domain.k*dt/(self.Domain.rho*self.Domain.Cv*\
+            0.25*(self.dx[1:-1,1:-1]+self.dx[1:-1,:-2])*(self.dy[1:-1,1:-1]+self.dy[:-2,1:-1]))
+        Fo[0,0]      =self.Domain.k*dt/(self.Domain.rho*self.Domain.Cv*\
+            0.25*(self.dx[0,0])*(self.dy[0,0]))
+        Fo[0,1:-1]   =self.Domain.k*dt/(self.Domain.rho*self.Domain.Cv*\
+            0.25*(self.dx[0,1:-1]+self.dx[0,:-2])*(self.dy[0,1:-1]))
+        Fo[1:-1,0]   =self.Domain.k*dt/(self.Domain.rho*self.Domain.Cv*\
+            0.25*(self.dx[1:-1,0])*(self.dy[1:-1,0]+self.dy[:-2,0]))
+        Fo[0,-1]     =self.Domain.k*dt/(self.Domain.rho*self.Domain.Cv*\
+            0.25*(self.dx[0,-1])*(self.dy[0,-1]))
+        Fo[-1,0]     =self.Domain.k*dt/(self.Domain.rho*self.Domain.Cv*\
+            0.25*(self.dx[-1,0])*(self.dy[-1,0]))
+        Fo[-1,1:-1]  =self.Domain.k*dt/(self.Domain.rho*self.Domain.Cv*\
+            0.25*(self.dx[-1,1:-1]+self.dx[-1,:-2])*(self.dy[-1,1:-1]))
+        Fo[1:-1,-1]   =self.Domain.k*dt/(self.Domain.rho*self.Domain.Cv*\
+            0.25*(self.dx[1:-1,-1])*(self.dy[1:-1,-1]+self.dy[:-2,-1]))
+        Fo[-1,-1]    =self.Domain.k*dt/(self.Domain.rho*self.Domain.Cv*\
+            0.25*(self.dx[-1,-1])*(self.dy[-1,-1]))
+        
         print 'Time step size: %f'%dt
         count=0
         while (count<self.countmax):
