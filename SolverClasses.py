@@ -181,13 +181,13 @@ class TwoDimPlanarSolve():
                     Bi=0
                     
                 else:
-                    q=-self.BCs['bc_left'][1+3*i][0]*self.BCs['bc_left'][1+3*i][1] # h*Tinf
-                    Bi=self.BCs['bc_left'][1+3*i][0]*T_prev[st:en,0] # h*Tij
+                    q=self.BCs['bc_left'][1+3*i][0]*self.BCs['bc_left'][1+3*i][1] # h*Tinf
+                    Bi=-self.BCs['bc_left'][1+3*i][0]*T_prev[st:en,0] # h*Tij
                 
                 T[st:en,0]+=Fo[st:en,0]*(Bi+q)*self.dy[st:en,0]/self.Domain.k
                 if len(self.BCs['bc_left'])/3-i==1:
                     if self.BCs['bc_left'][3*i]=='C':
-                        Bi=self.BCs['bc_left'][1+3*i][0]*T_prev[-1,0] # h*Tij
+                        Bi=-self.BCs['bc_left'][1+3*i][0]*T_prev[-1,0] # h*Tij
                     T[-1,0]+=Fo[-1,0]*(Bi+q)*self.dy[-1,0]/self.Domain.k
         
         # Right face
@@ -205,13 +205,13 @@ class TwoDimPlanarSolve():
                     Bi=0
                     
                 else:
-                    q=-self.BCs['bc_right'][1+3*i][0]*self.BCs['bc_right'][1+3*i][1] # h*Tinf
-                    Bi=self.BCs['bc_right'][1+3*i][0]*T_prev[st:en,-1] # h*Tij
+                    q=self.BCs['bc_right'][1+3*i][0]*self.BCs['bc_right'][1+3*i][1] # h*Tinf
+                    Bi=-self.BCs['bc_right'][1+3*i][0]*T_prev[st:en,-1] # h*Tij
                 
                 T[st:en,-1]+=Fo[st:en,-1]*(Bi+q)*self.dy[st:en,-1]/self.Domain.k
                 if len(self.BCs['bc_right'])/3-i==1:
                     if self.BCs['bc_right'][3*i]=='C':
-                        Bi=self.BCs['bc_right'][1+3*i][0]*T_prev[-1,-1] # h*Tij
+                        Bi=-self.BCs['bc_right'][1+3*i][0]*T_prev[-1,-1] # h*Tij
                     T[-1,-1]+=Fo[-1,-1]*(Bi+q)*self.dy[-1,-1]/self.Domain.k
         
         # South face
@@ -229,13 +229,13 @@ class TwoDimPlanarSolve():
                     Bi=0
                     
                 else:
-                    q=-self.BCs['bc_south'][1+3*i][0]*self.BCs['bc_south'][1+3*i][1] # h*Tinf
-                    Bi=self.BCs['bc_south'][1+3*i][0]*T_prev[0,st:en] # h*Tij
+                    q=self.BCs['bc_south'][1+3*i][0]*self.BCs['bc_south'][1+3*i][1] # h*Tinf
+                    Bi=-self.BCs['bc_south'][1+3*i][0]*T_prev[0,st:en] # h*Tij
                 
                 T[0,st:en]+=Fo[0,st:en]*(Bi+q)*self.dx[0,st:en]/self.Domain.k
                 if len(self.BCs['bc_south'])/3-i==1:
                     if self.BCs['bc_south'][3*i]=='C':
-                        Bi=self.BCs['bc_south'][1+3*i][0]*T_prev[0,-1] # h*Tij
+                        Bi=-self.BCs['bc_south'][1+3*i][0]*T_prev[0,-1] # h*Tij
                     T[0,-1]+=Fo[0,-1]*(Bi+q)*self.dx[0,-1]/self.Domain.k
                     
         # North face
@@ -253,13 +253,13 @@ class TwoDimPlanarSolve():
                     Bi=0
                     
                 else:
-                    q=-self.BCs['bc_north'][1+3*i][0]*self.BCs['bc_north'][1+3*i][1] # h*Tinf
-                    Bi=self.BCs['bc_north'][1+3*i][0]*T_prev[-1,st:en] # h*Tij
+                    q=self.BCs['bc_north'][1+3*i][0]*self.BCs['bc_north'][1+3*i][1] # h*Tinf
+                    Bi=-self.BCs['bc_north'][1+3*i][0]*T_prev[-1,st:en] # h*Tij
                 
                 T[-1,st:en]+=Fo[-1,st:en]*(Bi+q)*self.dx[-1,st:en]/self.Domain.k
                 if len(self.BCs['bc_north'])/3-i==1:
                     if self.BCs['bc_north'][3*i]=='C':
-                        Bi=self.BCs['bc_north'][1+3*i][0]*T_prev[-1,-1] # h*Tij
+                        Bi=-self.BCs['bc_north'][1+3*i][0]*T_prev[-1,-1] # h*Tij
                     T[-1,-1]+=Fo[-1,-1]*(Bi+q)*self.dx[-1,-1]/self.Domain.k
     
     # Calculate source term for combustion (Cantera module)

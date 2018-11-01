@@ -11,6 +11,7 @@ Desired:
     -Cantera for adding combustion reactions
     -Implicit solver
     -meshing tool with biasing
+    -Option to apply either flux BC to corners; -2 index to reflect this?
 
 @author: Joseph
 """
@@ -43,9 +44,9 @@ settings={} # Dictionary of problem settings
 BCs={} # Dictionary of boundary conditions
 # Geometry details
 settings['Length']                  = 4.0
-settings['Width']                   = 4.0
-settings['Nodes_x']                 = 61
-settings['Nodes_y']                 = 61
+settings['Width']                   = 3.0
+settings['Nodes_x']                 = 13
+settings['Nodes_y']                 = 11
 settings['k']                       = 10
 settings['Cp']                      = 800
 settings['rho']                     = 8000
@@ -70,18 +71,18 @@ Boundary condition options:
 """
 #['C',(10,300),(1,-2)]
 #['F',4*10**8,(1,-299),'C',(10,300),(2,-2)]
-BCs['bc_left']                      = ['T',700,(0,-1)]
+BCs['bc_left']                      = ['T',300,(0,-1)]
 # numpy.linspace(400, 900, settings['Nodes_y'])
-BCs['bc_right']                     = ['T',300,(0,-1)]
+BCs['bc_right']                     = ['T',700,(0,-1)]
 # numpy.linspace(400, 900, settings['Nodes_y'])
-BCs['bc_south']                     = ['T',700,(0,-1)]
+BCs['bc_south']                     = ['T',300,(0,-1)]
 # numpy.linspace(400, 900, settings['Nodes_x'])
-BCs['bc_north']                     = ['T',300,(0,-1)]
+BCs['bc_north']                     = ['T',700,(0,-1)]
 # numpy.linspace(400, 900, settings['Nodes_x'])
 
 # Time advancement
-settings['Fo']                      = 0.2
-settings['total_time_steps']        = 2000
+settings['Fo']                      = 1.0
+settings['total_time_steps']        = 50
 settings['Time_Scheme']             = 'Explicit'
 settings['Convergence']             = 0.0001
 settings['Max_iterations']          = 1000
@@ -104,7 +105,7 @@ print '################################'
 print 'Initializing solver package...'
 if settings['Time_Scheme']=='Steady':
     settings['total_time_steps']=1
-    settings['Fo']=0.2499
+    settings['Fo']=0.249
 solver=Solvers.TwoDimPlanarSolve(domain, settings, BCs, 'Solid')
 print '################################'
 
