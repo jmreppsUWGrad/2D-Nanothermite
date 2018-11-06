@@ -4,14 +4,42 @@
 
 Features:
     -Customizable boundary conditions (along each side) including distributions
-    -Explicit solver (Implicit and steady in the works)
+    -Explicit solver; implicit is spotty (steady would require a different function)
     -
 
 Desired:
-    -Cantera for adding combustion reactions
-    -Implicit solver
-    -meshing tool with biasing
+    -Combustion reaction modelling
+    -meshing tool with biasing [DONE; need to test with each solver]
     -Option to apply either flux BC to corners; -2 index to reflect this?
+
+NANOTHERMITE TESTING:
+    settings['Length']                  = 10**(-3)
+    settings['Width']                   = 6.0*10**(-3)
+    settings['Nodes_x']                 = 101
+    settings['Nodes_y']                 = 601
+    settings['k']                       = 10
+    settings['Cp']                      = 800
+    settings['rho']                     = 8000
+    BCs['bc_left']                      = ['F',0,(0,-1)]
+    BCs['bc_right']                     = ['C',(30,300),(0,-1)]
+    BCs['bc_south']                     = ['F',0,(0,-1)]
+    BCs['bc_north']                     = ['F',4*10**8,(1,10-settings['Nodes_x']),'C',(30,300),(10,-1)]
+    
+fig2=pyplot.figure(figsize=(7,7))
+pyplot.plot(domain.Y[:,1]*1000, domain.T[:,1],marker='x')
+pyplot.xlabel('$y$ (mm)')
+pyplot.ylabel('T (K)')
+pyplot.title('Temperature distribution at 2nd x')
+pyplot.xlim(5,6);
+
+fig4=pyplot.figure(figsize=(7, 7))
+pyplot.contourf(domain.X*1000, domain.Y*1000, domain.T, alpha=0.5, cmap=cm.viridis)  
+pyplot.colorbar()
+pyplot.xlabel('$x$ (mm)')
+pyplot.ylabel('$y$ (mm)')
+pyplot.title('Temperature distribution')
+pyplot.xlim(0,4)
+pyplot.ylim(5,6);
 
 @author: Joseph
 """
@@ -44,18 +72,26 @@ settings={} # Dictionary of problem settings
 BCs={} # Dictionary of boundary conditions
 # Geometry details
 settings['Length']                  = 4.0
-settings['Width']                   = 3.0
-settings['Nodes_x']                 = 13
-settings['Nodes_y']                 = 11
-settings['k']                       = 10
-settings['Cp']                      = 800
-settings['rho']                     = 8000
+settings['Width']                   = 4.0
+settings['Nodes_x']                 = 41
+settings['Nodes_y']                 = 41
+settings['k']                       = 10 #0.026384465709828872
+settings['Cp']                      = 800 # 714.602
+settings['rho']                     = 8000 #1.2
 
 # Meshing details
+"""
+Biasing options:
+    -'OneWayUp'   for linearly increasing element sizes with increasing x/y
+    -'OneWayDown' for linearly decreasing element sizes with increasing x/y
+    -'TwoWayEnd'  for linearly increasing sizes till middle, then decrease again
+    -'TwoWayMid'  for linearly decreasing sizes till middle, then increase again
+    -size         is the smallest element size based on above selection
+"""
 settings['bias_type_x']             = None
-settings['bias_size_x']             = 0.03 # Smallest element size (IN PROGRESS)
+settings['bias_size_x']             = 0.01 # Smallest element size
 settings['bias_type_y']             = None
-settings['bias_size_y']             = 0.03 # Smallest element size (IN PROGRESS)
+settings['bias_size_y']             = 0.01 # Smallest element size
 
 # Boundary conditions
 """
@@ -69,23 +105,23 @@ Boundary condition options:
         Third index: Node index range BC is valid for (second number must be negative)
         this pattern repeats...
 """
-#['C',(10,300),(1,-2)]
+#['C',(30,300),(0,-1)]
 #['F',4*10**8,(1,-299),'C',(10,300),(2,-2)]
-BCs['bc_left']                      = ['T',300,(0,-1)]
+BCs['bc_left']                      = ['T',600,(0,-1)]
 # numpy.linspace(400, 900, settings['Nodes_y'])
-BCs['bc_right']                     = ['T',700,(0,-1)]
+BCs['bc_right']                     = ['T',300,(0,-1)]
 # numpy.linspace(400, 900, settings['Nodes_y'])
 BCs['bc_south']                     = ['T',300,(0,-1)]
 # numpy.linspace(400, 900, settings['Nodes_x'])
-BCs['bc_north']                     = ['T',700,(0,-1)]
+BCs['bc_north']                     = ['T',600,(0,-1)]
 # numpy.linspace(400, 900, settings['Nodes_x'])
 
 # Time advancement
-settings['Fo']                      = 1.0
-settings['total_time_steps']        = 50
-settings['Time_Scheme']             = 'Explicit'
-settings['Convergence']             = 0.0001
-settings['Max_iterations']          = 1000
+settings['Fo']                      = 0.8 #Explicit and implicit solver
+settings['total_time_steps']        = 30 # Explicit and implicit solver
+settings['Time_Scheme']             = 'Implicit' # Explicit or Implicit
+settings['Convergence']             = 0.001 # For implicit solver only
+settings['Max_iterations']          = 100 # For implicit solver only
 
 print('######################################################')
 print('#             2D Heat Conduction Solver              #')
@@ -105,7 +141,6 @@ print '################################'
 print 'Initializing solver package...'
 if settings['Time_Scheme']=='Steady':
     settings['total_time_steps']=1
-    settings['Fo']=0.249
 solver=Solvers.TwoDimPlanarSolve(domain, settings, BCs, 'Solid')
 print '################################'
 
@@ -149,13 +184,29 @@ for nt in range(settings['total_time_steps']):
 ##########################################################################
 # ------------------------------------Post-processing
 ##########################################################################
+#fig2=pyplot.figure(figsize=(7,7))
+#pyplot.plot(domain.Y[:,1]*1000, domain.T[:,1],marker='x')
+#pyplot.xlabel('$y$ (mm)')
+#pyplot.ylabel('T (K)')
+#pyplot.title('Temperature distribution at 2nd x')
+#pyplot.xlim(5,6);
+#
+#fig4=pyplot.figure(figsize=(7, 7))
+#pyplot.contourf(domain.X*1000, domain.Y*1000, domain.T, alpha=0.5, cmap=cm.viridis)  
+#pyplot.colorbar()
+#pyplot.xlabel('$x$ (mm)')
+#pyplot.ylabel('$y$ (mm)')
+#pyplot.title('Temperature distribution')
+#pyplot.xlim(0,0.4)
+#pyplot.ylim(5,6);
+
 # 2D plot
 #fig=pyplot.figure(figsize=(7, 7))
 #ax = fig.gca(projection='3d')
 #ax.plot_surface(domain.X, domain.Y, domain.T, rstride=1, cstride=1, cmap=cm.viridis,linewidth=0, antialiased=True)
 ##ax.set_xlim(0,0.001)
 ##ax.set_ylim(0.005,0.006)
-#ax.set_zlim(300, 600)
+#ax.set_zlim(300, 700)
 #ax.set_xlabel('$x$ (m)')
 #ax.set_ylabel('$y$ (m)')
 #ax.set_zlabel('T (K)');
@@ -169,11 +220,11 @@ for nt in range(settings['total_time_steps']):
 
 # 1D Plot
 #fig2=pyplot.figure(figsize=(7,7))
-#pyplot.plot(domain.Y[:,1]*1000, domain.T[:,1],marker='x')
-#pyplot.xlabel('$y$ (mm)')
+#pyplot.plot(domain.Y[:,1], domain.T[:,1],marker='x')
+#pyplot.xlabel('$y$ (m)')
 #pyplot.ylabel('T (K)')
 #pyplot.title('Temperature distribution at 2nd x')
-#pyplot.xlim(5,6);
+##pyplot.xlim(5,6);
 #fig2.savefig(datTime+'_Plot2.png',dpi=300)
 
 # Temperature contour

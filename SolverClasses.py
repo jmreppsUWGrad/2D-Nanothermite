@@ -88,7 +88,7 @@ class TwoDimPlanarSolve():
             self.conv=settings['Convergence']
             self.countmax=settings['Max_iterations']
     
-    # Time step check with dx, dy, T and CFL number
+    # Time step check with dx, dy, Fo number
     def getdt(self):
         dt=numpy.zeros_like(self.dx)
         dt[1:-1,1:-1]=0.25*self.Fo*self.Domain.rho*self.Domain.Cv/self.Domain.k*\
@@ -121,7 +121,7 @@ class TwoDimPlanarSolve():
         else:
             return False
 
-    # Heat conduction (thermal conductivity not included in calc)
+    # Heat conduction into/out of each node CV (thermal conductivity not included in calc)
     def get_Cond(self, T, dx, dy):
         qx=numpy.empty_like(T)
         qy=numpy.empty_like(T)
@@ -263,14 +263,41 @@ class TwoDimPlanarSolve():
                     T[-1,-1]+=Fo[-1,-1]*(Bi+q)*self.dx[-1,-1]/self.Domain.k
     
     # Calculate source term for combustion (Cantera module)
-    def Source_Comb(self):
-        a=1+2
-        return 0
+    def Source_Comb(self, T, dx, dy):
+        # Terms to include after modelling combustion:
+            #divide by k
+            #resulting expression should have dimensions of K
+            #Be sure to account for area of CV properly
+        
+        
+        q_vol=0 # Volumetric heat generation rate
+        q_source=numpy.zeros_like(dx)
+        
+        q_source[1:-1,1:-1]=q_vol/self.Domain.k*\
+            0.25*(self.dx[1:-1,1:-1]+self.dx[1:-1,:-2])*(self.dy[1:-1,1:-1]+self.dy[:-2,1:-1])
+        q_source[0,0]      =q_vol/self.Domain.k*\
+            0.25*(self.dx[0,0])*(self.dy[0,0])
+        q_source[0,1:-1]   =q_vol/self.Domain.k*\
+            0.25*(self.dx[0,1:-1]+self.dx[0,:-2])*(self.dy[0,1:-1])
+        q_source[1:-1,0]   =q_vol/self.Domain.k*\
+            0.25*(self.dx[1:-1,0])*(self.dy[1:-1,0]+self.dy[:-2,0])
+        q_source[0,-1]     =q_vol/self.Domain.k*\
+            0.25*(self.dx[0,-1])*(self.dy[0,-1])
+        q_source[-1,0]     =q_vol/self.Domain.k*\
+            0.25*(self.dx[-1,0])*(self.dy[-1,0])
+        q_source[-1,1:-1]  =q_vol/self.Domain.k*\
+            0.25*(self.dx[-1,1:-1]+self.dx[-1,:-2])*(self.dy[-1,1:-1])
+        q_source[1:-1,-1]  =q_vol/self.Domain.k*\
+            0.25*(self.dx[1:-1,-1])*(self.dy[1:-1,-1]+self.dy[:-2,-1])
+        q_source[-1,-1]    =q_vol/self.Domain.k*\
+            0.25*(self.dx[-1,-1])*(self.dy[-1,-1])
+        
+        return q_source
     
     # Main solver (1 time step)
     def Advance_Soln_Cond(self):
         T_c=self.Domain.T.copy()
-#        T_0=self.Domain.T.copy()
+        T_0=self.Domain.T.copy()
         
         dt=self.getdt()
         if (numpy.isnan(dt)) or (dt<=0):
@@ -296,15 +323,16 @@ class TwoDimPlanarSolve():
         Fo[-1,-1]    =self.Domain.k*dt/(self.Domain.rho*self.Domain.Cv*\
             0.25*(self.dx[-1,-1])*(self.dy[-1,-1]))
         
-        print 'Time step size: %f'%dt
+        print 'Time step size: %.7f'%dt
         count=0
         while (count<self.countmax):
             ###################################################################
             # Temperature (2nd order central schemes)
             ###################################################################
-            dTdt=self.get_Cond(T_c, self.dx, self.dy)
+            dTdt =self.get_Cond(T_c, self.dx, self.dy)
+            dTdt+=self.Source_Comb(T_c, self.dx, self.dy)
             
-            self.Domain.T = T_c + Fo*dTdt
+            self.Domain.T = T_0 + Fo*dTdt
             
             ###################################################################
             # Apply boundary conditions
@@ -314,7 +342,9 @@ class TwoDimPlanarSolve():
             ###################################################################
             # Divergence/Convergence checks
             ###################################################################
-            if (numpy.isnan(numpy.amax(self.Domain.T))):
+            if (numpy.isnan(numpy.amax(self.Domain.T))) \
+            or (numpy.amax(self.Domain.T)>100*numpy.amax(T_0)) \
+            or (numpy.amin(self.Domain.T)<=0):
                 print '**************Divergence detected****************'
                 return 1
             
