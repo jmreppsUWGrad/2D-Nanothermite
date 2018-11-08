@@ -8,9 +8,10 @@ Features:
     -
 
 Desired:
-    -Combustion reaction modelling
+    -Combustion reaction modelling (own class)
     -meshing tool with biasing [DONE; need to test with each solver]
     -Option to apply either flux BC to corners; -2 index to reflect this?
+    -Radiation BC
 
 NANOTHERMITE TESTING:
     settings['Length']                  = 10**(-3)
@@ -104,21 +105,26 @@ Boundary condition options:
         Second index: Numbers associated with BC (can be an array)
         Third index: Node index range BC is valid for (second number must be negative)
         this pattern repeats...
+    -radiation options: None or [emissivity, surrounding_Temp]
 """
 #['C',(30,300),(0,-1)]
 #['F',4*10**8,(1,-299),'C',(10,300),(2,-2)]
 BCs['bc_left']                      = ['T',600,(0,-1)]
+BCs['bc_left_rad']                  = None
 # numpy.linspace(400, 900, settings['Nodes_y'])
 BCs['bc_right']                     = ['T',300,(0,-1)]
+BCs['bc_right_rad']                 = None
 # numpy.linspace(400, 900, settings['Nodes_y'])
 BCs['bc_south']                     = ['T',300,(0,-1)]
+BCs['bc_south_rad']                 = None
 # numpy.linspace(400, 900, settings['Nodes_x'])
 BCs['bc_north']                     = ['T',600,(0,-1)]
+BCs['bc_north_rad']                 = None
 # numpy.linspace(400, 900, settings['Nodes_x'])
 
 # Time advancement
-settings['Fo']                      = 0.8 #Explicit and implicit solver
-settings['total_time_steps']        = 30 # Explicit and implicit solver
+settings['Fo']                      = 1.6 #Explicit and implicit solver
+settings['total_time_steps']        = 100 # Explicit and implicit solver
 settings['Time_Scheme']             = 'Implicit' # Explicit or Implicit
 settings['Convergence']             = 0.001 # For implicit solver only
 settings['Max_iterations']          = 100 # For implicit solver only
@@ -139,8 +145,6 @@ print '################################'
 ##########################################################################
 
 print 'Initializing solver package...'
-if settings['Time_Scheme']=='Steady':
-    settings['total_time_steps']=1
 solver=Solvers.TwoDimPlanarSolve(domain, settings, BCs, 'Solid')
 print '################################'
 

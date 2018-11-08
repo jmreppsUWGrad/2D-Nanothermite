@@ -261,44 +261,45 @@ class TwoDimPlanarSolve():
                     if self.BCs['bc_north'][3*i]=='C':
                         Bi=-self.BCs['bc_north'][1+3*i][0]*T_prev[-1,-1] # h*Tij
                     T[-1,-1]+=Fo[-1,-1]*(Bi+q)*self.dx[-1,-1]/self.Domain.k
-    
-    # Calculate source term for combustion (Cantera module)
-    def Source_Comb(self, T, dx, dy):
-        # Terms to include after modelling combustion:
-            #divide by k
-            #resulting expression should have dimensions of K
-            #Be sure to account for area of CV properly
         
+        # Apply radiation BCs
+        if self.BCs['bc_left_rad']!=None:
+            T[:,0]+=Fo[:,0]*self.dy[:,0]/self.Domain.k*\
+                self.BCs['bc_left_rad'][0]*5.67*10**(-8)*\
+                (self.BCs['bc_left_rad'][1]**4-T_prev[:,0]**4)
+        if self.BCs['bc_right_rad']!=None:
+            T[:,-1]+=Fo[:,-1]*self.dy[:,-1]/self.Domain.k*\
+                self.BCs['bc_right_rad'][0]*5.67*10**(-8)*\
+                (self.BCs['bc_right_rad'][1]**4-T_prev[:,-1]**4)
+        if self.BCs['bc_south_rad']!=None:
+            T[0,:]+=Fo[0,:]*self.dy[0,:]/self.Domain.k*\
+                self.BCs['bc_south_rad'][0]*5.67*10**(-8)*\
+                (self.BCs['bc_south_rad'][1]**4-T_prev[0,:]**4)
+        if self.BCs['bc_north_rad']!=None:
+            T[-1,:]+=Fo[-1,:]*self.dy[-1,:]/self.Domain.k*\
+                self.BCs['bc_north_rad'][0]*5.67*10**(-8)*\
+                (self.BCs['bc_north_rad'][1]**4-T_prev[-1,:]**4)
         
-        q_vol=0 # Volumetric heat generation rate
-        q_source=numpy.zeros_like(dx)
-        
-        q_source[1:-1,1:-1]=q_vol/self.Domain.k*\
-            0.25*(self.dx[1:-1,1:-1]+self.dx[1:-1,:-2])*(self.dy[1:-1,1:-1]+self.dy[:-2,1:-1])
-        q_source[0,0]      =q_vol/self.Domain.k*\
-            0.25*(self.dx[0,0])*(self.dy[0,0])
-        q_source[0,1:-1]   =q_vol/self.Domain.k*\
-            0.25*(self.dx[0,1:-1]+self.dx[0,:-2])*(self.dy[0,1:-1])
-        q_source[1:-1,0]   =q_vol/self.Domain.k*\
-            0.25*(self.dx[1:-1,0])*(self.dy[1:-1,0]+self.dy[:-2,0])
-        q_source[0,-1]     =q_vol/self.Domain.k*\
-            0.25*(self.dx[0,-1])*(self.dy[0,-1])
-        q_source[-1,0]     =q_vol/self.Domain.k*\
-            0.25*(self.dx[-1,0])*(self.dy[-1,0])
-        q_source[-1,1:-1]  =q_vol/self.Domain.k*\
-            0.25*(self.dx[-1,1:-1]+self.dx[-1,:-2])*(self.dy[-1,1:-1])
-        q_source[1:-1,-1]  =q_vol/self.Domain.k*\
-            0.25*(self.dx[1:-1,-1])*(self.dy[1:-1,-1]+self.dy[:-2,-1])
-        q_source[-1,-1]    =q_vol/self.Domain.k*\
-            0.25*(self.dx[-1,-1])*(self.dy[-1,-1])
-        
-        return q_source
-    
     # Main solver (1 time step)
     def Advance_Soln_Cond(self):
         T_c=self.Domain.T.copy()
         T_0=self.Domain.T.copy()
         
+#        if (self.time_scheme=='Explicit') or (self.time_scheme=='Implicit'):
+#            rk_coeff = numpy.array([1,0])
+#            rk_substep_fraction = numpy.array([1,0])
+#            Nstep = self.countmax
+#            dTdt =[0]
+#            
+#        else:
+#            RK_info=temporal_schemes.runge_kutta(self.time_scheme)
+#            Nstep = RK_info.Nk
+#            if Nstep<0:
+#                return 1 # Scheme not recognized; abort solver
+#            rk_coeff = RK_info.rk_coeff
+#            rk_substep_fraction = RK_info.rk_substep_fraction
+#            dTdt =[0]*Nstep
+            
         dt=self.getdt()
         if (numpy.isnan(dt)) or (dt<=0):
             print '*********Diverging time step***********'
@@ -326,13 +327,19 @@ class TwoDimPlanarSolve():
         print 'Time step size: %.7f'%dt
         count=0
         while (count<self.countmax):
+            
+            self.Domain.T[1:-1, 1:-1]=(Fo[1:-1,1:-1]*self.dx[1:-1,1:-1]**2*(T_c[:-2,1:-1]+T_c[2:,1:-1]) \
+            +Fo[1:-1,1:-1]*self.dy[1:-1,1:-1]**2*(T_c[1:-1,:-2]+T_c[1:-1,2:])+self.dx[1:-1,1:-1]*self.dy[1:-1,1:-1]*T_0[1:-1,1:-1]) \
+            /(self.dx[1:-1,1:-1]*self.dy[1:-1,1:-1]+2*Fo[1:-1,1:-1]*(self.dx[1:-1,1:-1]**2+self.dy[1:-1,1:-1]**2))
+            
+            
             ###################################################################
             # Temperature (2nd order central schemes)
             ###################################################################
-            dTdt =self.get_Cond(T_c, self.dx, self.dy)
-            dTdt+=self.Source_Comb(T_c, self.dx, self.dy)
+#            dTdt =self.get_Cond(T_c, self.dx, self.dy)
+#            dTdt+=self.Source_Comb(T_c, self.dx, self.dy)
             
-            self.Domain.T = T_0 + Fo*dTdt
+#            self.Domain.T = T_0 + Fo*dTdt
             
             ###################################################################
             # Apply boundary conditions
@@ -351,7 +358,7 @@ class TwoDimPlanarSolve():
             # Break while loop if converged OR is explicit solve
             if (self.time_scheme=='Explicit'):
                 break
-            elif (self.CheckConv(T_c, self.Domain.T)):
+            elif (self.time_scheme=='Implicit') and (self.CheckConv(T_c, self.Domain.T)):
                 break
             count+=1
             T_c=self.Domain.T.copy()

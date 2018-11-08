@@ -59,10 +59,10 @@ class FileOut():
 #            self.fout.write('\n')
         
         self.Write_single_line('\nBoundary conditions:')
-        keys=['bc_left',\
-              'bc_right',\
-              'bc_south',\
-              'bc_north']
+        keys=['bc_left','bc_left_rad',\
+              'bc_right','bc_right_rad',\
+              'bc_south','bc_south_rad',\
+              'bc_north','bc_north_rad']
         for i in keys:
             self.fout.write(i)
             self.fout.write(':')
