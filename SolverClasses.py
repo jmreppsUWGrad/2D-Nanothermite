@@ -160,12 +160,12 @@ class TwoDimPlanarSolve():
         return qx+qy
     
     # Bondary condition handler
-    def Apply_BCs_Cond(self, T, Fo, T_prev):
+    def Apply_BCs_Cond(self, T, T_prev):
 #        BC1x,BC1y='T','T'# BC types at corner 1
 #        BC2x,BC2y='T','T'# BC types at corner 2
 #        BC3x,BC3y='T','T'# BC types at corner 3
 #        BC4x,BC4y='T','T'# BC types at corner 4
-        
+        Fo=0
         # Left face
         for i in range(len(self.BCs['bc_left'])/3):
             st=self.BCs['bc_left'][2+3*i][0]
@@ -282,69 +282,70 @@ class TwoDimPlanarSolve():
         
     # Main solver (1 time step)
     def Advance_Soln_Cond(self):
-        T_c=self.Domain.T.copy()
         T_0=self.Domain.T.copy()
+        T_c=self.Domain.T.copy()
         
-#        if (self.time_scheme=='Explicit') or (self.time_scheme=='Implicit'):
-#            rk_coeff = numpy.array([1,0])
-#            rk_substep_fraction = numpy.array([1,0])
-#            Nstep = self.countmax
-#            dTdt =[0]
-#            
-#        else:
-#            RK_info=temporal_schemes.runge_kutta(self.time_scheme)
-#            Nstep = RK_info.Nk
-#            if Nstep<0:
-#                return 1 # Scheme not recognized; abort solver
-#            rk_coeff = RK_info.rk_coeff
-#            rk_substep_fraction = RK_info.rk_substep_fraction
-#            dTdt =[0]*Nstep
-            
         dt=self.getdt()
+        
         if (numpy.isnan(dt)) or (dt<=0):
             print '*********Diverging time step***********'
             return 1
-        Fo=numpy.zeros_like(T_c)
-        Fo[1:-1,1:-1]=self.Domain.k*dt/(self.Domain.rho*self.Domain.Cv*\
-            0.25*(self.dx[1:-1,1:-1]+self.dx[1:-1,:-2])*(self.dy[1:-1,1:-1]+self.dy[:-2,1:-1]))
-        Fo[0,0]      =self.Domain.k*dt/(self.Domain.rho*self.Domain.Cv*\
-            0.25*(self.dx[0,0])*(self.dy[0,0]))
-        Fo[0,1:-1]   =self.Domain.k*dt/(self.Domain.rho*self.Domain.Cv*\
-            0.25*(self.dx[0,1:-1]+self.dx[0,:-2])*(self.dy[0,1:-1]))
-        Fo[1:-1,0]   =self.Domain.k*dt/(self.Domain.rho*self.Domain.Cv*\
-            0.25*(self.dx[1:-1,0])*(self.dy[1:-1,0]+self.dy[:-2,0]))
-        Fo[0,-1]     =self.Domain.k*dt/(self.Domain.rho*self.Domain.Cv*\
-            0.25*(self.dx[0,-1])*(self.dy[0,-1]))
-        Fo[-1,0]     =self.Domain.k*dt/(self.Domain.rho*self.Domain.Cv*\
-            0.25*(self.dx[-1,0])*(self.dy[-1,0]))
-        Fo[-1,1:-1]  =self.Domain.k*dt/(self.Domain.rho*self.Domain.Cv*\
-            0.25*(self.dx[-1,1:-1]+self.dx[-1,:-2])*(self.dy[-1,1:-1]))
-        Fo[1:-1,-1]   =self.Domain.k*dt/(self.Domain.rho*self.Domain.Cv*\
-            0.25*(self.dx[1:-1,-1])*(self.dy[1:-1,-1]+self.dy[:-2,-1]))
-        Fo[-1,-1]    =self.Domain.k*dt/(self.Domain.rho*self.Domain.Cv*\
-            0.25*(self.dx[-1,-1])*(self.dy[-1,-1]))
+        
+#        Fo=numpy.zeros_like(T_c)
+#        Fo[1:-1,1:-1]=self.Domain.k*dt/(self.Domain.rho*self.Domain.Cv*\
+#            0.25*(self.dx[1:-1,1:-1]+self.dx[1:-1,:-2])*(self.dy[1:-1,1:-1]+self.dy[:-2,1:-1]))
+#        Fo[0,0]      =self.Domain.k*dt/(self.Domain.rho*self.Domain.Cv*\
+#            0.25*(self.dx[0,0])*(self.dy[0,0]))
+#        Fo[0,1:-1]   =self.Domain.k*dt/(self.Domain.rho*self.Domain.Cv*\
+#            0.25*(self.dx[0,1:-1]+self.dx[0,:-2])*(self.dy[0,1:-1]))
+#        Fo[1:-1,0]   =self.Domain.k*dt/(self.Domain.rho*self.Domain.Cv*\
+#            0.25*(self.dx[1:-1,0])*(self.dy[1:-1,0]+self.dy[:-2,0]))
+#        Fo[0,-1]     =self.Domain.k*dt/(self.Domain.rho*self.Domain.Cv*\
+#            0.25*(self.dx[0,-1])*(self.dy[0,-1]))
+#        Fo[-1,0]     =self.Domain.k*dt/(self.Domain.rho*self.Domain.Cv*\
+#            0.25*(self.dx[-1,0])*(self.dy[-1,0]))
+#        Fo[-1,1:-1]  =self.Domain.k*dt/(self.Domain.rho*self.Domain.Cv*\
+#            0.25*(self.dx[-1,1:-1]+self.dx[-1,:-2])*(self.dy[-1,1:-1]))
+#        Fo[1:-1,-1]   =self.Domain.k*dt/(self.Domain.rho*self.Domain.Cv*\
+#            0.25*(self.dx[1:-1,-1])*(self.dy[1:-1,-1]+self.dy[:-2,-1]))
+#        Fo[-1,-1]    =self.Domain.k*dt/(self.Domain.rho*self.Domain.Cv*\
+#            0.25*(self.dx[-1,-1])*(self.dy[-1,-1]))
         
         print 'Time step size: %.7f'%dt
+        
+        # Calculate flux coefficients
+        aW=0.5*self.Domain.k*(self.dy[1:-1,1:-1]+self.dy[:-2,1:-1])/self.dx[1:-1,:-2]
+        aE=0.5*self.Domain.k*(self.dy[1:-1,1:-1]+self.dy[:-2,1:-1])/self.dx[1:-1,1:-1]
+        aS=0.5*self.Domain.k*(self.dx[1:-1,1:-1]+self.dx[1:-1,:-2])/self.dy[:-2,1:-1]
+        aN=0.5*self.Domain.k*(self.dx[1:-1,1:-1]+self.dx[1:-1,:-2])/self.dy[1:-1,1:-1]
+        at=self.Domain.rho*self.Domain.Cv/4/dt*\
+        (self.dy[1:-1,1:-1]+self.dy[:-2,1:-1])*(self.dx[1:-1,1:-1]+self.dx[1:-1,:-2])
+        
         count=0
         while (count<self.countmax):
-            
-            self.Domain.T[1:-1, 1:-1]=(Fo[1:-1,1:-1]*self.dx[1:-1,1:-1]**2*(T_c[:-2,1:-1]+T_c[2:,1:-1]) \
-            +Fo[1:-1,1:-1]*self.dy[1:-1,1:-1]**2*(T_c[1:-1,:-2]+T_c[1:-1,2:])+self.dx[1:-1,1:-1]*self.dy[1:-1,1:-1]*T_0[1:-1,1:-1]) \
-            /(self.dx[1:-1,1:-1]*self.dy[1:-1,1:-1]+2*Fo[1:-1,1:-1]*(self.dx[1:-1,1:-1]**2+self.dy[1:-1,1:-1]**2))
-            
-            
             ###################################################################
             # Temperature (2nd order central schemes)
             ###################################################################
-#            dTdt =self.get_Cond(T_c, self.dx, self.dy)
-#            dTdt+=self.Source_Comb(T_c, self.dx, self.dy)
+            # Sum up all contributing temperatures
+            self.Domain.T[1:-1,1:-1] = aW*T_c[1:-1,:-2]
+            self.Domain.T[1:-1,1:-1]+= aE*T_c[1:-1,2:]
+            self.Domain.T[1:-1,1:-1]+= aS*T_c[:-2,1:-1]
+            self.Domain.T[1:-1,1:-1]+= aN*T_c[2:,1:-1]
+            # Source terms
             
-#            self.Domain.T = T_0 + Fo*dTdt
+            
+            # Temperature from previous time step
+            if self.time_scheme=='Explicit':
+                self.Domain.T[1:-1,1:-1]+= (at-aW-aE-aS-aN)*T_0[1:-1,1:-1]
+                self.Domain.T[1:-1,1:-1]/= (at)
+            else:
+                self.Domain.T[1:-1,1:-1]+= (at)*T_0[1:-1,1:-1]
+                self.Domain.T[1:-1,1:-1]/= (at+aW+aE+aS+aN)
             
             ###################################################################
             # Apply boundary conditions
             ###################################################################
-            self.Apply_BCs_Cond(self.Domain.T, Fo, T_c)
+            self.Apply_BCs_Cond(self.Domain.T, T_0)
             
             ###################################################################
             # Divergence/Convergence checks
@@ -358,7 +359,7 @@ class TwoDimPlanarSolve():
             # Break while loop if converged OR is explicit solve
             if (self.time_scheme=='Explicit'):
                 break
-            elif (self.time_scheme=='Implicit') and (self.CheckConv(T_c, self.Domain.T)):
+            elif (self.CheckConv(T_c, self.Domain.T)):
                 break
             count+=1
             T_c=self.Domain.T.copy()

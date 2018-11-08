@@ -123,7 +123,7 @@ BCs['bc_north_rad']                 = None
 # numpy.linspace(400, 900, settings['Nodes_x'])
 
 # Time advancement
-settings['Fo']                      = 1.6 #Explicit and implicit solver
+settings['Fo']                      = 1.0 #Explicit and implicit solver
 settings['total_time_steps']        = 100 # Explicit and implicit solver
 settings['Time_Scheme']             = 'Implicit' # Explicit or Implicit
 settings['Convergence']             = 0.001 # For implicit solver only
