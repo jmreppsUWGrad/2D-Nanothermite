@@ -121,51 +121,79 @@ class TwoDimPlanarSolve():
         else:
             return False
 
-    # Heat conduction into/out of each node CV (thermal conductivity not included in calc)
-    def get_Cond(self, T, dx, dy):
-        qx=numpy.empty_like(T)
-        qy=numpy.empty_like(T)
-        # Heat conduction in x direction (Central differences)
-        qx[1:-1,1:-1] =-0.5*(dy[1:-1,1:-1]+dy[:-2,1:-1])*(T[1:-1,1:-1]-T[1:-1,:-2])/(dx[1:-1,:-2])
-        qx[1:-1,1:-1]-=-0.5*(dy[1:-1,1:-1]+dy[:-2,1:-1])*(T[1:-1,2:]-T[1:-1,1:-1])/(dx[1:-1,1:-1])
-        # Area account for north/south bondary nodes
-        qx[0,1:-1]    =-0.5*(dy[0,1:-1])*(T[0,1:-1]-T[0,:-2])/(dx[0,:-2])
-        qx[0,1:-1]   -=-0.5*(dy[0,1:-1])*(T[0,2:]-T[0,1:-1])/(dx[0,1:-1])
-        qx[-1,1:-1]   =-0.5*(dy[-1,1:-1])*(T[-1,1:-1]-T[-1,:-2])/(dx[-1,:-2])
-        qx[-1,1:-1]  -=-0.5*(dy[-1,1:-1])*(T[-1,2:]-T[-1,1:-1])/(dx[-1,1:-1])
-        # Forward/backward difference for left/right boundaries
-        qx[0,0]       =0.5*(dy[0,0])*(T[0,1]-T[0,0])/dx[0,0]
-        qx[1:-1,0]    =0.5*(dy[1:-1,0]+dy[:-2,0])*(T[1:-1,1]-T[1:-1,0])/dx[1:-1,0]
-        qx[-1,0]      =0.5*(dy[-1,0])*(T[-1,1]-T[-1,0])/dx[-1,0]
-        qx[0,-1]      =-0.5*(dy[0,-1])*(T[0,-1]-T[0,-2])/dx[0,-1]
-        qx[1:-1,-1]   =-0.5*(dy[1:-1,-1]+dy[:-2,-1])*(T[1:-1,-1]-T[1:-1,-2])/dx[1:-1,-1]
-        qx[-1,-1]     =-0.5*(dy[-1,-1])*(T[-1,-1]-T[-1,-2])/dx[-1,-1]
+    # coefficients for temperature weighting in Advance_Soln_Cond
+    def get_Coeff(self, dx, dy, dt):
+        aW=numpy.zeros_like(dx)
+        aE=numpy.zeros_like(dx)
+        aS=numpy.zeros_like(dx)
+        aN=numpy.zeros_like(dx)
+        at=numpy.zeros_like(dx)
+        
+        # Storage coefficient
+        at[1:-1,1:-1]=self.Domain.rho*self.Domain.Cv/dt*\
+            0.25*(self.dx[1:-1,1:-1]+self.dx[1:-1,:-2])*(self.dy[1:-1,1:-1]+self.dy[:-2,1:-1])
+        at[0,0]      =self.Domain.rho*self.Domain.Cv/dt*\
+            0.25*(self.dx[0,0])*(self.dy[0,0])
+        at[0,1:-1]   =self.Domain.rho*self.Domain.Cv/dt*\
+            0.25*(self.dx[0,1:-1]+self.dx[0,:-2])*(self.dy[0,1:-1])
+        at[1:-1,0]   =self.Domain.rho*self.Domain.Cv/dt*\
+            0.25*(self.dx[1:-1,0])*(self.dy[1:-1,0]+self.dy[:-2,0])
+        at[0,-1]     =self.Domain.rho*self.Domain.Cv/dt*\
+            0.25*(self.dx[0,-1])*(self.dy[0,-1])
+        at[-1,0]     =self.Domain.rho*self.Domain.Cv/dt*\
+            0.25*(self.dx[-1,0])*(self.dy[-1,0])
+        at[-1,1:-1]  =self.Domain.rho*self.Domain.Cv/dt*\
+            0.25*(self.dx[-1,1:-1]+self.dx[-1,:-2])*(self.dy[-1,1:-1])
+        at[1:-1,-1]   =self.Domain.rho*self.Domain.Cv/dt*\
+            0.25*(self.dx[1:-1,-1])*(self.dy[1:-1,-1]+self.dy[:-2,-1])
+        at[-1,-1]    =self.Domain.rho*self.Domain.Cv/dt*\
+            0.25*(self.dx[-1,-1])*(self.dy[-1,-1])
+        
+        # Left/right face factors
+        aW[1:-1,1:-1] =0.5*self.Domain.k*(dy[1:-1,1:-1]+dy[:-2,1:-1])/(dx[1:-1,:-2])
+        aE[1:-1,1:-1] =0.5*self.Domain.k*(dy[1:-1,1:-1]+dy[:-2,1:-1])/(dx[1:-1,1:-1])
+        # At north/south bondaries
+        aW[0,1:-1]    =0.5*self.Domain.k*(dy[0,1:-1])/(dx[0,:-2])
+        aE[0,1:-1]    =0.5*self.Domain.k*(dy[0,1:-1])/(dx[0,1:-1])
+        aW[-1,1:-1]   =0.5*self.Domain.k*(dy[-1,1:-1])/(dx[-1,:-2])
+        aE[-1,1:-1]   =0.5*self.Domain.k*(dy[-1,1:-1])/(dx[-1,1:-1])
+        # At Left/right boundaries
+        aE[0,0]       =0.5*self.Domain.k*(dy[0,0])/dx[0,0]
+        aE[1:-1,0]    =0.5*self.Domain.k*(dy[1:-1,0]+dy[:-2,0])/dx[1:-1,0]
+        aE[-1,0]      =0.5*self.Domain.k*(dy[-1,0])/dx[-1,0]
+        aW[0,-1]      =0.5*self.Domain.k*(dy[0,-1])/dx[0,-1]
+        aW[1:-1,-1]   =0.5*self.Domain.k*(dy[1:-1,-1]+dy[:-2,-1])/dx[1:-1,-1]
+        aW[-1,-1]     =0.5*self.Domain.k*(dy[-1,-1])/dx[-1,-1]
+        
+        # South/north faces
+        aS[1:-1,1:-1]=0.5*self.Domain.k*(dx[1:-1,1:-1]+dx[1:-1,:-2])/dy[:-2,1:-1]
+        aN[1:-1,1:-1]=0.5*self.Domain.k*(dx[1:-1,1:-1]+dx[1:-1,:-2])/dy[1:-1,1:-1]
         
         # Heat conduction in y direction (Central differences)
-        qy[1:-1,1:-1] =-0.5*(dx[1:-1,1:-1]+dx[1:-1,:-2])*(T[1:-1,1:-1]-T[:-2,1:-1])/(dy[:-2,1:-1])
-        qy[1:-1,1:-1]-=-0.5*(dx[1:-1,1:-1]+dx[1:-1,:-2])*(T[2:,1:-1]-T[1:-1,1:-1])/(dy[1:-1,1:-1])
+        aS[1:-1,1:-1] =0.5*self.Domain.k*(dx[1:-1,1:-1]+dx[1:-1,:-2])/(dy[:-2,1:-1])
+        aN[1:-1,1:-1] =0.5*self.Domain.k*(dx[1:-1,1:-1]+dx[1:-1,:-2])/(dy[1:-1,1:-1])
         # Area account for left/right boundary nodes
-        qy[1:-1,0]    =-0.5*(dx[1:-1,0])*(T[1:-1,0]-T[:-2,0])/(dy[:-2,0])
-        qy[1:-1,0]   -=-0.5*(dx[1:-1,0])*(T[2:,0]-T[1:-1,0])/(dy[1:-1,0])
-        qy[1:-1,-1]   =-0.5*(dx[1:-1,-1])*(T[1:-1,-1]-T[:-2,-1])/(dy[:-2,-1])
-        qy[1:-1,-1]  -=-0.5*(dx[1:-1,-1])*(T[2:,-1]-T[1:-1,-1])/(dy[1:-1,-1])
+        aS[1:-1,0]    =0.5*self.Domain.k*(dx[1:-1,0])/(dy[:-2,0])
+        aN[1:-1,0]    =0.5*self.Domain.k*(dx[1:-1,0])/(dy[1:-1,0])
+        aS[1:-1,-1]   =0.5*self.Domain.k*(dx[1:-1,-1])/(dy[:-2,-1])
+        aN[1:-1,-1]   =0.5*self.Domain.k*(dx[1:-1,-1])/(dy[1:-1,-1])
         # Forward/backward difference for north/south boundaries
-        qy[0,0]       =0.5*dx[0,0]*(T[0,1]-T[0,0])/dy[0,0]
-        qy[0,1:-1]    =0.5*(dx[0,1:-1]+dx[0,:-2])*(T[1,1:-1]-T[0,1:-1])/dy[0,1:-1]
-        qy[0,-1]      =0.5*dx[0,-1]*(T[0,-1]-T[0,-2])/dy[0,-1]
-        qy[-1,0]      =-0.5*dx[-1,0]*(T[-1,0]-T[-2,0])/dy[-1,0]
-        qy[-1,1:-1]   =-0.5*(dx[0,1:-1]+dx[0,:-2])*(T[-1,1:-1]-T[-2,1:-1])/dy[-1,1:-1]
-        qy[-1,-1]     =-0.5*dx[-1,-1]*(T[-1,-1]-T[-2,-1])/dy[-1,-1]
+        aN[0,0]       =0.5*self.Domain.k*dx[0,0]/dy[0,0]
+        aN[0,1:-1]    =0.5*self.Domain.k*(dx[0,1:-1]+dx[0,:-2])/dy[0,1:-1]
+        aN[0,-1]      =0.5*self.Domain.k*dx[0,-1]/dy[0,-1]
+        aS[-1,0]      =0.5*self.Domain.k*dx[-1,0]/dy[-1,0]
+        aS[-1,1:-1]   =0.5*self.Domain.k*(dx[0,1:-1]+dx[0,:-2])/dy[-1,1:-1]
+        aS[-1,-1]     =0.5*self.Domain.k*dx[-1,-1]/dy[-1,-1]
         
-        return qx+qy
+        return aW,aE,aS,aN,at
     
     # Bondary condition handler
-    def Apply_BCs_Cond(self, T, T_prev):
+    def Apply_BCs_Cond(self, T, T_prev, at):
 #        BC1x,BC1y='T','T'# BC types at corner 1
 #        BC2x,BC2y='T','T'# BC types at corner 2
 #        BC3x,BC3y='T','T'# BC types at corner 3
 #        BC4x,BC4y='T','T'# BC types at corner 4
-        Fo=0
+        
         # Left face
         for i in range(len(self.BCs['bc_left'])/3):
             st=self.BCs['bc_left'][2+3*i][0]
@@ -184,11 +212,11 @@ class TwoDimPlanarSolve():
                     q=self.BCs['bc_left'][1+3*i][0]*self.BCs['bc_left'][1+3*i][1] # h*Tinf
                     Bi=-self.BCs['bc_left'][1+3*i][0]*T_prev[st:en,0] # h*Tij
                 
-                T[st:en,0]+=Fo[st:en,0]*(Bi+q)*self.dy[st:en,0]/self.Domain.k
+                T[st:en,0]+=(Bi+q)*self.dy[st:en,0]/at[st:en,0]
                 if len(self.BCs['bc_left'])/3-i==1:
                     if self.BCs['bc_left'][3*i]=='C':
                         Bi=-self.BCs['bc_left'][1+3*i][0]*T_prev[-1,0] # h*Tij
-                    T[-1,0]+=Fo[-1,0]*(Bi+q)*self.dy[-1,0]/self.Domain.k
+                    T[-1,0]+=(Bi+q)*self.dy[-1,0]/at[-1,0]
         
         # Right face
         for i in range(len(self.BCs['bc_right'])/3):
@@ -208,11 +236,11 @@ class TwoDimPlanarSolve():
                     q=self.BCs['bc_right'][1+3*i][0]*self.BCs['bc_right'][1+3*i][1] # h*Tinf
                     Bi=-self.BCs['bc_right'][1+3*i][0]*T_prev[st:en,-1] # h*Tij
                 
-                T[st:en,-1]+=Fo[st:en,-1]*(Bi+q)*self.dy[st:en,-1]/self.Domain.k
+                T[st:en,-1]+=(Bi+q)*self.dy[st:en,-1]/at[st:en,-1]
                 if len(self.BCs['bc_right'])/3-i==1:
                     if self.BCs['bc_right'][3*i]=='C':
                         Bi=-self.BCs['bc_right'][1+3*i][0]*T_prev[-1,-1] # h*Tij
-                    T[-1,-1]+=Fo[-1,-1]*(Bi+q)*self.dy[-1,-1]/self.Domain.k
+                    T[-1,-1]+=(Bi+q)*self.dy[-1,-1]/at[-1,-1]
         
         # South face
         for i in range(len(self.BCs['bc_south'])/3):
@@ -232,11 +260,11 @@ class TwoDimPlanarSolve():
                     q=self.BCs['bc_south'][1+3*i][0]*self.BCs['bc_south'][1+3*i][1] # h*Tinf
                     Bi=-self.BCs['bc_south'][1+3*i][0]*T_prev[0,st:en] # h*Tij
                 
-                T[0,st:en]+=Fo[0,st:en]*(Bi+q)*self.dx[0,st:en]/self.Domain.k
+                T[0,st:en]+=(Bi+q)*self.dx[0,st:en]/at[0,st:en]
                 if len(self.BCs['bc_south'])/3-i==1:
                     if self.BCs['bc_south'][3*i]=='C':
                         Bi=-self.BCs['bc_south'][1+3*i][0]*T_prev[0,-1] # h*Tij
-                    T[0,-1]+=Fo[0,-1]*(Bi+q)*self.dx[0,-1]/self.Domain.k
+                    T[0,-1]+=(Bi+q)*self.dx[0,-1]/at[0,-1]
                     
         # North face
         for i in range(len(self.BCs['bc_north'])/3):
@@ -256,27 +284,27 @@ class TwoDimPlanarSolve():
                     q=self.BCs['bc_north'][1+3*i][0]*self.BCs['bc_north'][1+3*i][1] # h*Tinf
                     Bi=-self.BCs['bc_north'][1+3*i][0]*T_prev[-1,st:en] # h*Tij
                 
-                T[-1,st:en]+=Fo[-1,st:en]*(Bi+q)*self.dx[-1,st:en]/self.Domain.k
+                T[-1,st:en]+=(Bi+q)*self.dx[-1,st:en]/at[-1,st:en]
                 if len(self.BCs['bc_north'])/3-i==1:
                     if self.BCs['bc_north'][3*i]=='C':
                         Bi=-self.BCs['bc_north'][1+3*i][0]*T_prev[-1,-1] # h*Tij
-                    T[-1,-1]+=Fo[-1,-1]*(Bi+q)*self.dx[-1,-1]/self.Domain.k
+                    T[-1,-1]+=(Bi+q)*self.dx[-1,-1]/at[-1,-1]
         
         # Apply radiation BCs
         if self.BCs['bc_left_rad']!=None:
-            T[:,0]+=Fo[:,0]*self.dy[:,0]/self.Domain.k*\
+            T[:,0]+=self.dy[:,0]/at[:,0]*\
                 self.BCs['bc_left_rad'][0]*5.67*10**(-8)*\
                 (self.BCs['bc_left_rad'][1]**4-T_prev[:,0]**4)
         if self.BCs['bc_right_rad']!=None:
-            T[:,-1]+=Fo[:,-1]*self.dy[:,-1]/self.Domain.k*\
+            T[:,-1]+=self.dy[:,-1]/at[:,-1]*\
                 self.BCs['bc_right_rad'][0]*5.67*10**(-8)*\
                 (self.BCs['bc_right_rad'][1]**4-T_prev[:,-1]**4)
         if self.BCs['bc_south_rad']!=None:
-            T[0,:]+=Fo[0,:]*self.dy[0,:]/self.Domain.k*\
+            T[0,:]+=self.dx[0,:]/at[0,:]*\
                 self.BCs['bc_south_rad'][0]*5.67*10**(-8)*\
                 (self.BCs['bc_south_rad'][1]**4-T_prev[0,:]**4)
         if self.BCs['bc_north_rad']!=None:
-            T[-1,:]+=Fo[-1,:]*self.dy[-1,:]/self.Domain.k*\
+            T[-1,:]+=self.dx[-1,:]/at[-1,:]*\
                 self.BCs['bc_north_rad'][0]*5.67*10**(-8)*\
                 (self.BCs['bc_north_rad'][1]**4-T_prev[-1,:]**4)
         
@@ -290,36 +318,10 @@ class TwoDimPlanarSolve():
         if (numpy.isnan(dt)) or (dt<=0):
             print '*********Diverging time step***********'
             return 1
-        
-#        Fo=numpy.zeros_like(T_c)
-#        Fo[1:-1,1:-1]=self.Domain.k*dt/(self.Domain.rho*self.Domain.Cv*\
-#            0.25*(self.dx[1:-1,1:-1]+self.dx[1:-1,:-2])*(self.dy[1:-1,1:-1]+self.dy[:-2,1:-1]))
-#        Fo[0,0]      =self.Domain.k*dt/(self.Domain.rho*self.Domain.Cv*\
-#            0.25*(self.dx[0,0])*(self.dy[0,0]))
-#        Fo[0,1:-1]   =self.Domain.k*dt/(self.Domain.rho*self.Domain.Cv*\
-#            0.25*(self.dx[0,1:-1]+self.dx[0,:-2])*(self.dy[0,1:-1]))
-#        Fo[1:-1,0]   =self.Domain.k*dt/(self.Domain.rho*self.Domain.Cv*\
-#            0.25*(self.dx[1:-1,0])*(self.dy[1:-1,0]+self.dy[:-2,0]))
-#        Fo[0,-1]     =self.Domain.k*dt/(self.Domain.rho*self.Domain.Cv*\
-#            0.25*(self.dx[0,-1])*(self.dy[0,-1]))
-#        Fo[-1,0]     =self.Domain.k*dt/(self.Domain.rho*self.Domain.Cv*\
-#            0.25*(self.dx[-1,0])*(self.dy[-1,0]))
-#        Fo[-1,1:-1]  =self.Domain.k*dt/(self.Domain.rho*self.Domain.Cv*\
-#            0.25*(self.dx[-1,1:-1]+self.dx[-1,:-2])*(self.dy[-1,1:-1]))
-#        Fo[1:-1,-1]   =self.Domain.k*dt/(self.Domain.rho*self.Domain.Cv*\
-#            0.25*(self.dx[1:-1,-1])*(self.dy[1:-1,-1]+self.dy[:-2,-1]))
-#        Fo[-1,-1]    =self.Domain.k*dt/(self.Domain.rho*self.Domain.Cv*\
-#            0.25*(self.dx[-1,-1])*(self.dy[-1,-1]))
-        
         print 'Time step size: %.7f'%dt
         
         # Calculate flux coefficients
-        aW=0.5*self.Domain.k*(self.dy[1:-1,1:-1]+self.dy[:-2,1:-1])/self.dx[1:-1,:-2]
-        aE=0.5*self.Domain.k*(self.dy[1:-1,1:-1]+self.dy[:-2,1:-1])/self.dx[1:-1,1:-1]
-        aS=0.5*self.Domain.k*(self.dx[1:-1,1:-1]+self.dx[1:-1,:-2])/self.dy[:-2,1:-1]
-        aN=0.5*self.Domain.k*(self.dx[1:-1,1:-1]+self.dx[1:-1,:-2])/self.dy[1:-1,1:-1]
-        at=self.Domain.rho*self.Domain.Cv/4/dt*\
-        (self.dy[1:-1,1:-1]+self.dy[:-2,1:-1])*(self.dx[1:-1,1:-1]+self.dx[1:-1,:-2])
+        aW,aE,aS,aN,at=self.get_Coeff(self.dx,self.dy, dt)
         
         count=0
         while (count<self.countmax):
@@ -327,25 +329,26 @@ class TwoDimPlanarSolve():
             # Temperature (2nd order central schemes)
             ###################################################################
             # Sum up all contributing temperatures
-            self.Domain.T[1:-1,1:-1] = aW*T_c[1:-1,:-2]
-            self.Domain.T[1:-1,1:-1]+= aE*T_c[1:-1,2:]
-            self.Domain.T[1:-1,1:-1]+= aS*T_c[:-2,1:-1]
-            self.Domain.T[1:-1,1:-1]+= aN*T_c[2:,1:-1]
+            
+            self.Domain.T[:,1:]    = aW[:,1:]*T_c[:,:-1]
+            self.Domain.T[:,0]     = aE[:,0]*T_c[:,1]
+            
+            self.Domain.T[:,1:-1] += aE[:,1:-1]*T_c[:,2:]
+            self.Domain.T[1:,:]   += aS[1:,:]*T_c[:-1,:]
+            self.Domain.T[:-1,:]  += aN[:-1,:]*T_c[1:,:]
             # Source terms
             
-            
-            # Temperature from previous time step
+            ###################################################################
+            # Apply temperature from previous time step and boundary conditions
+            ###################################################################
             if self.time_scheme=='Explicit':
-                self.Domain.T[1:-1,1:-1]+= (at-aW-aE-aS-aN)*T_0[1:-1,1:-1]
-                self.Domain.T[1:-1,1:-1]/= (at)
+                self.Domain.T+= (at-aW-aE-aS-aN)*T_0
+                self.Domain.T/= (at)
+                self.Apply_BCs_Cond(self.Domain.T, T_0, at)
             else:
-                self.Domain.T[1:-1,1:-1]+= (at)*T_0[1:-1,1:-1]
-                self.Domain.T[1:-1,1:-1]/= (at+aW+aE+aS+aN)
-            
-            ###################################################################
-            # Apply boundary conditions
-            ###################################################################
-            self.Apply_BCs_Cond(self.Domain.T, T_0)
+                self.Domain.T+= (at)*T_0
+                self.Domain.T/= (at+aW+aE+aS+aN)
+                self.Apply_BCs_Cond(self.Domain.T, self.Domain.T, at+aW+aE+aS+aN)
             
             ###################################################################
             # Divergence/Convergence checks

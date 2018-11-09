@@ -10,6 +10,7 @@ Features:
 Desired:
     -Combustion reaction modelling (own class)
     -meshing tool with biasing [DONE; need to test with each solver]
+        [BC function NOT reflecting biased mesh]
     -Option to apply either flux BC to corners; -2 index to reflect this?
     -Radiation BC
 
@@ -109,24 +110,24 @@ Boundary condition options:
 """
 #['C',(30,300),(0,-1)]
 #['F',4*10**8,(1,-299),'C',(10,300),(2,-2)]
-BCs['bc_left']                      = ['T',600,(0,-1)]
+BCs['bc_left']                      = ['T',300,(0,-1)]
 BCs['bc_left_rad']                  = None
 # numpy.linspace(400, 900, settings['Nodes_y'])
-BCs['bc_right']                     = ['T',300,(0,-1)]
+BCs['bc_right']                     = ['T',700,(0,-1)]
 BCs['bc_right_rad']                 = None
 # numpy.linspace(400, 900, settings['Nodes_y'])
-BCs['bc_south']                     = ['T',300,(0,-1)]
+BCs['bc_south']                     = ['C',(50,300),(0,-1)]
 BCs['bc_south_rad']                 = None
 # numpy.linspace(400, 900, settings['Nodes_x'])
-BCs['bc_north']                     = ['T',600,(0,-1)]
+BCs['bc_north']                     = ['C',(50,300),(0,-1)]
 BCs['bc_north_rad']                 = None
 # numpy.linspace(400, 900, settings['Nodes_x'])
 
 # Time advancement
-settings['Fo']                      = 1.0 #Explicit and implicit solver
+settings['Fo']                      = 10 #Explicit and implicit solver
 settings['total_time_steps']        = 100 # Explicit and implicit solver
 settings['Time_Scheme']             = 'Implicit' # Explicit or Implicit
-settings['Convergence']             = 0.001 # For implicit solver only
+settings['Convergence']             = 0.0001 # For implicit solver only
 settings['Max_iterations']          = 100 # For implicit solver only
 
 print('######################################################')
