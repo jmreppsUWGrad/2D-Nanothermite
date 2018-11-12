@@ -11,10 +11,10 @@ solver object.
 
 Assumptions:
     -equal discretization spacings in either x or y (want to adjust)
-    -constant thermal conductivity
+    -constant thermal conductivity (eventually make distribution)
 
 Features:
-    -time step based on Fourrier number and discretizations in x and y
+    -time step based on Fourrier number and local discretizations in x and y
     -
 
 
@@ -25,6 +25,7 @@ import numpy
 #import MatClasses
 #import CoolProp.CoolProp as CP
 #import temporal_schemes
+import Source_Comb
 
 # 1D Solvers (CURRENTLY ONLY FOR CONDUCTION)
 class OneDimSolve():
@@ -87,10 +88,19 @@ class TwoDimPlanarSolve():
             self.Fo=settings['Fo']
             self.conv=settings['Convergence']
             self.countmax=settings['Max_iterations']
-    
+        
+        # Define source terms and pointer to object here
+        self.get_source=Source_Comb.Source_terms()
+        self.source_unif=settings['Source_Uniform']
+        
     # Time step check with dx, dy, Fo number
     def getdt(self):
         dt=numpy.zeros_like(self.dx)
+        # Stability check for Fourrier number
+        if self.time_scheme=='Explicit':
+            self.Fo=min(self.Fo, 1.0)
+            print 'Fourrier number changed to %.7f for stability'%self.Fo
+        
         dt[1:-1,1:-1]=0.25*self.Fo*self.Domain.rho*self.Domain.Cv/self.Domain.k*\
             (self.dx[1:-1,1:-1]+self.dx[1:-1,:-2])*(self.dy[1:-1,1:-1]+self.dy[:-2,1:-1])
         dt[0,0]      =0.25*self.Fo*self.Domain.rho*self.Domain.Cv/self.Domain.k*\
@@ -189,11 +199,6 @@ class TwoDimPlanarSolve():
     
     # Bondary condition handler
     def Apply_BCs_Cond(self, T, T_prev, at):
-#        BC1x,BC1y='T','T'# BC types at corner 1
-#        BC2x,BC2y='T','T'# BC types at corner 2
-#        BC3x,BC3y='T','T'# BC types at corner 3
-#        BC4x,BC4y='T','T'# BC types at corner 4
-        
         # Left face
         for i in range(len(self.BCs['bc_left'])/3):
             st=self.BCs['bc_left'][2+3*i][0]
@@ -336,7 +341,10 @@ class TwoDimPlanarSolve():
             self.Domain.T[:,1:-1] += aE[:,1:-1]*T_c[:,2:]
             self.Domain.T[1:,:]   += aS[1:,:]*T_c[:-1,:]
             self.Domain.T[:-1,:]  += aN[:-1,:]*T_c[1:,:]
+            
             # Source terms
+            if self.source_unif!=None:
+                self.Domain.T     += self.get_source.Source_Uniform(self.source_unif, self.dx, self.dy)
             
             ###################################################################
             # Apply temperature from previous time step and boundary conditions

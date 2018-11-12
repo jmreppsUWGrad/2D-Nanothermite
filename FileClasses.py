@@ -42,6 +42,13 @@ class FileOut():
             self.Write_single_line(str(settings[i]))
 #            self.fout.write('\n')
         
+        self.Write_single_line('\nSource Terms:\n')
+        keys=['Source_Uniform']
+        for i in keys:
+            self.fout.write(i)
+            self.fout.write(':')
+            self.Write_single_line(str(settings[i]))
+
         self.Write_single_line('\nMeshing details:')
         keys=['bias_type_x','bias_size_x','bias_type_y','bias_size_y']
         for i in keys:
