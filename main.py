@@ -12,7 +12,8 @@ Desired:
     -meshing tool with biasing [DONE; need to test with each solver]
         [BC function NOT reflecting biased mesh]
     -Option to apply either flux BC to corners; -2 index to reflect this?
-    -Radiation BC
+    -Radiation BC [Done]
+    -Cantera use via Source_Comb class
 
 NANOTHERMITE TESTING:
     settings['Length']                  = 10**(-3)
@@ -113,17 +114,17 @@ Boundary condition options:
 """
 #['C',(30,300),(0,-1)]
 #['F',4*10**8,(1,-299),'C',(10,300),(2,-2)]
-BCs['bc_left']                      = ['C',(50,300),(0,-1)]
-BCs['bc_left_rad']                  = None
+BCs['bc_left']                      = ['C',(1,300),(0,-1)]
+BCs['bc_left_rad']                  = [0.8,300]
 # numpy.linspace(400, 900, settings['Nodes_y'])
-BCs['bc_right']                     = ['C',(50,300),(0,-1)]
-BCs['bc_right_rad']                 = None
+BCs['bc_right']                     = ['C',(1,300),(0,-1)]
+BCs['bc_right_rad']                 = [0.8,300]
 # numpy.linspace(400, 900, settings['Nodes_y'])
-BCs['bc_south']                     = ['C',(50,300),(0,-1)]
-BCs['bc_south_rad']                 = None
+BCs['bc_south']                     = ['C',(1,300),(0,-1)]
+BCs['bc_south_rad']                 = [0.8,300]
 # numpy.linspace(400, 900, settings['Nodes_x'])
-BCs['bc_north']                     = ['C',(50,300),(0,-1)]
-BCs['bc_north_rad']                 = None
+BCs['bc_north']                     = ['C',(1,300),(0,-1)]
+BCs['bc_north_rad']                 = [0.8,300]
 # numpy.linspace(400, 900, settings['Nodes_x'])
 
 # Time advancement

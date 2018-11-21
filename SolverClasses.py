@@ -345,6 +345,8 @@ class TwoDimPlanarSolve():
             # Source terms
             if self.source_unif!=None:
                 self.Domain.T     += self.get_source.Source_Uniform(self.source_unif, self.dx, self.dy)
+#            if self.:
+#                self.Domain.T     += self.get_source.Source_Comb(T_c, self.Domain.Y_species, self.dx, self.dy)
             
             ###################################################################
             # Apply temperature from previous time step and boundary conditions

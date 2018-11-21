@@ -42,7 +42,7 @@ class FileOut():
             self.Write_single_line(str(settings[i]))
 #            self.fout.write('\n')
         
-        self.Write_single_line('\nSource Terms:\n')
+        self.Write_single_line('\nSource Terms:')
         keys=['Source_Uniform']
         for i in keys:
             self.fout.write(i)

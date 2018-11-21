@@ -105,6 +105,8 @@ class TwoDimPlanar:
             self.Cv=settings['Cp']
             self.rho=settings['rho']
             self.T=numpy.zeros((self.Ny, self.Nx))
+            
+#            self.Y_species=numpy.zeros((self.Ny, self.Nx, 15)) # species array
         
         # Biasing options       
         self.xbias=[settings['bias_type_x'], settings['bias_size_x']]
