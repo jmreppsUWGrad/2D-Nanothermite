@@ -9,6 +9,16 @@ This contains classes for reading and writing files in good format
 
 """
 
+keys_Settings=['Length','Width','Nodes_x','Nodes_y','k','Cp','rho',\
+               'bias_type_x','bias_size_x','bias_type_y','bias_size_y']
+keys_Time_adv=['Fo','dt','total_time_steps', 'Time_Scheme','Convergence','Max_iterations']
+keys_BCs=     ['bc_left','bc_left_rad',\
+              'bc_right','bc_right_rad',\
+              'bc_south','bc_south_rad',\
+              'bc_north','bc_north_rad']
+
+import string as st
+
 class FileOut():
     def __init__(self, filename, isBin):
         self.name=filename
@@ -66,11 +76,7 @@ class FileOut():
 #            self.fout.write('\n')
         
         self.Write_single_line('\nBoundary conditions:')
-        keys=['bc_left','bc_left_rad',\
-              'bc_right','bc_right_rad',\
-              'bc_south','bc_south_rad',\
-              'bc_north','bc_north_rad']
-        for i in keys:
+        for i in keys_BCs:
             self.fout.write(i)
             self.fout.write(':')
             self.Write_single_line(str(BCs[i]))
@@ -98,4 +104,33 @@ class FileIn():
             read_type='rb'
         else:
             read_type='r'
-        self.fout=open(filename+'.txt', read_type)
+        self.fin=open(filename+'.txt', read_type)
+        
+    def Read_Input(self, settings, BCs):
+        for line in self.fin:
+            if st.find(line, ':')>0 and st.find(line, '#')!=0:
+                line=st.split(line, ':')
+                if line[0] in keys_Settings:
+                    if line[0]=='Nodes_x' or line[0]=='Nodes_y':
+                        settings[line[0]]=int(line[1])
+                    elif line[1]=='None\n':
+                        settings[line[0]]=None
+                    else:
+                        settings[line[0]]=float(line[1])
+                        
+                elif line[0] in keys_Time_adv:
+                    if line[0]=='Time_Scheme':
+                        settings[line[0]]=st.split(line[1], '\n')[0]
+                    elif line[1]=='None\n':
+                        settings[line[0]]=None
+                    elif line[0]=='total_time_steps':
+                        settings[line[0]]=int(line[1])
+                    else:
+                        settings[line[0]]=float(line[1])
+                        
+                elif line[0] in keys_BCs:
+                    BC_info=st.split(line[1], '\n')[0]
+                    BC_info=st.split
+                    BCs[line[0]]=list(st.split(line[1], '\n')[0])
+                    
+        self.fin.close()

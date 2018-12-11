@@ -14,6 +14,7 @@ Desired:
     -Option to apply either flux BC to corners; -2 index to reflect this?
     -Radiation BC [Done]
     -Cantera use via Source_Comb class
+    -Read an input file; BC settings need re-coding
 
 NANOTHERMITE TESTING:
     settings['Length']                  = 10**(-3)
@@ -75,15 +76,15 @@ settings={} # Dictionary of problem settings
 BCs={} # Dictionary of boundary conditions
 # Geometry details
 settings['Length']                  = 4.0
-settings['Width']                   = 4.0
-settings['Nodes_x']                 = 41
-settings['Nodes_y']                 = 41
-settings['k']                       = 10 #0.026384465709828872
-settings['Cp']                      = 800 # 714.602
-settings['rho']                     = 8000 #1.2
+settings['Width']                   = 1.0
+settings['Nodes_x']                 = 51
+settings['Nodes_y']                 = 101
+settings['k']                       = 0.026384465709828872#10 #0.026384465709828872
+settings['Cp']                      = 714.602#800 # 714.602
+settings['rho']                     = 1.2#8000 #1.2
 
 # Source terms
-settings['Source_Uniform']          = 10000
+settings['Source_Uniform']          = None
 
 # Meshing details
 """
@@ -114,25 +115,35 @@ Boundary condition options:
 """
 #['C',(30,300),(0,-1)]
 #['F',4*10**8,(1,-299),'C',(10,300),(2,-2)]
-BCs['bc_left']                      = ['C',(1,300),(0,-1)]
-BCs['bc_left_rad']                  = [0.8,300]
+BCs['bc_left']                      = ['F',0,(0,-1)]
+BCs['bc_left_rad']                  = None
 # numpy.linspace(400, 900, settings['Nodes_y'])
-BCs['bc_right']                     = ['C',(1,300),(0,-1)]
-BCs['bc_right_rad']                 = [0.8,300]
+BCs['bc_right']                     = ['F',0,(0,-1)]
+BCs['bc_right_rad']                 = None
 # numpy.linspace(400, 900, settings['Nodes_y'])
-BCs['bc_south']                     = ['C',(1,300),(0,-1)]
-BCs['bc_south_rad']                 = [0.8,300]
+BCs['bc_south']                     = ['T',600,(0,-1)]
+BCs['bc_south_rad']                 = None
 # numpy.linspace(400, 900, settings['Nodes_x'])
-BCs['bc_north']                     = ['C',(1,300),(0,-1)]
-BCs['bc_north_rad']                 = [0.8,300]
+BCs['bc_north']                     = ['T',300,(0,-1)]
+BCs['bc_north_rad']                 = None
 # numpy.linspace(400, 900, settings['Nodes_x'])
 
 # Time advancement
-settings['Fo']                      = 1.5 # Explicit and implicit solver
-settings['total_time_steps']        = 100 # Explicit and implicit solver
+settings['Fo']                      = 1.5
+settings['dt']                      = None # Time step
+settings['total_time_steps']        = 1
 settings['Time_Scheme']             = 'Implicit' # Explicit or Implicit
-settings['Convergence']             = 0.0001 # For implicit solver only
-settings['Max_iterations']          = 100 # For implicit solver only
+settings['Convergence']             = 0.0001 # implicit solver only
+settings['Max_iterations']          = 100 #    implicit solver only
+
+##########################################################################
+# -------------------------------------Read input file [IN PROGRESS]
+##########################################################################
+#del settings, BCs
+#settings={}
+#BCs={}
+#fin=FileClasses.FileIn('Input_File', 0)
+#fin.Read_Input(settings, BCs)
 
 print('######################################################')
 print('#             2D Heat Conduction Solver              #')

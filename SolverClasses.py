@@ -86,11 +86,12 @@ class TwoDimPlanarSolve():
             self.gy=settings['Gravity_y']
         else:
             self.Fo=settings['Fo']
+            self.dt=settings['dt']
             self.conv=settings['Convergence']
             self.countmax=settings['Max_iterations']
         
         # Define source terms and pointer to object here
-        self.get_source=Source_Comb.Source_terms()
+#        self.get_source=Source_Comb.Source_terms()
         self.source_unif=settings['Source_Uniform']
         
     # Time step check with dx, dy, Fo number
@@ -318,7 +319,10 @@ class TwoDimPlanarSolve():
         T_0=self.Domain.T.copy()
         T_c=self.Domain.T.copy()
         
-        dt=self.getdt()
+        if self.dt==None:
+            dt=self.getdt()
+        else:
+            dt=min(self.dt,self.getdt())
         
         if (numpy.isnan(dt)) or (dt<=0):
             print '*********Diverging time step***********'
