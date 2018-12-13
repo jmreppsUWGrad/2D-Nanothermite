@@ -91,7 +91,7 @@ class TwoDimPlanarSolve():
             self.countmax=settings['Max_iterations']
         
         # Define source terms and pointer to object here
-#        self.get_source=Source_Comb.Source_terms()
+        self.get_source=Source_Comb.Source_terms()
         self.source_unif=settings['Source_Uniform']
         
     # Time step check with dx, dy, Fo number
@@ -350,7 +350,7 @@ class TwoDimPlanarSolve():
             if self.source_unif!=None:
                 self.Domain.T     += self.get_source.Source_Uniform(self.source_unif, self.dx, self.dy)
 #            if self.:
-#                self.Domain.T     += self.get_source.Source_Comb(T_c, self.Domain.Y_species, self.dx, self.dy)
+#                self.Domain.T     += self.get_source.Source_Comb_Kim(T_c, self.Domain.eta, self.dx, self.dy, dt)
             
             ###################################################################
             # Apply temperature from previous time step and boundary conditions

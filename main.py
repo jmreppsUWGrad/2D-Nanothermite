@@ -131,7 +131,7 @@ BCs['bc_north_rad']                 = None
 # Time advancement
 settings['Fo']                      = 1.5
 settings['dt']                      = None # Time step
-settings['total_time_steps']        = 1
+settings['total_time_steps']        = 10
 settings['Time_Scheme']             = 'Implicit' # Explicit or Implicit
 settings['Convergence']             = 0.0001 # implicit solver only
 settings['Max_iterations']          = 100 #    implicit solver only
