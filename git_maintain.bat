@@ -32,7 +32,7 @@ IF /I %Push%==y (git push -u origin %branch%)
 echo.
 echo.
 set /p cont=Still working?
-IF /I %cont%==y (GOTO Start)
+IF /I %cont%==y (GOTO Tracking)
 
 echo Exiting...
 TIMEOUT /T 2
