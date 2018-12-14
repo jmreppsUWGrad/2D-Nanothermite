@@ -42,9 +42,9 @@ class Source_terms():
     # Int. J of Energy and Power engineering, vol.8, no.7, pp. 612-615, 2014.
     def Source_Comb_Kim(self, T, eta, dx, dy, dt):
         at=np.zeros_like(dx)
+        Ea=40000 # [J/mol] Approx value from Kim's paper
+        A0=1e6 # [mol/m^3/s] Fudged value
         dH=1200 # [J/mol] Value taken from V. Baijot et al., A multi-phase ..., Combustion and Flame, 2017.
-        Ea=40000 # [J/mol]
-        A0=1e10 # [m^3]
         
         # CV dimensions
         at[1:-1,1:-1]=0.25*(dx[1:-1,1:-1]+dx[1:-1,:-2])*(dy[1:-1,1:-1]+dy[:-2,1:-1])

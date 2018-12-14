@@ -51,7 +51,7 @@ pyplot.ylim(5,6);
 ##########################################################################
 # ----------------------------------Libraries and classes
 ##########################################################################
-import numpy
+import numpy as np
 from matplotlib import pyplot, cm
 from mpl_toolkits.mplot3d import Axes3D
 from datetime import datetime
@@ -75,16 +75,17 @@ import FileClasses
 settings={} # Dictionary of problem settings
 BCs={} # Dictionary of boundary conditions
 # Geometry details
-settings['Length']                  = 4.0
-settings['Width']                   = 1.0
-settings['Nodes_x']                 = 51
-settings['Nodes_y']                 = 101
-settings['k']                       = 0.026384465709828872#10 #0.026384465709828872
-settings['Cp']                      = 714.602#800 # 714.602
-settings['rho']                     = 1.2#8000 #1.2
+settings['Length']                  = 10**(-3)
+settings['Width']                   = 6.0*10**(-3)
+settings['Nodes_x']                 = 101
+settings['Nodes_y']                 = 601
+settings['k']                       = 10 #0.026384465709828872
+settings['Cp']                      = 800 # 714.602
+settings['rho']                     = 8000 #1.2
 
 # Source terms
 settings['Source_Uniform']          = None
+settings['Source_Kim']              = True
 
 # Meshing details
 """
@@ -118,21 +119,21 @@ Boundary condition options:
 BCs['bc_left']                      = ['F',0,(0,-1)]
 BCs['bc_left_rad']                  = None
 # numpy.linspace(400, 900, settings['Nodes_y'])
-BCs['bc_right']                     = ['F',0,(0,-1)]
+BCs['bc_right']                     = ['C',(30,300),(0,-1)]
 BCs['bc_right_rad']                 = None
 # numpy.linspace(400, 900, settings['Nodes_y'])
-BCs['bc_south']                     = ['T',600,(0,-1)]
+BCs['bc_south']                     = ['F',0,(0,-1)]
 BCs['bc_south_rad']                 = None
 # numpy.linspace(400, 900, settings['Nodes_x'])
-BCs['bc_north']                     = ['T',300,(0,-1)]
+BCs['bc_north']                     = ['F',4*10**8,(1,10-settings['Nodes_x']),'C',(30,300),(10,-1)]
 BCs['bc_north_rad']                 = None
 # numpy.linspace(400, 900, settings['Nodes_x'])
 
 # Time advancement
-settings['Fo']                      = 1.5
+settings['Fo']                      = 0.1
 settings['dt']                      = None # Time step
-settings['total_time_steps']        = 10
-settings['Time_Scheme']             = 'Implicit' # Explicit or Implicit
+settings['total_time_steps']        = 1000
+settings['Time_Scheme']             = 'Explicit' # Explicit or Implicit
 settings['Convergence']             = 0.0001 # implicit solver only
 settings['Max_iterations']          = 100 #    implicit solver only
 
@@ -191,14 +192,23 @@ print '################################\n'
 ##########################################################################
 # -------------------------------------Solve
 ##########################################################################
+t=0
+BCs_changed=False
 print 'Solving:'
 for nt in range(settings['total_time_steps']):
-    print 'Time step %i of %i'%(nt+1, settings['total_time_steps'])
-    err=solver.Advance_Soln_Cond()
+    err,dt=solver.Advance_Soln_Cond()
+    t+=dt
+    print 'Time step %i, Step size=%.7f, Time elapsed=%f;'%(nt+1,dt, t)
+    
     if err==1:
         print '#################### Solver aborted #######################'
         break
-
+    
+    # Change boundary conditions
+    if np.amax(domain.eta)>=0.5 and not BCs_changed:
+        solver.BCs['bc_north']=['C',(30,300),(0,-1)]
+        BCs_changed=True
+    
 #output_file.close()
 
 ##########################################################################
@@ -210,15 +220,25 @@ for nt in range(settings['total_time_steps']):
 #pyplot.ylabel('T (K)')
 #pyplot.title('Temperature distribution at 2nd x')
 #pyplot.xlim(5,6);
-#
-#fig4=pyplot.figure(figsize=(7, 7))
-#pyplot.contourf(domain.X*1000, domain.Y*1000, domain.T, alpha=0.5, cmap=cm.viridis)  
-#pyplot.colorbar()
-#pyplot.xlabel('$x$ (mm)')
-#pyplot.ylabel('$y$ (mm)')
-#pyplot.title('Temperature distribution')
-#pyplot.xlim(0,0.4)
-#pyplot.ylim(5,6);
+
+# Nano thermite testing figures
+fig4=pyplot.figure(figsize=(7, 7))
+pyplot.contourf(domain.X*1000, domain.Y*1000, domain.T, alpha=0.5, cmap=cm.viridis)  
+pyplot.colorbar()
+pyplot.xlabel('$x$ (mm)')
+pyplot.ylabel('$y$ (mm)')
+pyplot.title('Temperature distribution, t=%.7f'%t)
+pyplot.xlim(0,0.4)
+pyplot.ylim(5,6);
+
+fig4=pyplot.figure(figsize=(7, 7))
+pyplot.contourf(domain.X*1000, domain.Y*1000, domain.eta, alpha=0.5, cmap=cm.viridis)  
+pyplot.colorbar()
+pyplot.xlabel('$x$ (mm)')
+pyplot.ylabel('$y$ (mm)')
+pyplot.title('Reaction progress, t=%.7f'%t)
+pyplot.xlim(0,0.4)
+pyplot.ylim(5,6);
 
 # 2D plot
 #fig=pyplot.figure(figsize=(7, 7))
@@ -248,12 +268,12 @@ for nt in range(settings['total_time_steps']):
 #fig2.savefig(datTime+'_Plot2.png',dpi=300)
 
 # Temperature contour
-fig4=pyplot.figure(figsize=(7, 7))
-pyplot.contourf(domain.X, domain.Y, domain.T, alpha=0.5, cmap=cm.viridis)  
-pyplot.colorbar()
-pyplot.xlabel('$x$ (m)')
-pyplot.ylabel('$y$ (m)')
-pyplot.title('Temperature distribution');
+#fig4=pyplot.figure(figsize=(7, 7))
+#pyplot.contourf(domain.X, domain.Y, domain.T, alpha=0.5, cmap=cm.viridis)  
+#pyplot.colorbar()
+#pyplot.xlabel('$x$ (m)')
+#pyplot.ylabel('$y$ (m)')
+#pyplot.title('Temperature distribution');
 #fig4.savefig(datTime+'_Temp.png',dpi=300)
 
 print('Solver has finished its run')

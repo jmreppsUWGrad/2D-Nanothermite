@@ -93,14 +93,15 @@ class TwoDimPlanarSolve():
         # Define source terms and pointer to object here
         self.get_source=Source_Comb.Source_terms()
         self.source_unif=settings['Source_Uniform']
+        self.source_Kim=settings['Source_Kim']
         
     # Time step check with dx, dy, Fo number
     def getdt(self):
         dt=numpy.zeros_like(self.dx)
         # Stability check for Fourrier number
-        if self.time_scheme=='Explicit':
-            self.Fo=min(self.Fo, 1.0)
-            print 'Fourrier number changed to %.7f for stability'%self.Fo
+#        if self.time_scheme=='Explicit':
+#            self.Fo=min(self.Fo, 1.0)
+#            print 'Fourrier number changed to %.7f for stability'%self.Fo
         
         dt[1:-1,1:-1]=0.25*self.Fo*self.Domain.rho*self.Domain.Cv/self.Domain.k*\
             (self.dx[1:-1,1:-1]+self.dx[1:-1,:-2])*(self.dy[1:-1,1:-1]+self.dy[:-2,1:-1])
@@ -326,8 +327,8 @@ class TwoDimPlanarSolve():
         
         if (numpy.isnan(dt)) or (dt<=0):
             print '*********Diverging time step***********'
-            return 1
-        print 'Time step size: %.7f'%dt
+            return 1, dt
+#        print 'Time step size: %.7f'%dt
         
         # Calculate flux coefficients
         aW,aE,aS,aN,at=self.get_Coeff(self.dx,self.dy, dt)
@@ -346,11 +347,11 @@ class TwoDimPlanarSolve():
             self.Domain.T[1:,:]   += aS[1:,:]*T_c[:-1,:]
             self.Domain.T[:-1,:]  += aN[:-1,:]*T_c[1:,:]
             
-            # Source terms
+            # Source terms (units of W/m)
             if self.source_unif!=None:
                 self.Domain.T     += self.get_source.Source_Uniform(self.source_unif, self.dx, self.dy)
-#            if self.:
-#                self.Domain.T     += self.get_source.Source_Comb_Kim(T_c, self.Domain.eta, self.dx, self.dy, dt)
+            if self.source_Kim:
+                self.Domain.T     += self.get_source.Source_Comb_Kim(T_c, self.Domain.eta, self.dx, self.dy, dt)
             
             ###################################################################
             # Apply temperature from previous time step and boundary conditions
@@ -371,7 +372,7 @@ class TwoDimPlanarSolve():
             or (numpy.amax(self.Domain.T)>100*numpy.amax(T_0)) \
             or (numpy.amin(self.Domain.T)<=0):
                 print '**************Divergence detected****************'
-                return 1
+                return 1, dt
             
             # Break while loop if converged OR is explicit solve
             if (self.time_scheme=='Explicit'):
@@ -387,6 +388,6 @@ class TwoDimPlanarSolve():
         
         if count==self.countmax:
             print '*************No convergence reached*****************'
-            return 1
+            return 1, dt
         else:
-            return 0
+            return 0, dt
