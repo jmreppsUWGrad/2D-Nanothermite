@@ -119,20 +119,20 @@ Boundary condition options:
 BCs['bc_left']                      = ['F',0,(0,-1)]
 BCs['bc_left_rad']                  = None
 # numpy.linspace(400, 900, settings['Nodes_y'])
-BCs['bc_right']                     = ['C',(30,300),(0,-1)]
+BCs['bc_right']                     = ['C',(5,300),(0,-1)]
 BCs['bc_right_rad']                 = None
 # numpy.linspace(400, 900, settings['Nodes_y'])
 BCs['bc_south']                     = ['F',0,(0,-1)]
 BCs['bc_south_rad']                 = None
 # numpy.linspace(400, 900, settings['Nodes_x'])
-BCs['bc_north']                     = ['F',4*10**8,(1,10-settings['Nodes_x']),'C',(30,300),(10,-1)]
+BCs['bc_north']                     = ['F',4*10**8,(1,10-settings['Nodes_x']),'C',(5,300),(10,-1)]
 BCs['bc_north_rad']                 = None
 # numpy.linspace(400, 900, settings['Nodes_x'])
 
 # Time advancement
 settings['Fo']                      = 0.1
 settings['dt']                      = None # Time step
-settings['total_time_steps']        = 1000
+settings['total_time_steps']        = 10
 settings['Time_Scheme']             = 'Explicit' # Explicit or Implicit
 settings['Convergence']             = 0.0001 # implicit solver only
 settings['Max_iterations']          = 100 #    implicit solver only
@@ -205,8 +205,8 @@ for nt in range(settings['total_time_steps']):
         break
     
     # Change boundary conditions
-    if np.amax(domain.eta)>=0.5 and not BCs_changed:
-        solver.BCs['bc_north']=['C',(30,300),(0,-1)]
+    if np.amax(domain.eta)>=0.8 and not BCs_changed:
+        solver.BCs['bc_north']=['C',(5,300),(0,-1)]
         BCs_changed=True
     
 #output_file.close()

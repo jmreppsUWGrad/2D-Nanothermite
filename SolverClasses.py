@@ -351,7 +351,7 @@ class TwoDimPlanarSolve():
             if self.source_unif!=None:
                 self.Domain.T     += self.get_source.Source_Uniform(self.source_unif, self.dx, self.dy)
             if self.source_Kim:
-                self.Domain.T     += self.get_source.Source_Comb_Kim(T_c, self.Domain.eta, self.dx, self.dy, dt)
+                self.Domain.T     += self.get_source.Source_Comb_Kim(self.Domain.rho, T_c, self.Domain.eta, self.dx, self.dy, dt)
             
             ###################################################################
             # Apply temperature from previous time step and boundary conditions

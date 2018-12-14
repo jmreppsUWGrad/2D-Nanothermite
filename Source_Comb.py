@@ -40,11 +40,12 @@ class Source_terms():
     # Calculate source term for combustion based on
     # K. Kim, "Computational Modeling of Combustion Wave in Nanoscale Thermite Reaction",
     # Int. J of Energy and Power engineering, vol.8, no.7, pp. 612-615, 2014.
-    def Source_Comb_Kim(self, T, eta, dx, dy, dt):
+    def Source_Comb_Kim(self, rho, T, eta, dx, dy, dt):
         at=np.zeros_like(dx)
         Ea=40000 # [J/mol] Approx value from Kim's paper
-        A0=1e6 # [mol/m^3/s] Fudged value
-        dH=1200 # [J/mol] Value taken from V. Baijot et al., A multi-phase ..., Combustion and Flame, 2017.
+        A0=1e6 # [1/s] Fudged value
+#        dH=1200 # [J/mol] Value taken from V. Baijot et al., A multi-phase ..., Combustion and Flame, 2017.
+        dH=300000 #[J/kg] approx from ...
         
         # CV dimensions
         at[1:-1,1:-1]=0.25*(dx[1:-1,1:-1]+dx[1:-1,:-2])*(dy[1:-1,1:-1]+dy[:-2,1:-1])
@@ -60,7 +61,7 @@ class Source_terms():
         detadt=A0*(1-eta)*np.exp(-Ea/self.R/T)
         eta+=dt*detadt
         
-        return at*dH*detadt
+        return rho*at*dH*detadt
     
     # Calculate source term for combustion (NEEDS MODIFYING)
     def Source_Comb(self, T, y_species, dx, dy):
