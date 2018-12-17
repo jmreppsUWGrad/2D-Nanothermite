@@ -27,51 +27,6 @@ import numpy
 #import temporal_schemes
 import Source_Comb
 
-# 1D Solvers (CURRENTLY ONLY FOR CONDUCTION)
-class OneDimSolve():
-    def __init__(self, geom, timeSize, timeSteps, conv):
-        self.Domain=geom # Geometry object
-        self.dt=timeSize
-        self.Nt=timeSteps
-        self.conv=conv
-        self.T=self.Domain.T
-        self.dx=self.Domain.dx
-        self.maxCount=1000
-        self.Fo=1.0*self.Domain.mat_prop['k']*self.dt\
-        /(self.Domain.mat_prop['rho']*self.Domain.mat_prop['Cp'])
-        self.BCs={'BCx1': ('T',600,(0,-1)),\
-                 'BCx2': ('T',300,(0,-1)),\
-                 'BCy1': ('T',600,(0,-1)),\
-                 'BCy2': ('T',300,(0,-1))\
-                 }
-    
-    # Convergence checker
-    def CheckConv(self, Tprev, Tnew):
-        diff=numpy.sum(numpy.abs(Tnew[:]-Tprev[:]))/numpy.sum(numpy.abs(Tprev[:]))
-        print(diff)
-        if diff<=self.conv:
-            return True
-        else:
-            return False
-    # Solve
-    def SolveExpTrans(self):
-        Tc=numpy.empty_like(self.T)
-        for i in range(self.Nt):
-            Tc=self.T.copy()
-            self.T[1:-1]=2*self.Fo/(self.dx[:-1]+self.dx[1:])*(Tc[:-2]/self.dx[:-1]+Tc[2:]/self.dx[1:])\
-            +(1-2*self.Fo/(self.dx[:-1]+self.dx[1:])*(1/self.dx[:-1]+1/self.dx[1:]))*Tc[1:-1]
-        
-    def SolveSS(self):
-        Tc=numpy.empty_like(self.T)
-        count=0
-        print 'Residuals:'
-        while count<self.maxCount:
-            Tc=self.T.copy()
-            self.T[1:-1]=(self.dx[1:]*Tc[:-2]+self.dx[:-1]*Tc[2:])\
-            /(self.dx[1:]+self.dx[:-1])
-            if self.CheckConv(Tc,self.T):
-                break
-
 # 2D solver
 class TwoDimPlanarSolve():
     def __init__(self, geom_obj, settings, BCs, solver):
@@ -117,7 +72,7 @@ class TwoDimPlanarSolve():
             (self.dx[-1,0])*(self.dy[-1,0])
         dt[-1,1:-1]  =0.25*self.Fo*self.Domain.rho*self.Domain.Cv/self.Domain.k*\
             (self.dx[-1,1:-1]+self.dx[-1,:-2])*(self.dy[-1,1:-1])
-        dt[1:-1,-1]   =0.25*self.Fo*self.Domain.rho*self.Domain.Cv/self.Domain.k*\
+        dt[1:-1,-1]  =0.25*self.Fo*self.Domain.rho*self.Domain.Cv/self.Domain.k*\
             (self.dx[1:-1,-1])*(self.dy[1:-1,-1]+self.dy[:-2,-1])
         dt[-1,-1]    =0.25*self.Fo*self.Domain.rho*self.Domain.Cv/self.Domain.k*\
             (self.dx[-1,-1])*(self.dy[-1,-1])
@@ -298,19 +253,19 @@ class TwoDimPlanarSolve():
                     T[-1,-1]+=(Bi+q)*self.dx[-1,-1]/at[-1,-1]
         
         # Apply radiation BCs
-        if self.BCs['bc_left_rad']!=None:
+        if self.BCs['bc_left_rad']!='None':
             T[:,0]+=self.dy[:,0]/at[:,0]*\
                 self.BCs['bc_left_rad'][0]*5.67*10**(-8)*\
                 (self.BCs['bc_left_rad'][1]**4-T_prev[:,0]**4)
-        if self.BCs['bc_right_rad']!=None:
+        if self.BCs['bc_right_rad']!='None':
             T[:,-1]+=self.dy[:,-1]/at[:,-1]*\
                 self.BCs['bc_right_rad'][0]*5.67*10**(-8)*\
                 (self.BCs['bc_right_rad'][1]**4-T_prev[:,-1]**4)
-        if self.BCs['bc_south_rad']!=None:
+        if self.BCs['bc_south_rad']!='None':
             T[0,:]+=self.dx[0,:]/at[0,:]*\
                 self.BCs['bc_south_rad'][0]*5.67*10**(-8)*\
                 (self.BCs['bc_south_rad'][1]**4-T_prev[0,:]**4)
-        if self.BCs['bc_north_rad']!=None:
+        if self.BCs['bc_north_rad']!='None':
             T[-1,:]+=self.dx[-1,:]/at[-1,:]*\
                 self.BCs['bc_north_rad'][0]*5.67*10**(-8)*\
                 (self.BCs['bc_north_rad'][1]**4-T_prev[-1,:]**4)
@@ -320,7 +275,7 @@ class TwoDimPlanarSolve():
         T_0=self.Domain.T.copy()
         T_c=self.Domain.T.copy()
         
-        if self.dt==None:
+        if self.dt=='None':
             dt=self.getdt()
         else:
             dt=min(self.dt,self.getdt())
@@ -348,9 +303,9 @@ class TwoDimPlanarSolve():
             self.Domain.T[:-1,:]  += aN[:-1,:]*T_c[1:,:]
             
             # Source terms (units of W/m)
-            if self.source_unif!=None:
+            if self.source_unif!='None':
                 self.Domain.T     += self.get_source.Source_Uniform(self.source_unif, self.dx, self.dy)
-            if self.source_Kim:
+            if self.source_Kim=='True':
                 self.Domain.T     += self.get_source.Source_Comb_Kim(self.Domain.rho, T_c, self.Domain.eta, self.dx, self.dy, dt)
             
             ###################################################################

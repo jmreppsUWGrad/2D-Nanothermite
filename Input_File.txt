@@ -5,9 +5,18 @@
 ######################################################
 
 ############### INPUT FILE #########################
-##########Input_2018-10-29_1602##################
+#    Reference directions:
+#    left-smallest x coordinate
+#    right-largest x value
+#    north-largest y coordinate
+#    south-smallest y coordinate
 
-Settings:
+######################################################
+#			Settings
+#	Rectangular domain
+#	Properties are in standard units J, kg, K, W, m
+######################################################
+
 Length:4.0
 Width:4.0
 Nodes_x:51
@@ -16,75 +25,53 @@ k:10
 Cp:800
 rho:8000
 
-Meshing details:
+######################################################
+#			Source terms
+#	Source_uniform: specify volumetric heating; W/m^3 or None
+#	Source_Kim: True or None
+######################################################
+
+Source_Uniform:None
+Source_Kim:True
+
+######################################################
+#			Meshing details
+#	Currently not available
+######################################################
+
 bias_type_x:None
 bias_size_x:0.003
 bias_type_y:None
 bias_size_y:1e-06
 
-Time advancement:
+######################################################
+#			Time advancement details
+#	Fo in (0, 1.0)
+#	'total_time_steps' OR 'total_time' must be specified
+#	Time schemes: Explicit, Implicit
+#	[IN PROGRESS] Number_Data_Output: Number of conservative variable files to be output over the time/number of steps specified
+######################################################
+
 Fo:0.1
+dt:None
 total_time_steps:10
 Time_Scheme:Explicit
 Convergence:0.001
+Max_iterations:100
 
-Boundary conditions:
-bc_left:['T', 600, (1, -2)]
-bc_right:['T', 300, (0, -1)]
-bc_south:['T', 600, (0, -1)]
-bc_north:['T', 300, (0, -1)]
+######################################################
+#			Boundary conditions
+# Format: [type of BC], [values for BC], [first node #], [last node #]
+#	[type of BC]  -T or F for const. temp or flux; each requires one value for [values for BC]
+#	[type of BC]  -C for convective BC; requires conv. HT coeff AND T_infty for [values for BC]
+#	[first node #]-first node number to apply BC; 0 based index; must be positive
+#	[last node #] -last node number to apply BC; must be negative/relative to last node
+#		Mulitple BCs can be specified along a boundary; separate everything with commas;
+#	e.g. F, 1000, 0,-1,C,10,300,1,-1
+#  [IN PROGRESS] Profiles possible; must be same size as number of nodes on that boundary
+######################################################
 
-Initial conditions:
-T
-[300. 300. 300. ... 300. 300. 300.]
-[300. 300. 300. ... 300. 300. 300.]
-[300. 300. 300. ... 300. 300. 300.]
-[300. 300. 300. ... 300. 300. 300.]
-[300. 300. 300. ... 300. 300. 300.]
-[300. 300. 300. ... 300. 300. 300.]
-[300. 300. 300. ... 300. 300. 300.]
-[300. 300. 300. ... 300. 300. 300.]
-[300. 300. 300. ... 300. 300. 300.]
-[300. 300. 300. ... 300. 300. 300.]
-[300. 300. 300. ... 300. 300. 300.]
-[300. 300. 300. ... 300. 300. 300.]
-[300. 300. 300. ... 300. 300. 300.]
-[300. 300. 300. ... 300. 300. 300.]
-[300. 300. 300. ... 300. 300. 300.]
-[300. 300. 300. ... 300. 300. 300.]
-[300. 300. 300. ... 300. 300. 300.]
-[300. 300. 300. ... 300. 300. 300.]
-[300. 300. 300. ... 300. 300. 300.]
-[300. 300. 300. ... 300. 300. 300.]
-[300. 300. 300. ... 300. 300. 300.]
-[300. 300. 300. ... 300. 300. 300.]
-[300. 300. 300. ... 300. 300. 300.]
-[300. 300. 300. ... 300. 300. 300.]
-[300. 300. 300. ... 300. 300. 300.]
-[300. 300. 300. ... 300. 300. 300.]
-[300. 300. 300. ... 300. 300. 300.]
-[300. 300. 300. ... 300. 300. 300.]
-[300. 300. 300. ... 300. 300. 300.]
-[300. 300. 300. ... 300. 300. 300.]
-[300. 300. 300. ... 300. 300. 300.]
-[300. 300. 300. ... 300. 300. 300.]
-[300. 300. 300. ... 300. 300. 300.]
-[300. 300. 300. ... 300. 300. 300.]
-[300. 300. 300. ... 300. 300. 300.]
-[300. 300. 300. ... 300. 300. 300.]
-[300. 300. 300. ... 300. 300. 300.]
-[300. 300. 300. ... 300. 300. 300.]
-[300. 300. 300. ... 300. 300. 300.]
-[300. 300. 300. ... 300. 300. 300.]
-[300. 300. 300. ... 300. 300. 300.]
-[300. 300. 300. ... 300. 300. 300.]
-[300. 300. 300. ... 300. 300. 300.]
-[300. 300. 300. ... 300. 300. 300.]
-[300. 300. 300. ... 300. 300. 300.]
-[300. 300. 300. ... 300. 300. 300.]
-[300. 300. 300. ... 300. 300. 300.]
-[300. 300. 300. ... 300. 300. 300.]
-[300. 300. 300. ... 300. 300. 300.]
-[300. 300. 300. ... 300. 300. 300.]
-[300. 300. 300. ... 300. 300. 300.]
-
+bc_left:T, 600, 1, -2
+bc_right:T, 300, 0, -1
+bc_south:T, 600, 0, -1
+bc_north:T, 300, 0, -1

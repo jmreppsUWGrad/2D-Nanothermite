@@ -84,8 +84,8 @@ settings['Cp']                      = 800 # 714.602
 settings['rho']                     = 8000 #1.2
 
 # Source terms
-settings['Source_Uniform']          = None
-settings['Source_Kim']              = True
+settings['Source_Uniform']          = 'None'
+settings['Source_Kim']              = 'True'
 
 # Meshing details
 """
@@ -96,9 +96,9 @@ Biasing options:
     -'TwoWayMid'  for linearly decreasing sizes till middle, then increase again
     -size         is the smallest element size based on above selection
 """
-settings['bias_type_x']             = None
+settings['bias_type_x']             = 'None'
 settings['bias_size_x']             = 0.01 # Smallest element size
-settings['bias_type_y']             = None
+settings['bias_type_y']             = 'None'
 settings['bias_size_y']             = 0.01 # Smallest element size
 
 # Boundary conditions
@@ -117,21 +117,21 @@ Boundary condition options:
 #['C',(30,300),(0,-1)]
 #['F',4*10**8,(1,-299),'C',(10,300),(2,-2)]
 BCs['bc_left']                      = ['F',0,(0,-1)]
-BCs['bc_left_rad']                  = None
+BCs['bc_left_rad']                  = 'None'
 # numpy.linspace(400, 900, settings['Nodes_y'])
 BCs['bc_right']                     = ['C',(5,300),(0,-1)]
-BCs['bc_right_rad']                 = None
+BCs['bc_right_rad']                 = 'None'
 # numpy.linspace(400, 900, settings['Nodes_y'])
 BCs['bc_south']                     = ['F',0,(0,-1)]
-BCs['bc_south_rad']                 = None
+BCs['bc_south_rad']                 = 'None'
 # numpy.linspace(400, 900, settings['Nodes_x'])
 BCs['bc_north']                     = ['F',4*10**8,(1,10-settings['Nodes_x']),'C',(5,300),(10,-1)]
-BCs['bc_north_rad']                 = None
+BCs['bc_north_rad']                 = 'None'
 # numpy.linspace(400, 900, settings['Nodes_x'])
 
 # Time advancement
 settings['Fo']                      = 0.1
-settings['dt']                      = None # Time step
+settings['dt']                      = 'None' # Time step
 settings['total_time_steps']        = 10
 settings['Time_Scheme']             = 'Explicit' # Explicit or Implicit
 settings['Convergence']             = 0.0001 # implicit solver only
