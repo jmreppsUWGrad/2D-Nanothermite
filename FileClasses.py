@@ -13,7 +13,7 @@ keys_Settings=['Length','Width','Nodes_x','Nodes_y','k','Cp','rho',\
                'bias_type_x','bias_size_x','bias_type_y','bias_size_y',\
                'Source_Uniform','Source_Kim']
 keys_Time_adv=['Fo','dt','total_time_steps', 'Time_Scheme',\
-               'Convergence','Max_iterations']
+               'Convergence','Max_iterations','Output_directory']
 keys_BCs=     ['bc_left','bc_left_rad',\
               'bc_right','bc_right_rad',\
               'bc_south','bc_south_rad',\
@@ -70,7 +70,8 @@ class FileOut():
 #            self.fout.write('\n')
         
         self.Write_single_line('\nTime advancement:')
-        keys=['Fo','total_time_steps', 'Time_Scheme','Convergence','Max_iterations']
+        keys=['Fo','dt','total_time_steps', 'Time_Scheme','Convergence',\
+              'Max_iterations','Output_directory']
         for i in keys:
             self.fout.write(i)
             self.fout.write(':')
@@ -125,29 +126,49 @@ class FileIn():
                         settings[line[0]]=st.split(line[1], '\n')[0]
                     elif line[0]=='total_time_steps' or line[0]=='Max_iterations':
                         settings[line[0]]=int(line[1])
+                    elif line[0]=='Output_directory':
+                        settings[line[0]]=line[1]+':'+st.split(line[2], '\n')[0]
                     else:
                         settings[line[0]]=float(line[1])
                         
                 elif line[0] in keys_BCs:
                     BC_info=st.split(line[1], ',')
                     BCs[line[0]]=[]
+                    # Radiation BCs
+                    if line[0]=='bc_left_rad' or line[0]=='bc_right_rad'\
+                        or line[0]=='bc_north_rad' or line[0]=='bc_south_rad':
+                        try:
+                            BCs[line[0]]=[float(BC_info[0])]
+                            BCs[line[0]]+=[float(BC_info[1])]
+                        except:
+                            BCs[line[0]]=st.split(BC_info[0], '\n')[0]
+                        del BC_info[0]
+                    # All other BCs
                     i=0
                     while len(BC_info)>1:
                         BCs[line[0]]+=[BC_info[0]]
                         del BC_info[0]
-                        
+                        # Temp or flux BC
                         if BCs[line[0]][3*i]=='T' or BCs[line[0]][3*i]=='F':
                             # Value into a float
                             BCs[line[0]]+=[float(BC_info[0])]
                             del BC_info[0]
                             BCs[line[0]]+=[(int(BC_info[0]),int(BC_info[1]))]
                             del BC_info[1], BC_info[0]
-                        
+                        # Convective BC
                         elif BCs[line[0]][3*i]=='C':
                             BCs[line[0]]+=[(float(BC_info[0]),float(BC_info[1]))]
                             del BC_info[1], BC_info[0]
                             BCs[line[0]]+=[(int(BC_info[0]),int(BC_info[1]))]
                             del BC_info[1], BC_info[0]
+                        # Radiation BC
+                        else:
+                            try:
+                                BCs[line[0]]=[float(BCs[line[0]][0])]
+                                BCs[line[0]]+=[float(BC_info[0])]
+                            except:
+                                continue
+                            del BC_info[0]
                         i+=1
                     
         self.fin.close()

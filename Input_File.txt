@@ -17,10 +17,10 @@
 #	Properties are in standard units J, kg, K, W, m
 ######################################################
 
-Length:4.0
-Width:4.0
-Nodes_x:51
-Nodes_y:51
+Length:1.0
+Width:1.0
+Nodes_x:31
+Nodes_y:31
 k:10
 Cp:800
 rho:8000
@@ -32,7 +32,7 @@ rho:8000
 ######################################################
 
 Source_Uniform:None
-Source_Kim:True
+Source_Kim:None
 
 ######################################################
 #			Meshing details
@@ -54,10 +54,12 @@ bias_size_y:1e-06
 
 Fo:0.1
 dt:None
-total_time_steps:10
-Time_Scheme:Explicit
-Convergence:0.001
+total_time_steps:1000
+Time_Scheme:Implicit
+Convergence:0.0001
 Max_iterations:100
+#Output_directory:C:\Users\mepps\Documents\Research\2D_Conduction\Tests
+Output_directory:C:\Users\Joseph\Documents\School\Research\2D_Conduction\Tests
 
 ######################################################
 #			Boundary conditions
@@ -67,11 +69,15 @@ Max_iterations:100
 #	[first node #]-first node number to apply BC; 0 based index; must be positive
 #	[last node #] -last node number to apply BC; must be negative/relative to last node
 #		Mulitple BCs can be specified along a boundary; separate everything with commas;
-#	e.g. F, 1000, 0,-1,C,10,300,1,-1
+#	e.g. F, 1000, 0,-10,C,10,300,10,-1
 #  [IN PROGRESS] Profiles possible; must be same size as number of nodes on that boundary
 ######################################################
 
-bc_left:T, 600, 1, -2
+bc_left:T, 600, 0, -1
+bc_left_rad:None
 bc_right:T, 300, 0, -1
+bc_right_rad:None
 bc_south:T, 600, 0, -1
+bc_south_rad:None
 bc_north:T, 300, 0, -1
+bc_north_rad:None

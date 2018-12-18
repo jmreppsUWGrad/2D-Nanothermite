@@ -75,17 +75,17 @@ import FileClasses
 settings={} # Dictionary of problem settings
 BCs={} # Dictionary of boundary conditions
 # Geometry details
-settings['Length']                  = 10**(-3)
-settings['Width']                   = 6.0*10**(-3)
-settings['Nodes_x']                 = 101
-settings['Nodes_y']                 = 601
+settings['Length']                  = 1.0
+settings['Width']                   = 1.0
+settings['Nodes_x']                 = 31
+settings['Nodes_y']                 = 31
 settings['k']                       = 10 #0.026384465709828872
 settings['Cp']                      = 800 # 714.602
 settings['rho']                     = 8000 #1.2
 
 # Source terms
 settings['Source_Uniform']          = 'None'
-settings['Source_Kim']              = 'True'
+settings['Source_Kim']              = 'None'
 
 # Meshing details
 """
@@ -116,41 +116,50 @@ Boundary condition options:
 """
 #['C',(30,300),(0,-1)]
 #['F',4*10**8,(1,-299),'C',(10,300),(2,-2)]
-BCs['bc_left']                      = ['F',0,(0,-1)]
+BCs['bc_left']                      = ['T',600,(0,-1)]
 BCs['bc_left_rad']                  = 'None'
 # numpy.linspace(400, 900, settings['Nodes_y'])
-BCs['bc_right']                     = ['C',(5,300),(0,-1)]
+BCs['bc_right']                     = ['T',300,(0,-1)]
 BCs['bc_right_rad']                 = 'None'
 # numpy.linspace(400, 900, settings['Nodes_y'])
-BCs['bc_south']                     = ['F',0,(0,-1)]
+BCs['bc_south']                     = ['T',600,(0,-1)]
 BCs['bc_south_rad']                 = 'None'
 # numpy.linspace(400, 900, settings['Nodes_x'])
-BCs['bc_north']                     = ['F',4*10**8,(1,10-settings['Nodes_x']),'C',(5,300),(10,-1)]
+BCs['bc_north']                     = ['T',300,(0,-1)]
 BCs['bc_north_rad']                 = 'None'
 # numpy.linspace(400, 900, settings['Nodes_x'])
 
 # Time advancement
 settings['Fo']                      = 0.1
 settings['dt']                      = 'None' # Time step
-settings['total_time_steps']        = 10
+settings['total_time_steps']        = 1000
 settings['Time_Scheme']             = 'Explicit' # Explicit or Implicit
 settings['Convergence']             = 0.0001 # implicit solver only
 settings['Max_iterations']          = 100 #    implicit solver only
-
-##########################################################################
-# -------------------------------------Read input file [IN PROGRESS]
-##########################################################################
-#del settings, BCs
-#settings={}
-#BCs={}
-#fin=FileClasses.FileIn('Input_File', 0)
-#fin.Read_Input(settings, BCs)
 
 print('######################################################')
 print('#             2D Heat Conduction Solver              #')
 print('#              Created by J. Mark Epps               #')
 print('#          Part of Masters Thesis at UW 2018-2020    #')
 print('######################################################\n')
+
+##########################################################################
+# -------------------------------------Read input file
+##########################################################################
+del settings, BCs
+print 'Reading input file...'
+settings={}
+BCs={}
+fin=FileClasses.FileIn('Input_File', 0)
+fin.Read_Input(settings, BCs)
+os.chdir(settings['Output_directory'])
+
+print '################################'
+
+# Initial conditions from previous run/already in memory
+#Use_inital_values                   = False
+
+
 print 'Initializing geometry package...'
 #domain=OneDimLine(L,Nx)
 domain=TwoDimPlanar(settings, 'Solid')
@@ -173,7 +182,6 @@ print '################################'
 # -------------------------------------File setups
 ##########################################################################
 print 'Initializing files...'
-os.chdir('Tests')
 datTime=str(datetime.date(datetime.now()))+'_'+'{:%H%M}'.format(datetime.time(datetime.now()))
 isBinFile=False
 
@@ -205,9 +213,9 @@ for nt in range(settings['total_time_steps']):
         break
     
     # Change boundary conditions
-    if np.amax(domain.eta)>=0.8 and not BCs_changed:
-        solver.BCs['bc_north']=['C',(5,300),(0,-1)]
-        BCs_changed=True
+#    if np.amax(domain.eta)>=0.8 and not BCs_changed:
+#        solver.BCs['bc_north']=['C',(5,300),(0,-1)]
+#        BCs_changed=True
     
 #output_file.close()
 
@@ -228,8 +236,8 @@ pyplot.colorbar()
 pyplot.xlabel('$x$ (mm)')
 pyplot.ylabel('$y$ (mm)')
 pyplot.title('Temperature distribution, t=%.7f'%t)
-pyplot.xlim(0,0.4)
-pyplot.ylim(5,6);
+#pyplot.xlim(0,0.4)
+#pyplot.ylim(5,6);
 
 fig4=pyplot.figure(figsize=(7, 7))
 pyplot.contourf(domain.X*1000, domain.Y*1000, domain.eta, alpha=0.5, cmap=cm.viridis)  
@@ -237,8 +245,8 @@ pyplot.colorbar()
 pyplot.xlabel('$x$ (mm)')
 pyplot.ylabel('$y$ (mm)')
 pyplot.title('Reaction progress, t=%.7f'%t)
-pyplot.xlim(0,0.4)
-pyplot.ylim(5,6);
+#pyplot.xlim(0,0.4)
+#pyplot.ylim(5,6);
 
 # 2D plot
 #fig=pyplot.figure(figsize=(7, 7))
