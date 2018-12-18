@@ -54,9 +54,10 @@ class TwoDimPlanarSolve():
     def getdt(self):
         dt=numpy.zeros_like(self.dx)
         # Stability check for Fourrier number
-#        if self.time_scheme=='Explicit':
-#            self.Fo=min(self.Fo, 1.0)
-#            print 'Fourrier number changed to %.7f for stability'%self.Fo
+        if self.time_scheme=='Explicit':
+            self.Fo=min(self.Fo, 1.0)
+        elif self.Fo=='None':
+            self.Fo=1.0
         
         dt[1:-1,1:-1]=0.25*self.Fo*self.Domain.rho*self.Domain.Cv/self.Domain.k*\
             (self.dx[1:-1,1:-1]+self.dx[1:-1,:-2])*(self.dy[1:-1,1:-1]+self.dy[:-2,1:-1])
@@ -271,7 +272,7 @@ class TwoDimPlanarSolve():
                 (self.BCs['bc_north_rad'][1]**4-T_prev[-1,:]**4)
         
     # Main solver (1 time step)
-    def Advance_Soln_Cond(self):
+    def Advance_Soln_Cond(self, nt, t):
         T_0=self.Domain.T.copy()
         T_c=self.Domain.T.copy()
         
@@ -279,11 +280,11 @@ class TwoDimPlanarSolve():
             dt=self.getdt()
         else:
             dt=min(self.dt,self.getdt())
-        
+            
         if (numpy.isnan(dt)) or (dt<=0):
             print '*********Diverging time step***********'
             return 1, dt
-#        print 'Time step size: %.7f'%dt
+        print 'Time step %i, Step size=%.7f, Time elapsed=%f;'%(nt+1,dt, t+dt)
         
         # Calculate flux coefficients
         aW,aE,aS,aN,at=self.get_Coeff(self.dx,self.dy, dt)

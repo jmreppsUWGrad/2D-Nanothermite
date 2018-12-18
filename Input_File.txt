@@ -19,20 +19,20 @@
 
 Length:1.0
 Width:1.0
-Nodes_x:31
-Nodes_y:31
+Nodes_x:61
+Nodes_y:61
 k:10
 Cp:800
 rho:8000
 
 ######################################################
 #			Source terms
-#	Source_uniform: specify volumetric heating; W/m^3 or None
+#	Source_uniform: specify volumetric heating in W/m^3 or None
 #	Source_Kim: True or None
 ######################################################
 
 Source_Uniform:None
-Source_Kim:None
+Source_Kim:True
 
 ######################################################
 #			Meshing details
@@ -46,20 +46,23 @@ bias_size_y:1e-06
 
 ######################################################
 #			Time advancement details
-#	Fo in (0, 1.0)
-#	'total_time_steps' OR 'total_time' must be specified
+#	'Fo' (in (0, 1.0)) OR 'dt' must be specified; if both are, then smallest will be used; Fo stability check to 1.0
+#	'total_time_steps' OR 'total_time' must be specified; if both, then smallest will be used
 #	Time schemes: Explicit, Implicit
-#	[IN PROGRESS] Number_Data_Output: Number of conservative variable files to be output over the time/number of steps specified
+#	'Convergence' and 'Max_iterations' are for implicit solver
+#	[IN PROGRESS] Number_Data_Output: Number of T variable files to be output over the time/number of steps specified
 ######################################################
 
 Fo:0.1
-dt:None
-total_time_steps:1000
-Time_Scheme:Implicit
+dt:0.0001
+total_time_steps:None
+total_time:1.0
+Time_Scheme:Explicit
 Convergence:0.0001
 Max_iterations:100
 #Output_directory:C:\Users\mepps\Documents\Research\2D_Conduction\Tests
 Output_directory:C:\Users\Joseph\Documents\School\Research\2D_Conduction\Tests
+Number_Data_Output:None
 
 ######################################################
 #			Boundary conditions
@@ -73,11 +76,11 @@ Output_directory:C:\Users\Joseph\Documents\School\Research\2D_Conduction\Tests
 #  [IN PROGRESS] Profiles possible; must be same size as number of nodes on that boundary
 ######################################################
 
-bc_left:T, 600, 0, -1
+bc_left:C, 5, 300, 0, -1
 bc_left_rad:None
-bc_right:T, 300, 0, -1
+bc_right:C, 5, 300, 0, -1
 bc_right_rad:None
-bc_south:T, 600, 0, -1
+bc_south:C, 5, 300, 0, -1
 bc_south_rad:None
-bc_north:T, 300, 0, -1
+bc_north:F, 1000, 0, -1
 bc_north_rad:None

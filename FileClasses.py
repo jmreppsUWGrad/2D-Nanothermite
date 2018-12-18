@@ -12,7 +12,7 @@ This contains classes for reading and writing files in good format
 keys_Settings=['Length','Width','Nodes_x','Nodes_y','k','Cp','rho',\
                'bias_type_x','bias_size_x','bias_type_y','bias_size_y',\
                'Source_Uniform','Source_Kim']
-keys_Time_adv=['Fo','dt','total_time_steps', 'Time_Scheme',\
+keys_Time_adv=['Fo','dt','total_time_steps', 'total_time','Time_Scheme',\
                'Convergence','Max_iterations','Output_directory']
 keys_BCs=     ['bc_left','bc_left_rad',\
               'bc_right','bc_right_rad',\

@@ -133,6 +133,7 @@ BCs['bc_north_rad']                 = 'None'
 settings['Fo']                      = 0.1
 settings['dt']                      = 'None' # Time step
 settings['total_time_steps']        = 1000
+settings['total_time']              = 'None'
 settings['Time_Scheme']             = 'Explicit' # Explicit or Implicit
 settings['Convergence']             = 0.0001 # implicit solver only
 settings['Max_iterations']          = 100 #    implicit solver only
@@ -181,33 +182,42 @@ print '################################'
 ##########################################################################
 # -------------------------------------File setups
 ##########################################################################
-print 'Initializing files...'
-datTime=str(datetime.date(datetime.now()))+'_'+'{:%H%M}'.format(datetime.time(datetime.now()))
-isBinFile=False
-
-#output_file=FileClasses.FileOut('Output_'+datTime, isBinFile)
-input_file=FileClasses.FileOut('Input_'+datTime, isBinFile)
-
-# Write headers to files
-input_file.header_cond('INPUT')
-#output_file.header('OUTPUT')
-
-# Write input file with settings
-input_file.input_writer_cond(settings, BCs, domain.T)
-input_file.close()
-print '################################\n'
+#print 'Initializing files...'
+#datTime=str(datetime.date(datetime.now()))+'_'+'{:%H%M}'.format(datetime.time(datetime.now()))
+#isBinFile=False
+#
+##output_file=FileClasses.FileOut('Output_'+datTime, isBinFile)
+#input_file=FileClasses.FileOut('Input_'+datTime, isBinFile)
+#
+## Write headers to files
+#input_file.header_cond('INPUT')
+##output_file.header('OUTPUT')
+#
+## Write input file with settings
+#input_file.input_writer_cond(settings, BCs, domain.T)
+#input_file.close()
+#print '################################\n'
 
 ##########################################################################
 # -------------------------------------Solve
 ##########################################################################
-t=0
+t,nt=0,0
+#output_data_t,output_data_nt=0,0
+if settings['total_time_steps']=='None':
+    settings['total_time_steps']=settings['total_time']*10**9
+#    output_data_t=settings['total_time']/settings['Number_Data_Output']
+elif settings['total_time']=='None':
+    settings['total_time']=settings['total_time_steps']*10**9
+#    output_data_nt=int(settings['total_time_steps']/settings['Number_Data_Output'])
+
 BCs_changed=False
 print 'Solving:'
-for nt in range(settings['total_time_steps']):
-    err,dt=solver.Advance_Soln_Cond()
+while nt<settings['total_time_steps'] and t<settings['total_time']:
+#for nt in range(settings['total_time_steps']):
+    err,dt=solver.Advance_Soln_Cond(nt, t)
     t+=dt
-    print 'Time step %i, Step size=%.7f, Time elapsed=%f;'%(nt+1,dt, t)
-    
+    nt+=1
+#    print 'Time step %i, Step size=%.7f, Time elapsed=%f;'%(nt+1,dt, t)
     if err==1:
         print '#################### Solver aborted #######################'
         break
@@ -222,6 +232,7 @@ for nt in range(settings['total_time_steps']):
 ##########################################################################
 # ------------------------------------Post-processing
 ##########################################################################
+T, eta=domain.T, domain.eta
 #fig2=pyplot.figure(figsize=(7,7))
 #pyplot.plot(domain.Y[:,1]*1000, domain.T[:,1],marker='x')
 #pyplot.xlabel('$y$ (mm)')
@@ -231,7 +242,7 @@ for nt in range(settings['total_time_steps']):
 
 # Nano thermite testing figures
 fig4=pyplot.figure(figsize=(7, 7))
-pyplot.contourf(domain.X*1000, domain.Y*1000, domain.T, alpha=0.5, cmap=cm.viridis)  
+pyplot.contourf(domain.X*1000, domain.Y*1000, T, alpha=0.5, cmap=cm.viridis)  
 pyplot.colorbar()
 pyplot.xlabel('$x$ (mm)')
 pyplot.ylabel('$y$ (mm)')
@@ -240,7 +251,7 @@ pyplot.title('Temperature distribution, t=%.7f'%t)
 #pyplot.ylim(5,6);
 
 fig4=pyplot.figure(figsize=(7, 7))
-pyplot.contourf(domain.X*1000, domain.Y*1000, domain.eta, alpha=0.5, cmap=cm.viridis)  
+pyplot.contourf(domain.X*1000, domain.Y*1000, eta, alpha=0.5, cmap=cm.viridis)  
 pyplot.colorbar()
 pyplot.xlabel('$x$ (mm)')
 pyplot.ylabel('$y$ (mm)')
@@ -251,7 +262,7 @@ pyplot.title('Reaction progress, t=%.7f'%t)
 # 2D plot
 #fig=pyplot.figure(figsize=(7, 7))
 #ax = fig.gca(projection='3d')
-#ax.plot_surface(domain.X, domain.Y, domain.T, rstride=1, cstride=1, cmap=cm.viridis,linewidth=0, antialiased=True)
+#ax.plot_surface(domain.X, domain.Y, T, rstride=1, cstride=1, cmap=cm.viridis,linewidth=0, antialiased=True)
 ##ax.set_xlim(0,0.001)
 ##ax.set_ylim(0.005,0.006)
 #ax.set_zlim(300, 700)
@@ -268,7 +279,7 @@ pyplot.title('Reaction progress, t=%.7f'%t)
 
 # 1D Plot
 #fig2=pyplot.figure(figsize=(7,7))
-#pyplot.plot(domain.Y[:,1], domain.T[:,1],marker='x')
+#pyplot.plot(domain.Y[:,1], T[:,1],marker='x')
 #pyplot.xlabel('$y$ (m)')
 #pyplot.ylabel('T (K)')
 #pyplot.title('Temperature distribution at 2nd x')
@@ -277,7 +288,7 @@ pyplot.title('Reaction progress, t=%.7f'%t)
 
 # Temperature contour
 #fig4=pyplot.figure(figsize=(7, 7))
-#pyplot.contourf(domain.X, domain.Y, domain.T, alpha=0.5, cmap=cm.viridis)  
+#pyplot.contourf(domain.X, domain.Y, T, alpha=0.5, cmap=cm.viridis)  
 #pyplot.colorbar()
 #pyplot.xlabel('$x$ (m)')
 #pyplot.ylabel('$y$ (m)')
