@@ -13,7 +13,7 @@ keys_Settings=['Length','Width','Nodes_x','Nodes_y','k','Cp','rho',\
                'bias_type_x','bias_size_x','bias_type_y','bias_size_y',\
                'Source_Uniform','Source_Kim']
 keys_Time_adv=['Fo','dt','total_time_steps', 'total_time','Time_Scheme',\
-               'Convergence','Max_iterations','Output_directory']
+               'Convergence','Max_iterations','Output_directory','Number_Data_Output']
 keys_BCs=     ['bc_left','bc_left_rad',\
               'bc_right','bc_right_rad',\
               'bc_south','bc_south_rad',\
@@ -124,7 +124,8 @@ class FileIn():
                 elif line[0] in keys_Time_adv:
                     if line[0]=='Time_Scheme' or line[1]=='None\n':
                         settings[line[0]]=st.split(line[1], '\n')[0]
-                    elif line[0]=='total_time_steps' or line[0]=='Max_iterations':
+                    elif line[0]=='total_time_steps' or line[0]=='Max_iterations'\
+                        or line[0]=='Number_Data_Output':
                         settings[line[0]]=int(line[1])
                     elif line[0]=='Output_directory':
                         settings[line[0]]=line[1]+':'+st.split(line[2], '\n')[0]

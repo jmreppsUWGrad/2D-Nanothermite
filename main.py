@@ -147,11 +147,11 @@ print('######################################################\n')
 ##########################################################################
 # -------------------------------------Read input file
 ##########################################################################
-del settings, BCs
 print 'Reading input file...'
 settings={}
 BCs={}
-fin=FileClasses.FileIn('Input_File', 0)
+#fin=FileClasses.FileIn('Input_File', 0)
+fin=FileClasses.FileIn('Input_File_nt', 0)
 fin.Read_Input(settings, BCs)
 os.chdir(settings['Output_directory'])
 
@@ -198,17 +198,23 @@ print '################################'
 #input_file.close()
 #print '################################\n'
 
+print 'Saving data to numpy array files...'
+np.save('T_'+'0.000000', domain.T, False)
+np.save('eta_'+'0.000000', domain.eta, False)
+np.save('X', domain.X, False)
+np.save('Y', domain.Y, False)
+
 ##########################################################################
 # -------------------------------------Solve
 ##########################################################################
 t,nt=0,0
-#output_data_t,output_data_nt=0,0
+output_data_t,output_data_nt=0,0
 if settings['total_time_steps']=='None':
     settings['total_time_steps']=settings['total_time']*10**9
-#    output_data_t=settings['total_time']/settings['Number_Data_Output']
+    output_data_t=settings['total_time']/settings['Number_Data_Output']
 elif settings['total_time']=='None':
     settings['total_time']=settings['total_time_steps']*10**9
-#    output_data_nt=int(settings['total_time_steps']/settings['Number_Data_Output'])
+    output_data_nt=int(settings['total_time_steps']/settings['Number_Data_Output'])
 
 BCs_changed=False
 print 'Solving:'
@@ -222,10 +228,17 @@ while nt<settings['total_time_steps'] and t<settings['total_time']:
         print '#################### Solver aborted #######################'
         break
     
+    # Output data to numpy files
+    if output_data_nt!=0 and nt%output_data_nt==0:
+        print 'Saving data to numpy array files...'
+        np.save('T_'+'{:f}'.format(t), domain.T, False)
+        np.save('eta_'+'{:f}'.format(t), domain.eta, False)
+        
     # Change boundary conditions
-#    if np.amax(domain.eta)>=0.8 and not BCs_changed:
-#        solver.BCs['bc_north']=['C',(5,300),(0,-1)]
-#        BCs_changed=True
+    if np.amax(domain.eta)>=1.0 and not BCs_changed:
+        solver.BCs['bc_north']=['C',(5,300),(0,-1)]
+        BCs_changed=True
+#        break
     
 #output_file.close()
 
