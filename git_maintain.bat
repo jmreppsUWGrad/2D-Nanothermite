@@ -1,16 +1,16 @@
 @echo OFF
-git init
+REM git init
 
 :Start
 set /p branch=What branch to access?
 git checkout %branch%
 echo.
-git pull
-echo.
+REM git pull
+REM echo.
 
-echo. Make changes to desired file(s)
-pause
-echo.
+REM echo. Make changes to desired file(s)
+REM pause
+REM echo.
 :Tracking
 set track=""
 set /p track=What file was changed?
