@@ -55,16 +55,16 @@ bias_size_y:1e-06
 
 Fo:0.2
 dt:None
-total_time_steps:6000
+total_time_steps:8000
 total_time:None
 Time_Scheme:Explicit
 
 Convergence:0.0001
 Max_iterations:100
 
-Output_directory:C:\Users\mepps\Documents\Research\2D_Conduction\Tests\Nanothermite\9
+Output_directory:C:\Users\mepps\Documents\Research\2D_Conduction\Tests\Nanothermite\ChangingProp\1
 #Output_directory:C:\Users\Joseph\Documents\School\Research\2D_Conduction\Tests\Nanothermite\6
-Number_Data_Output:6
+Number_Data_Output:8
 
 ######################################################
 #			Boundary conditions

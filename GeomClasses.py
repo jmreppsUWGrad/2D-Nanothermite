@@ -37,7 +37,7 @@ class TwoDimPlanar:
         self.y=numpy.zeros(self.Ny)
         self.dx=numpy.zeros(self.Nx) # NOTE: SIZE MADE TO MATCH REST OF ARRAYS (FOR NOW)
         self.dy=numpy.zeros(self.Ny) # NOTE: SIZE MADE TO MATCH REST OF ARRAYS (FOR NOW)
-        self.k=settings['k']
+#        self.k=settings['k']
         # Fluid solver
         if solver=='Fluid':
             self.fluid=settings['Fluid']
@@ -55,10 +55,13 @@ class TwoDimPlanar:
             
             self.Cv=self.R/(self.gamma-1)
         else:
-            self.Cv=settings['Cp']
-            self.rho=settings['rho']
+#            self.Cv=settings['Cp']
+#            self.rho=settings['rho']
             self.T=numpy.zeros((self.Ny, self.Nx))
             self.eta=numpy.zeros((self.Ny, self.Nx))
+            self.k=numpy.zeros((self.Ny, self.Nx))
+            self.rho=numpy.zeros((self.Ny, self.Nx))
+            self.Cv=numpy.zeros((self.Ny, self.Nx))
 #            self.Y_species=numpy.zeros((self.Ny, self.Nx, 15)) # species array
 #            self.P=numpy.zeros((self.Ny, self.Nx))
         
@@ -151,10 +154,14 @@ class TwoDimPlanar:
         
         return u,v,p,T
     
-    # Calculate temperature dependent properties (unsure if this will be the spot)
-    def calcTempDepProp(self):
+    # Calculate temperature dependent properties
+    def calcProp(self):
+        rho1,Cv1,k1=7191,518,108
+        rho0,Cv0,k0=5643,599,39
         
-        self.Cv=self.mat_prop['R']/(self.mat_prop['gamma']-1)
+        self.k=(self.eta/k1+(1-self.eta)/k0)**(-1)
+        self.rho=self.eta*rho1+(1-self.eta)*rho0
+        self.Cv=self.eta*Cv1+(1-self.eta)*Cv0
     
     # Check everything before solving
     def IsReadyToSolve(self):

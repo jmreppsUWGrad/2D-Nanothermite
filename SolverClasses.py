@@ -59,23 +59,23 @@ class TwoDimPlanarSolve():
         elif self.Fo=='None':
             self.Fo=1.0
         
-        dt[1:-1,1:-1]=0.25*self.Fo*self.Domain.rho*self.Domain.Cv/self.Domain.k*\
+        dt[1:-1,1:-1]=0.25*self.Fo*self.Domain.rho[1:-1,1:-1]*self.Domain.Cv[1:-1,1:-1]/self.Domain.k[1:-1,1:-1]*\
             (self.dx[1:-1,1:-1]+self.dx[1:-1,:-2])*(self.dy[1:-1,1:-1]+self.dy[:-2,1:-1])
-        dt[0,0]      =0.25*self.Fo*self.Domain.rho*self.Domain.Cv/self.Domain.k*\
+        dt[0,0]      =0.25*self.Fo*self.Domain.rho[0,0]*self.Domain.Cv[0,0]/self.Domain.k[0,0]*\
             (self.dx[0,0])*(self.dy[0,0])
-        dt[0,1:-1]   =0.25*self.Fo*self.Domain.rho*self.Domain.Cv/self.Domain.k*\
+        dt[0,1:-1]   =0.25*self.Fo*self.Domain.rho[0,1:-1]*self.Domain.Cv[0,1:-1]/self.Domain.k[0,1:-1]*\
             (self.dx[0,1:-1]+self.dx[0,:-2])*(self.dy[0,1:-1])
-        dt[1:-1,0]   =0.25*self.Fo*self.Domain.rho*self.Domain.Cv/self.Domain.k*\
+        dt[1:-1,0]   =0.25*self.Fo*self.Domain.rho[1:-1,0]*self.Domain.Cv[1:-1,0]/self.Domain.k[1:-1,0]*\
             (self.dx[1:-1,0])*(self.dy[1:-1,0]+self.dy[:-2,0])
-        dt[0,-1]     =0.25*self.Fo*self.Domain.rho*self.Domain.Cv/self.Domain.k*\
+        dt[0,-1]     =0.25*self.Fo*self.Domain.rho[0,-1]*self.Domain.Cv[0,-1]/self.Domain.k[0,-1]*\
             (self.dx[0,-1])*(self.dy[0,-1])
-        dt[-1,0]     =0.25*self.Fo*self.Domain.rho*self.Domain.Cv/self.Domain.k*\
+        dt[-1,0]     =0.25*self.Fo*self.Domain.rho[-1,0]*self.Domain.Cv[-1,0]/self.Domain.k[-1,0]*\
             (self.dx[-1,0])*(self.dy[-1,0])
-        dt[-1,1:-1]  =0.25*self.Fo*self.Domain.rho*self.Domain.Cv/self.Domain.k*\
+        dt[-1,1:-1]  =0.25*self.Fo*self.Domain.rho[-1,1:-1]*self.Domain.Cv[-1,1:-1]/self.Domain.k[-1,1:-1]*\
             (self.dx[-1,1:-1]+self.dx[-1,:-2])*(self.dy[-1,1:-1])
-        dt[1:-1,-1]  =0.25*self.Fo*self.Domain.rho*self.Domain.Cv/self.Domain.k*\
+        dt[1:-1,-1]  =0.25*self.Fo*self.Domain.rho[1:-1,-1]*self.Domain.Cv[1:-1,-1]/self.Domain.k[1:-1,-1]*\
             (self.dx[1:-1,-1])*(self.dy[1:-1,-1]+self.dy[:-2,-1])
-        dt[-1,-1]    =0.25*self.Fo*self.Domain.rho*self.Domain.Cv/self.Domain.k*\
+        dt[-1,-1]    =0.25*self.Fo*self.Domain.rho[-1,-1]*self.Domain.Cv[-1,-1]/self.Domain.k[-1,-1]*\
             (self.dx[-1,-1])*(self.dy[-1,-1])
         
         return numpy.amin(dt)
@@ -98,60 +98,86 @@ class TwoDimPlanarSolve():
         at=numpy.zeros_like(dx)
         
         # Storage coefficient
-        at[1:-1,1:-1]=self.Domain.rho*self.Domain.Cv/dt*\
+        at[1:-1,1:-1]=self.Domain.rho[1:-1,1:-1]*self.Domain.Cv[1:-1,1:-1]/dt*\
             0.25*(self.dx[1:-1,1:-1]+self.dx[1:-1,:-2])*(self.dy[1:-1,1:-1]+self.dy[:-2,1:-1])
-        at[0,0]      =self.Domain.rho*self.Domain.Cv/dt*\
+        at[0,0]      =self.Domain.rho[0,0]*self.Domain.Cv[0,0]/dt*\
             0.25*(self.dx[0,0])*(self.dy[0,0])
-        at[0,1:-1]   =self.Domain.rho*self.Domain.Cv/dt*\
+        at[0,1:-1]   =self.Domain.rho[0,1:-1]*self.Domain.Cv[0,1:-1]/dt*\
             0.25*(self.dx[0,1:-1]+self.dx[0,:-2])*(self.dy[0,1:-1])
-        at[1:-1,0]   =self.Domain.rho*self.Domain.Cv/dt*\
+        at[1:-1,0]   =self.Domain.rho[1:-1,0]*self.Domain.Cv[1:-1,0]/dt*\
             0.25*(self.dx[1:-1,0])*(self.dy[1:-1,0]+self.dy[:-2,0])
-        at[0,-1]     =self.Domain.rho*self.Domain.Cv/dt*\
+        at[0,-1]     =self.Domain.rho[0,-1]*self.Domain.Cv[0,-1]/dt*\
             0.25*(self.dx[0,-1])*(self.dy[0,-1])
-        at[-1,0]     =self.Domain.rho*self.Domain.Cv/dt*\
+        at[-1,0]     =self.Domain.rho[-1,0]*self.Domain.Cv[-1,0]/dt*\
             0.25*(self.dx[-1,0])*(self.dy[-1,0])
-        at[-1,1:-1]  =self.Domain.rho*self.Domain.Cv/dt*\
+        at[-1,1:-1]  =self.Domain.rho[-1,1:-1]*self.Domain.Cv[-1,1:-1]/dt*\
             0.25*(self.dx[-1,1:-1]+self.dx[-1,:-2])*(self.dy[-1,1:-1])
-        at[1:-1,-1]   =self.Domain.rho*self.Domain.Cv/dt*\
+        at[1:-1,-1]   =self.Domain.rho[1:-1,-1]*self.Domain.Cv[1:-1,-1]/dt*\
             0.25*(self.dx[1:-1,-1])*(self.dy[1:-1,-1]+self.dy[:-2,-1])
-        at[-1,-1]    =self.Domain.rho*self.Domain.Cv/dt*\
+        at[-1,-1]    =self.Domain.rho[-1,-1]*self.Domain.Cv[-1,-1]/dt*\
             0.25*(self.dx[-1,-1])*(self.dy[-1,-1])
         
         # Left/right face factors
-        aW[1:-1,1:-1] =0.5*self.Domain.k*(dy[1:-1,1:-1]+dy[:-2,1:-1])/(dx[1:-1,:-2])
-        aE[1:-1,1:-1] =0.5*self.Domain.k*(dy[1:-1,1:-1]+dy[:-2,1:-1])/(dx[1:-1,1:-1])
+        aW[1:-1,1:-1] =0.5*(2*self.Domain.k[1:-1,1:-1]*self.Domain.k[1:-1,:-2])/(self.Domain.k[1:-1,1:-1]+self.Domain.k[1:-1,:-2])\
+                    *(dy[1:-1,1:-1]+dy[:-2,1:-1])/(dx[1:-1,:-2])
+        aE[1:-1,1:-1] =0.5*(2*self.Domain.k[1:-1,1:-1]*self.Domain.k[1:-1,2:])/(self.Domain.k[1:-1,1:-1]+self.Domain.k[1:-1,2:])\
+                    *(dy[1:-1,1:-1]+dy[:-2,1:-1])/(dx[1:-1,1:-1])
         # At north/south bondaries
-        aW[0,1:-1]    =0.5*self.Domain.k*(dy[0,1:-1])/(dx[0,:-2])
-        aE[0,1:-1]    =0.5*self.Domain.k*(dy[0,1:-1])/(dx[0,1:-1])
-        aW[-1,1:-1]   =0.5*self.Domain.k*(dy[-1,1:-1])/(dx[-1,:-2])
-        aE[-1,1:-1]   =0.5*self.Domain.k*(dy[-1,1:-1])/(dx[-1,1:-1])
+        aW[0,1:-1]    =0.5*(2*self.Domain.k[0,1:-1]*self.Domain.k[0,:-2])/(self.Domain.k[0,1:-1]+self.Domain.k[0,:-2])\
+            *(dy[0,1:-1])/(dx[0,:-2])
+        aE[0,1:-1]    =0.5*(2*self.Domain.k[0,1:-1]*self.Domain.k[0,2:])/(self.Domain.k[0,1:-1]+self.Domain.k[0,2:])\
+            *(dy[0,1:-1])/(dx[0,1:-1])
+        aW[-1,1:-1]   =0.5*(2*self.Domain.k[-1,1:-1]*self.Domain.k[-1,:-2])/(self.Domain.k[-1,1:-1]+self.Domain.k[-1,:-2])\
+            *(dy[-1,1:-1])/(dx[-1,:-2])
+        aE[-1,1:-1]   =0.5*(2*self.Domain.k[-1,1:-1]*self.Domain.k[-1,2:])/(self.Domain.k[-1,1:-1]+self.Domain.k[-1,2:])\
+            *(dy[-1,1:-1])/(dx[-1,1:-1])
         # At Left/right boundaries
-        aE[0,0]       =0.5*self.Domain.k*(dy[0,0])/dx[0,0]
-        aE[1:-1,0]    =0.5*self.Domain.k*(dy[1:-1,0]+dy[:-2,0])/dx[1:-1,0]
-        aE[-1,0]      =0.5*self.Domain.k*(dy[-1,0])/dx[-1,0]
-        aW[0,-1]      =0.5*self.Domain.k*(dy[0,-1])/dx[0,-1]
-        aW[1:-1,-1]   =0.5*self.Domain.k*(dy[1:-1,-1]+dy[:-2,-1])/dx[1:-1,-1]
-        aW[-1,-1]     =0.5*self.Domain.k*(dy[-1,-1])/dx[-1,-1]
+        aE[0,0]       =0.5*(2*self.Domain.k[0,0]*self.Domain.k[0,1])/(self.Domain.k[0,0]+self.Domain.k[0,1])\
+            *(dy[0,0])/dx[0,0]
+        aE[1:-1,0]    =0.5*(2*self.Domain.k[1:-1,0]*self.Domain.k[1:-1,1])/(self.Domain.k[1:-1,0]+self.Domain.k[1:-1,1])\
+            *(dy[1:-1,0]+dy[:-2,0])/dx[1:-1,0]
+        aE[-1,0]      =0.5*(2*self.Domain.k[-1,0]*self.Domain.k[-1,1])/(self.Domain.k[-1,0]+self.Domain.k[-1,1])\
+            *(dy[-1,0])/dx[-1,0]
+        aW[0,-1]      =0.5*(2*self.Domain.k[0,-1]*self.Domain.k[0,-2])/(self.Domain.k[0,-1]+self.Domain.k[0,-2])\
+            *(dy[0,-1])/dx[0,-1]
+        aW[1:-1,-1]   =0.5*(2*self.Domain.k[1:-1,-1]*self.Domain.k[1:-1,-2])/(self.Domain.k[1:-1,-1]+self.Domain.k[1:-1,-2])\
+            *(dy[1:-1,-1]+dy[:-2,-1])/dx[1:-1,-1]
+        aW[-1,-1]     =0.5*(2*self.Domain.k[-1,-1]*self.Domain.k[-1,-2])/(self.Domain.k[-1,-1]+self.Domain.k[-1,-2])\
+            *(dy[-1,-1])/dx[-1,-1]
         
         # South/north faces
-        aS[1:-1,1:-1]=0.5*self.Domain.k*(dx[1:-1,1:-1]+dx[1:-1,:-2])/dy[:-2,1:-1]
-        aN[1:-1,1:-1]=0.5*self.Domain.k*(dx[1:-1,1:-1]+dx[1:-1,:-2])/dy[1:-1,1:-1]
+        aS[1:-1,1:-1]=0.5*(2*self.Domain.k[1:-1,1:-1]*self.Domain.k[:-2,1:-1])/(self.Domain.k[1:-1,1:-1]+self.Domain.k[:-2,1:-1])\
+            *(dx[1:-1,1:-1]+dx[1:-1,:-2])/dy[:-2,1:-1]
+        aN[1:-1,1:-1]=0.5*(2*self.Domain.k[1:-1,1:-1]*self.Domain.k[2:,1:-1])/(self.Domain.k[1:-1,1:-1]+self.Domain.k[2:,1:-1])\
+            *(dx[1:-1,1:-1]+dx[1:-1,:-2])/dy[1:-1,1:-1]
         
         # Heat conduction in y direction (Central differences)
-        aS[1:-1,1:-1] =0.5*self.Domain.k*(dx[1:-1,1:-1]+dx[1:-1,:-2])/(dy[:-2,1:-1])
-        aN[1:-1,1:-1] =0.5*self.Domain.k*(dx[1:-1,1:-1]+dx[1:-1,:-2])/(dy[1:-1,1:-1])
+        aS[1:-1,1:-1] =0.5*(2*self.Domain.k[1:-1,1:-1]*self.Domain.k[:-2,1:-1])/(self.Domain.k[1:-1,1:-1]+self.Domain.k[:-2,1:-1])\
+            *(dx[1:-1,1:-1]+dx[1:-1,:-2])/(dy[:-2,1:-1])
+        aN[1:-1,1:-1] =0.5*(2*self.Domain.k[1:-1,1:-1]*self.Domain.k[2:,1:-1])/(self.Domain.k[1:-1,1:-1]+self.Domain.k[2:,1:-1])\
+            *(dx[1:-1,1:-1]+dx[1:-1,:-2])/(dy[1:-1,1:-1])
         # Area account for left/right boundary nodes
-        aS[1:-1,0]    =0.5*self.Domain.k*(dx[1:-1,0])/(dy[:-2,0])
-        aN[1:-1,0]    =0.5*self.Domain.k*(dx[1:-1,0])/(dy[1:-1,0])
-        aS[1:-1,-1]   =0.5*self.Domain.k*(dx[1:-1,-1])/(dy[:-2,-1])
-        aN[1:-1,-1]   =0.5*self.Domain.k*(dx[1:-1,-1])/(dy[1:-1,-1])
+        aS[1:-1,0]    =0.5*(2*self.Domain.k[1:-1,0]*self.Domain.k[:-2,0])/(self.Domain.k[1:-1,0]+self.Domain.k[:-2,0])\
+            *(dx[1:-1,0])/(dy[:-2,0])
+        aN[1:-1,0]    =0.5*(2*self.Domain.k[1:-1,0]*self.Domain.k[2:,0])/(self.Domain.k[1:-1,0]+self.Domain.k[2:,0])\
+            *(dx[1:-1,0])/(dy[1:-1,0])
+        aS[1:-1,-1]   =0.5*(2*self.Domain.k[1:-1,-1]*self.Domain.k[:-2,-1])/(self.Domain.k[1:-1,-1]+self.Domain.k[:-2,-1])\
+            *(dx[1:-1,-1])/(dy[:-2,-1])
+        aN[1:-1,-1]   =0.5*(2*self.Domain.k[1:-1,-1]*self.Domain.k[2:,-1])/(self.Domain.k[1:-1,-1]+self.Domain.k[2:,-1])\
+            *(dx[1:-1,-1])/(dy[1:-1,-1])
         # Forward/backward difference for north/south boundaries
-        aN[0,0]       =0.5*self.Domain.k*dx[0,0]/dy[0,0]
-        aN[0,1:-1]    =0.5*self.Domain.k*(dx[0,1:-1]+dx[0,:-2])/dy[0,1:-1]
-        aN[0,-1]      =0.5*self.Domain.k*dx[0,-1]/dy[0,-1]
-        aS[-1,0]      =0.5*self.Domain.k*dx[-1,0]/dy[-1,0]
-        aS[-1,1:-1]   =0.5*self.Domain.k*(dx[0,1:-1]+dx[0,:-2])/dy[-1,1:-1]
-        aS[-1,-1]     =0.5*self.Domain.k*dx[-1,-1]/dy[-1,-1]
+        aN[0,0]       =0.5*(2*self.Domain.k[0,0]*self.Domain.k[1,0])/(self.Domain.k[0,0]+self.Domain.k[1,0])\
+            *dx[0,0]/dy[0,0]
+        aN[0,1:-1]    =0.5*(2*self.Domain.k[0,1:-1]*self.Domain.k[1,1:-1])/(self.Domain.k[0,1:-1]+self.Domain.k[1,1:-1])\
+            *(dx[0,1:-1]+dx[0,:-2])/dy[0,1:-1]
+        aN[0,-1]      =0.5*(2*self.Domain.k[0,-1]*self.Domain.k[1,-1])/(self.Domain.k[0,-1]+self.Domain.k[1,-1])\
+            *dx[0,-1]/dy[0,-1]
+        aS[-1,0]      =0.5*(2*self.Domain.k[-1,0]*self.Domain.k[-2,0])/(self.Domain.k[-1,0]+self.Domain.k[-2,0])\
+            *dx[-1,0]/dy[-1,0]
+        aS[-1,1:-1]   =0.5*(2*self.Domain.k[-1,1:-1]*self.Domain.k[-2,1:-1])/(self.Domain.k[-1,1:-1]+self.Domain.k[-2,1:-1])\
+            *(dx[0,1:-1]+dx[0,:-2])/dy[-1,1:-1]
+        aS[-1,-1]     =0.5*(2*self.Domain.k[-1,-1]*self.Domain.k[-2,-1])/(self.Domain.k[-1,-1]+self.Domain.k[-2,-1])\
+            *dx[-1,-1]/dy[-1,-1]
         
         return aW,aE,aS,aN,at
     
@@ -275,6 +301,9 @@ class TwoDimPlanarSolve():
     def Advance_Soln_Cond(self, nt, t):
         T_0=self.Domain.T.copy()
         T_c=self.Domain.T.copy()
+        
+        # Calculate properties based on eta
+        self.Domain.calcProp()
         
         if self.dt=='None':
             dt=self.getdt()

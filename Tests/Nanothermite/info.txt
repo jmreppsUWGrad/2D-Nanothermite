@@ -1,4 +1,4 @@
-Flux removed when eta reached 1.0 somewhere
+Flux removed when eta reached 1.0 somewhere; Constant rho, k, Cv
 Diverging values: Ea=4000, A0=1e6, dH=300000; Ea=4000, A0=1e8, dH=300000;
 1./1b.
 Ea=40000

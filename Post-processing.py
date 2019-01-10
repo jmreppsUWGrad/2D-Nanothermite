@@ -129,13 +129,17 @@ print('#              Created by J. Mark Epps               #')
 print('#          Part of Masters Thesis at UW 2018-2020    #')
 print('######################################################\n')
 
-os.chdir('Tests/Nanothermite/9')
+#os.chdir('Tests/Non-nt')
+#times=['9028.197115']
 
-times=['0.000000','0.000236','0.000471','0.000707','0.000943',\
-       '0.001179','0.001414']
+os.chdir('Tests/Nanothermite/ChangingProp/1')
+# Const. properties
 #times=['0.000000','0.000236','0.000471','0.000707','0.000943',\
-#       '0.001179','0.001414', '0.001650', '0.001886', '0.002121',\
+#       '0.001179','0.001414']#, '0.001650', '0.001886', '0.002121',\
 #       '0.002357', '0.002593', '0.002829']
+times=['0.000000','0.000195','0.000367','0.000540','0.000712',\
+       '0.000885','0.001057','0.001230','0.001402']
+
 for time in times:
     X=np.load('X.npy', False)
     Y=np.load('Y.npy', False)
@@ -149,7 +153,7 @@ for time in times:
     pyplot.colorbar()
     pyplot.xlabel('$x$ (m)')
     pyplot.ylabel('$y$ (m)')
-    pyplot.clim(270, 2000)
+#    pyplot.clim(270, 2000)
     pyplot.title('Temperature distribution t='+time);
     fig.savefig('T_'+time+'.png',dpi=300)
     pyplot.close(fig)
@@ -160,7 +164,7 @@ for time in times:
     pyplot.colorbar()
     pyplot.xlabel('$x$ (m)')
     pyplot.ylabel('$y$ (m)')
-    pyplot.clim(0.0, 1.0)
+#    pyplot.clim(0.0, 1.0)
     pyplot.title('Progress distribution t='+time);
     fig.savefig('eta_'+time+'.png',dpi=300)
     pyplot.close(fig)

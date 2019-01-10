@@ -271,6 +271,7 @@ pyplot.ylabel('$y$ (mm)')
 pyplot.title('Reaction progress, t=%.7f'%t)
 #pyplot.xlim(0,0.4)
 #pyplot.ylim(5,6);
+pyplot.close(fig4)
 
 # 2D plot
 #fig=pyplot.figure(figsize=(7, 7))

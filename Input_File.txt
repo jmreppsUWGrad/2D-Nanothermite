@@ -62,7 +62,7 @@ Time_Scheme:Implicit
 Convergence:0.0001
 Max_iterations:100
 
-Output_directory:C:\Users\mepps\Documents\Research\2D_Conduction\Tests
+Output_directory:C:\Users\mepps\Documents\Research\2D_Conduction\Tests\Non-nt
 #Output_directory:C:\Users\Joseph\Documents\School\Research\2D_Conduction\Tests
 Number_Data_Output:1
 
