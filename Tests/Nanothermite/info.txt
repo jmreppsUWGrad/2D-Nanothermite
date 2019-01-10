@@ -1,0 +1,23 @@
+Flux removed when eta reached 1.0 somewhere
+Diverging values: Ea=4000, A0=1e6, dH=300000; 
+1.
+Ea=40000
+A0=1e8
+dH=300000
+2.
+Ea=40000
+A0=1e6
+dH=300000
+3.
+Ea=40000
+A0=1e6
+dH=1200
+4.
+Ea=40000
+A0=1e8
+dH=1200
+5.
+Ea=4000
+A0=1e6
+dH=1200
+6.

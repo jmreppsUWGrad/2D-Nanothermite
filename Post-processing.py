@@ -129,9 +129,10 @@ print('#              Created by J. Mark Epps               #')
 print('#          Part of Masters Thesis at UW 2018-2020    #')
 print('######################################################\n')
 
-os.chdir('Tests/Nanothermite/5')
+os.chdir('Tests/Nanothermite/6')
 
-times=['0.000000','0.000236','0.000471','0.000707','0.000943','0.001179','0.001414']
+times=['0.000000','0.000236','0.000471','0.000707','0.000943',\
+       '0.001179','0.001414']
 for time in times:
     X=np.load('X.npy', False)
     Y=np.load('Y.npy', False)
@@ -145,7 +146,7 @@ for time in times:
     pyplot.colorbar()
     pyplot.xlabel('$x$ (m)')
     pyplot.ylabel('$y$ (m)')
-    pyplot.title('Temperature distribution');
+    pyplot.title('Temperature distribution t='+time);
     fig.savefig('T_'+time+'.png',dpi=300)
     pyplot.close(fig)
     
@@ -155,9 +156,11 @@ for time in times:
     pyplot.colorbar()
     pyplot.xlabel('$x$ (m)')
     pyplot.ylabel('$y$ (m)')
-    pyplot.title('Progress distribution');
+    pyplot.title('Progress distribution t='+time);
     fig.savefig('eta_'+time+'.png',dpi=300)
     pyplot.close(fig)
+    
+    print 'Processed '+time
 
 ##########################################################################
 # ------------------------------------- Get input file parameters
