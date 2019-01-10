@@ -1,6 +1,6 @@
 Flux removed when eta reached 1.0 somewhere
-Diverging values: Ea=4000, A0=1e6, dH=300000; 
-1.
+Diverging values: Ea=4000, A0=1e6, dH=300000; Ea=4000, A0=1e8, dH=300000;
+1./1b.
 Ea=40000
 A0=1e8
 dH=300000
@@ -21,3 +21,18 @@ Ea=4000
 A0=1e6
 dH=1200
 6.
+Ea=40000
+A0=1e6
+dH=30000
+7.
+Ea=40000
+A0=1e7
+dH=300000
+8.
+Ea=70000
+A0=1e8
+dH=300000
+9.
+Ea=170000
+A0=1e8
+dH=300000

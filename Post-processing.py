@@ -129,10 +129,13 @@ print('#              Created by J. Mark Epps               #')
 print('#          Part of Masters Thesis at UW 2018-2020    #')
 print('######################################################\n')
 
-os.chdir('Tests/Nanothermite/6')
+os.chdir('Tests/Nanothermite/9')
 
 times=['0.000000','0.000236','0.000471','0.000707','0.000943',\
        '0.001179','0.001414']
+#times=['0.000000','0.000236','0.000471','0.000707','0.000943',\
+#       '0.001179','0.001414', '0.001650', '0.001886', '0.002121',\
+#       '0.002357', '0.002593', '0.002829']
 for time in times:
     X=np.load('X.npy', False)
     Y=np.load('Y.npy', False)
@@ -142,20 +145,22 @@ for time in times:
     
     # Temperature contour
     fig=pyplot.figure(figsize=(6, 6))
-    pyplot.contourf(X, Y, T, alpha=0.5, cmap=cm.viridis)  
+    pyplot.contourf(X, Y, T, alpha=0.5, cmap=cm.viridis)#, vmin=270, vmax=2000)  
     pyplot.colorbar()
     pyplot.xlabel('$x$ (m)')
     pyplot.ylabel('$y$ (m)')
+    pyplot.clim(270, 2000)
     pyplot.title('Temperature distribution t='+time);
     fig.savefig('T_'+time+'.png',dpi=300)
     pyplot.close(fig)
     
     # Progress contour
     fig=pyplot.figure(figsize=(6, 6))
-    pyplot.contourf(X, Y, eta, alpha=0.5, cmap=cm.viridis)  
+    pyplot.contourf(X, Y, eta, alpha=0.5, cmap=cm.viridis)#, vmin=0.0, vmax=1.0)  
     pyplot.colorbar()
     pyplot.xlabel('$x$ (m)')
     pyplot.ylabel('$y$ (m)')
+    pyplot.clim(0.0, 1.0)
     pyplot.title('Progress distribution t='+time);
     fig.savefig('eta_'+time+'.png',dpi=300)
     pyplot.close(fig)
