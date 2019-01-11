@@ -45,7 +45,7 @@ class Source_terms():
         Ea=40000 # [J/mol] Approx value from Kim's paper
         A0=1e8 # [1/s] Fudged value
 #        dH=1200 # [J/mol] Value taken from V. Baijot et al., A multi-phase ..., Combustion and Flame, 2017.
-        dH=300000 #[J/kg] approx from ...
+        dH=30000 #[J/kg] approx from ...
         
         # CV dimensions
         at[1:-1,1:-1]=0.25*(dx[1:-1,1:-1]+dx[1:-1,:-2])*(dy[1:-1,1:-1]+dy[:-2,1:-1])
