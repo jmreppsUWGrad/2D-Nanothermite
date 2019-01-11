@@ -15,9 +15,11 @@ import numpy as np
 #import cantera as ct
 
 class Source_terms():
-    def __init__(self):
+    def __init__(self, Ea, A0, dH):
         self.R=8.314 # J/mol/K
-        self.Ea=30000 # J/mol
+        self.Ea=Ea # J/mol
+        self.A0=A0
+        self.dH=dH # J/mol
         self.n=0.2 # Temperature exponent
 #        self.species=key_species
     
@@ -42,10 +44,6 @@ class Source_terms():
     # Int. J of Energy and Power engineering, vol.8, no.7, pp. 612-615, 2014.
     def Source_Comb_Kim(self, rho, T, eta, dx, dy, dt):
         at=np.zeros_like(dx)
-        Ea=40000 # [J/mol] Approx value from Kim's paper
-        A0=1e8 # [1/s] Fudged value
-#        dH=1200 # [J/mol] Value taken from V. Baijot et al., A multi-phase ..., Combustion and Flame, 2017.
-        dH=30000 #[J/kg] approx from ...
         
         # CV dimensions
         at[1:-1,1:-1]=0.25*(dx[1:-1,1:-1]+dx[1:-1,:-2])*(dy[1:-1,1:-1]+dy[:-2,1:-1])
@@ -58,10 +56,10 @@ class Source_terms():
         at[1:-1,-1]  =0.25*(dx[1:-1,-1])*(dy[1:-1,-1]+dy[:-2,-1])
         at[-1,-1]    =0.25*(dx[-1,-1])*(dy[-1,-1])
         
-        detadt=A0*(1-eta)*np.exp(-Ea/self.R/T)
+        detadt=self.A0*(1-eta)*np.exp(-self.Ea/self.R/T)
         eta+=dt*detadt
         
-        return rho*at*dH*detadt
+        return rho*at*self.dH*detadt
     
     # Calculate source term for combustion (NEEDS MODIFYING)
     def Source_Comb(self, T, y_species, dx, dy):

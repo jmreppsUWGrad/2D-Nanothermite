@@ -52,9 +52,9 @@ pyplot.ylim(5,6);
 # ----------------------------------Libraries and classes
 ##########################################################################
 import numpy as np
-from matplotlib import pyplot, cm
-from mpl_toolkits.mplot3d import Axes3D
-from datetime import datetime
+#from matplotlib import pyplot, cm
+#from mpl_toolkits.mplot3d import Axes3D
+#from datetime import datetime
 import os
 #import CoolProp.CoolProp as CP
 
@@ -72,72 +72,6 @@ import FileClasses
 #    north-largest y coordinate
 #    south-smallest y coordinate
 ##########################################################################
-settings={} # Dictionary of problem settings
-BCs={} # Dictionary of boundary conditions
-# Geometry details
-settings['Length']                  = 1.0
-settings['Width']                   = 1.0
-settings['Nodes_x']                 = 31
-settings['Nodes_y']                 = 31
-settings['k']                       = 10 #0.026384465709828872
-settings['Cp']                      = 800 # 714.602
-settings['rho']                     = 8000 #1.2
-
-# Source terms
-settings['Source_Uniform']          = 'None'
-settings['Source_Kim']              = 'None'
-
-# Meshing details
-"""
-Biasing options:
-    -'OneWayUp'   for linearly increasing element sizes with increasing x/y
-    -'OneWayDown' for linearly decreasing element sizes with increasing x/y
-    -'TwoWayEnd'  for linearly increasing sizes till middle, then decrease again
-    -'TwoWayMid'  for linearly decreasing sizes till middle, then increase again
-    -size         is the smallest element size based on above selection
-"""
-settings['bias_type_x']             = 'None'
-settings['bias_size_x']             = 0.01 # Smallest element size
-settings['bias_type_y']             = 'None'
-settings['bias_size_y']             = 0.01 # Smallest element size
-
-# Boundary conditions
-"""
-Boundary condition options:
-    -'T' for constant temperature boundary (specify T)
-    -'F' for constant flux boundary (specify q")
-    -'C' for convective boundary (specify h and Tinf)
-    -format: ['T', 200, (0,-1), ...]
-        First index: type of BC
-        Second index: Numbers associated with BC (can be an array)
-        Third index: Node index range BC is valid for (second number must be negative)
-        this pattern repeats...
-    -radiation options: None or [emissivity, surrounding_Temp]
-"""
-#['C',(30,300),(0,-1)]
-#['F',4*10**8,(1,-299),'C',(10,300),(2,-2)]
-BCs['bc_left']                      = ['T',600,(0,-1)]
-BCs['bc_left_rad']                  = 'None'
-# numpy.linspace(400, 900, settings['Nodes_y'])
-BCs['bc_right']                     = ['T',300,(0,-1)]
-BCs['bc_right_rad']                 = 'None'
-# numpy.linspace(400, 900, settings['Nodes_y'])
-BCs['bc_south']                     = ['T',600,(0,-1)]
-BCs['bc_south_rad']                 = 'None'
-# numpy.linspace(400, 900, settings['Nodes_x'])
-BCs['bc_north']                     = ['T',300,(0,-1)]
-BCs['bc_north_rad']                 = 'None'
-# numpy.linspace(400, 900, settings['Nodes_x'])
-
-# Time advancement
-settings['Fo']                      = 0.1
-settings['dt']                      = 'None' # Time step
-settings['total_time_steps']        = 1000
-settings['total_time']              = 'None'
-settings['Time_Scheme']             = 'Explicit' # Explicit or Implicit
-settings['Convergence']             = 0.0001 # implicit solver only
-settings['Max_iterations']          = 100 #    implicit solver only
-
 print('######################################################')
 print('#             2D Heat Conduction Solver              #')
 print('#              Created by J. Mark Epps               #')
@@ -150,9 +84,10 @@ print('######################################################\n')
 print 'Reading input file...'
 settings={}
 BCs={}
+Sources={}
 #fin=FileClasses.FileIn('Input_File', 0)
 fin=FileClasses.FileIn('Input_File_nt', 0)
-fin.Read_Input(settings, BCs)
+fin.Read_Input(settings, Sources, BCs)
 os.chdir(settings['Output_directory'])
 
 print '################################'
@@ -172,7 +107,7 @@ print '################################'
 ##########################################################################
 
 print 'Initializing solver package...'
-solver=Solvers.TwoDimPlanarSolve(domain, settings, BCs, 'Solid')
+solver=Solvers.TwoDimPlanarSolve(domain, settings, Sources, BCs, 'Solid')
 print '################################'
 
 print 'Initializing domain...'
@@ -254,24 +189,24 @@ T, eta=domain.T, domain.eta
 #pyplot.xlim(5,6);
 
 # Nano thermite testing figures
-fig4=pyplot.figure(figsize=(7, 7))
-pyplot.contourf(domain.X*1000, domain.Y*1000, T, alpha=0.5, cmap=cm.viridis)  
-pyplot.colorbar()
-pyplot.xlabel('$x$ (mm)')
-pyplot.ylabel('$y$ (mm)')
-pyplot.title('Temperature distribution, t=%.7f'%t)
+#fig4=pyplot.figure(figsize=(7, 7))
+#pyplot.contourf(domain.X*1000, domain.Y*1000, T, alpha=0.5, cmap=cm.viridis)  
+#pyplot.colorbar()
+#pyplot.xlabel('$x$ (mm)')
+#pyplot.ylabel('$y$ (mm)')
+#pyplot.title('Temperature distribution, t=%.7f'%t)
 #pyplot.xlim(0,0.4)
 #pyplot.ylim(5,6);
 
-fig4=pyplot.figure(figsize=(7, 7))
-pyplot.contourf(domain.X*1000, domain.Y*1000, eta, alpha=0.5, cmap=cm.viridis)  
-pyplot.colorbar()
-pyplot.xlabel('$x$ (mm)')
-pyplot.ylabel('$y$ (mm)')
-pyplot.title('Reaction progress, t=%.7f'%t)
+#fig4=pyplot.figure(figsize=(7, 7))
+#pyplot.contourf(domain.X*1000, domain.Y*1000, eta, alpha=0.5, cmap=cm.viridis)  
+#pyplot.colorbar()
+#pyplot.xlabel('$x$ (mm)')
+#pyplot.ylabel('$y$ (mm)')
+#pyplot.title('Reaction progress, t=%.7f'%t)
 #pyplot.xlim(0,0.4)
 #pyplot.ylim(5,6);
-pyplot.close(fig4)
+#pyplot.close(fig4)
 
 # 2D plot
 #fig=pyplot.figure(figsize=(7, 7))

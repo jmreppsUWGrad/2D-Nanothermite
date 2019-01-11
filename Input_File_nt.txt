@@ -33,10 +33,24 @@ rho:6000
 
 Source_Uniform:None
 Source_Kim:True
+Ea:40000
+A0:100000000
+dH:30000
+
+#Ea=40000 # [J/mol] Approx value from Kim's paper
+#        A0=1e8 # [1/s] Fudged value
+#        dH=1200 # [J/mol] Value taken from V. Baijot et al., A multi-phase ..., Combustion and Flame, 2017.
+#        dH=30000 #[J/kg] approx from ...
 
 ######################################################
 #			Meshing details
 #	Currently not available
+#Biasing options:
+#    -'OneWayUp'   for linearly increasing element sizes with increasing x/y
+#    -'OneWayDown' for linearly decreasing element sizes with increasing x/y
+#    -'TwoWayEnd'  for linearly increasing sizes till middle, then decrease again
+#    -'TwoWayMid'  for linearly decreasing sizes till middle, then increase again
+#    -size         is the smallest element size based on above selection
 ######################################################
 
 bias_type_x:None
@@ -76,13 +90,16 @@ Number_Data_Output:6
 #		Mulitple BCs can be specified along a boundary; separate everything with commas;
 #	e.g. F, 1000, 0,-10,C,10,300,10,-1
 #  [IN PROGRESS] Profiles possible; must be same size as number of nodes on that boundary
+# [IN PROGRESS] Radiation options: None or [emissivity, surrounding_Temp]
 ######################################################
 
 bc_left:F, 0, 0, -1
 bc_left_rad:None
 bc_right:C, 30, 300, 0, -1
 bc_right_rad:None
+# numpy.linspace(400, 900, settings['Nodes_y'])
 bc_south:F, 0, 0, -1
 bc_south_rad:None
 bc_north:F, 400000000, 0, -81,C, 30, 300, 20, -1
 bc_north_rad:None
+# numpy.linspace(400, 900, settings['Nodes_x'])

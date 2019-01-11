@@ -10,8 +10,9 @@ This contains classes for reading and writing files in good format
 """
 
 keys_Settings=['Length','Width','Nodes_x','Nodes_y','k','Cp','rho',\
-               'bias_type_x','bias_size_x','bias_type_y','bias_size_y',\
-               'Source_Uniform','Source_Kim']
+               'bias_type_x','bias_size_x','bias_type_y','bias_size_y']
+               
+keys_Sources=['Source_Uniform','Source_Kim','Ea','A0','dH']
 keys_Time_adv=['Fo','dt','total_time_steps', 'total_time','Time_Scheme',\
                'Convergence','Max_iterations','Output_directory','Number_Data_Output']
 keys_BCs=     ['bc_left','bc_left_rad',\
@@ -55,7 +56,7 @@ class FileOut():
 #            self.fout.write('\n')
         
         self.Write_single_line('\nSource Terms:')
-        keys=['Source_Uniform','Source_Kim']
+        keys=['Source_Uniform','Source_Kim','Ea','A0','dH']
         for i in keys:
             self.fout.write(i)
             self.fout.write(':')
@@ -109,18 +110,25 @@ class FileIn():
             read_type='r'
         self.fin=open(filename+'.txt', read_type)
         
-    def Read_Input(self, settings, BCs):
+    def Read_Input(self, settings, Sources, BCs):
         for line in self.fin:
             if st.find(line, ':')>0 and st.find(line, '#')!=0:
                 line=st.split(line, ':')
+                # Domain settings
                 if line[0] in keys_Settings:
                     if line[0]=='Nodes_x' or line[0]=='Nodes_y':
                         settings[line[0]]=int(line[1])
-                    elif line[1]=='None\n' or line[1]=='True\n':
+                    elif line[1]=='None\n':
                         settings[line[0]]=st.split(line[1], '\n')[0]
                     else:
                         settings[line[0]]=float(line[1])
-                        
+                # Source term info
+                elif line[0] in keys_Sources:
+                    if line[1]=='None\n' or line[1]=='True\n':
+                        Sources[line[0]]=st.split(line[1], '\n')[0]
+                    else:
+                        Sources[line[0]]=float(line[1])
+                # Time advancement details
                 elif line[0] in keys_Time_adv:
                     if line[0]=='Time_Scheme' or line[1]=='None\n':
                         settings[line[0]]=st.split(line[1], '\n')[0]
@@ -131,7 +139,7 @@ class FileIn():
                         settings[line[0]]=line[1]+':'+st.split(line[2], '\n')[0]
                     else:
                         settings[line[0]]=float(line[1])
-                        
+                # Boundary conditions
                 elif line[0] in keys_BCs:
                     BC_info=st.split(line[1], ',')
                     BCs[line[0]]=[]

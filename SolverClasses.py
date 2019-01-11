@@ -29,7 +29,7 @@ import Source_Comb
 
 # 2D solver
 class TwoDimPlanarSolve():
-    def __init__(self, geom_obj, settings, BCs, solver):
+    def __init__(self, geom_obj, settings, Sources, BCs, solver):
         self.Domain=geom_obj # Geometry object
         self.time_scheme=settings['Time_Scheme']
         self.dx,self.dy=numpy.meshgrid(geom_obj.dx,geom_obj.dy)
@@ -45,10 +45,10 @@ class TwoDimPlanarSolve():
             self.conv=settings['Convergence']
             self.countmax=settings['Max_iterations']
         
-        # Define source terms and pointer to object here
-        self.get_source=Source_Comb.Source_terms()
-        self.source_unif=settings['Source_Uniform']
-        self.source_Kim=settings['Source_Kim']
+        # Define source terms and pointer to source object here
+        self.get_source=Source_Comb.Source_terms(Sources['Ea'], Sources['A0'], Sources['dH'])
+        self.source_unif=Sources['Source_Uniform']
+        self.source_Kim=Sources['Source_Kim']
         
     # Time step check with dx, dy, Fo number
     def getdt(self):
