@@ -1,6 +1,6 @@
 Flux removed when eta reached 1.0 somewhere; k,Cv,rho all change with eta
 Diverging values: 
-1./1b.
+1.
 Ea=40000
 A0=1e8
 dH=300000

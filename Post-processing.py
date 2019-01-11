@@ -132,15 +132,21 @@ print('######################################################\n')
 #os.chdir('Tests/Non-nt')
 #times=['9028.197115']
 
-os.chdir('Tests/Nanothermite/2')
+A0=1e8
+Ea=40000
+
 # Const. properties
-times=['0.000000','0.000236','0.000471','0.000707','0.000943',\
-       '0.001179','0.001414']#, '0.001650', '0.001886', '0.002121',\
+#os.chdir('Tests/Nanothermite/4')
+#times=['0.000000','0.000236','0.000471','0.000707','0.000943',\
+#       '0.001179','0.001414']#, '0.001650', '0.001886', '0.002121',\
 #       '0.002357', '0.002593', '0.002829']
 # Varying properties
-#times=['0.000000','0.000195','0.000367','0.000540','0.000712',\
-#       '0.000885','0.001057','0.001230','0.001402']
-
+os.chdir('Tests/Nanothermite/ChangingProp/1/241401Nodes')
+times=['0.000000','0.000199','0.000371','0.000544','0.000716',\
+       '0.000889','0.001061']#,'0.001230','0.001402']
+#times=['0.000000','0.000070','0.000113','0.000156','0.000199',\
+#       '0.000242','0.000285','0.000328','0.000371','0.000414',\
+#       '0.000458','0.000501','0.000544']
 for time in times:
     X=np.load('X.npy', False)
     Y=np.load('Y.npy', False)
@@ -168,6 +174,17 @@ for time in times:
 #    pyplot.clim(0.0, 1.0)
     pyplot.title('Progress distribution t='+time);
     fig.savefig('eta_'+time+'.png',dpi=300)
+    pyplot.close(fig)
+    
+    # Reaction rate contour
+    fig=pyplot.figure(figsize=(6, 6))
+    pyplot.contourf(X, Y, A0*(1-eta)*np.exp(-Ea/8.314/T), alpha=0.5, cmap=cm.viridis)#, vmin=0.0, vmax=1.0)  
+    pyplot.colorbar()
+    pyplot.xlabel('$x$ (m)')
+    pyplot.ylabel('$y$ (m)')
+#    pyplot.clim(0.0, 1.0)
+    pyplot.title('Reaction rate t='+time);
+    fig.savefig('Phi_'+time+'.png',dpi=300)
     pyplot.close(fig)
     
     print 'Processed '+time
