@@ -33,8 +33,8 @@ rho:6000
 
 Source_Uniform:None
 Source_Kim:True
-Ea:48000
-A0:4890000
+Ea:70000
+A0:48900000
 dH:63000000000
 
 #Ea=40000 # [J/mol] Approx value from Kim's paper
@@ -76,7 +76,7 @@ Time_Scheme:Explicit
 Convergence:0.0001
 Max_iterations:100
 
-Output_directory:C:\Users\mepps\Documents\Research\2D_Conduction\Tests\Tign\1
+Output_directory:C:\Users\mepps\Documents\Research\2D_Conduction\Tests\Tign\4
 #Output_directory:C:\Users\Joseph\Documents\School\Research\2D_Conduction\Tests\Nanothermite\2
 Number_Data_Output:6
 

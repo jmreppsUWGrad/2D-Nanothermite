@@ -129,24 +129,23 @@ print('#              Created by J. Mark Epps               #')
 print('#          Part of Masters Thesis at UW 2018-2020    #')
 print('######################################################\n')
 
-#os.chdir('Tests/Non-nt')
-#times=['9028.197115']
 
 A0=4.89e6
-Ea=48000
+Ea=70000
 
-# Const. properties
-#os.chdir('Tests/Nanothermite/4')
-#times=['0.000000','0.000236','0.000471','0.000707','0.000943',\
-#       '0.001179','0.001414']#, '0.001650', '0.001886', '0.002121',\
-#       '0.002357', '0.002593', '0.002829']
-# Varying properties
-os.chdir('Tests/Tign/1')
-times=['0.000000','0.000203','0.000376','0.000548','0.000721',\
-       '0.000893','0.001065']#,'0.001230','0.001402']
-#times=['0.000000','0.000070','0.000113','0.000156','0.000199',\
-#       '0.000242','0.000285','0.000328','0.000371','0.000414',\
-#       '0.000458','0.000501','0.000544']
+os.chdir('Tests/Tign/4')
+
+times=os.listdir('.')
+i=len(times)
+j=0
+while i>j:
+    if st.find(times[j],'eta')==0 and st.find(times[j],'.npy')>0:
+        times[j]=st.split(st.split(times[j],'_')[1],'.npy')[0]
+        j+=1
+    else:
+        del times[j]
+        i-=1
+
 for time in times:
     X=np.load('X.npy', False)
     Y=np.load('Y.npy', False)

@@ -4,14 +4,17 @@ Diverging values: Ea=4000, A0=1e6, dH=300000; Ea=4000, A0=1e8, dH=300000;
 Ea=40000
 A0=1e8
 dH=300000
+v=1.7 m/s
 2.
 Ea=40000
 A0=1e8
 dH=30000
+v is small
 3.
 Ea=40000
 A0=1e8
 dH=1200
+v is small
 4.
 DUMMY FOLDER
 5.
@@ -20,15 +23,19 @@ DUMMY FOLDER
 Ea=40000
 A0=1e6
 dH=30000
+v is small
 7.
 Ea=40000
 A0=1e7
 dH=300000
+v is small
 8.
 Ea=70000
 A0=1e8
 dH=300000
+v is small
 9.
 Ea=170000
 A0=1e8
 dH=300000
+v is small

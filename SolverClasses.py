@@ -355,7 +355,7 @@ class TwoDimPlanarSolve():
             ###################################################################
             if (numpy.isnan(numpy.amax(self.Domain.T))) \
             or (numpy.amax(self.Domain.T)>100*numpy.amax(T_0)) \
-            or (numpy.amin(self.Domain.T)<=0):
+            or (numpy.amin(self.Domain.T)<=0) or (numpy.amax(self.Domain.eta)>1.0):
                 print '**************Divergence detected****************'
                 return 1, dt
             
