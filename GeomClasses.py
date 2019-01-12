@@ -160,14 +160,14 @@ class TwoDimPlanar:
         rho0,Cv0,k0=5643,599,39
         
         # Changing with eta
-#        self.k=(self.eta/k1+(1-self.eta)/k0)**(-1)
-#        self.rho=self.eta*rho1+(1-self.eta)*rho0
-#        self.Cv=self.eta*Cv1+(1-self.eta)*Cv0
+        self.k=(self.eta/k1+(1-self.eta)/k0)**(-1)
+        self.rho=self.eta*rho1+(1-self.eta)*rho0
+        self.Cv=self.eta*Cv1+(1-self.eta)*Cv0
         
         # Constant
-        self.k[:,:]=70
-        self.rho[:,:]=6000
-        self.Cv[:,:]=550
+#        self.k[:,:]=70
+#        self.rho[:,:]=6000
+#        self.Cv[:,:]=550
     
     # Check everything before solving
     def IsReadyToSolve(self):

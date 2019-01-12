@@ -117,21 +117,21 @@ print '################################'
 ##########################################################################
 # -------------------------------------File setups
 ##########################################################################
-#print 'Initializing files...'
+print 'Saving input file to output directory...'
 #datTime=str(datetime.date(datetime.now()))+'_'+'{:%H%M}'.format(datetime.time(datetime.now()))
-#isBinFile=False
-#
-##output_file=FileClasses.FileOut('Output_'+datTime, isBinFile)
-#input_file=FileClasses.FileOut('Input_'+datTime, isBinFile)
-#
-## Write headers to files
-#input_file.header_cond('INPUT')
-##output_file.header('OUTPUT')
-#
-## Write input file with settings
-#input_file.input_writer_cond(settings, BCs, domain.T)
-#input_file.close()
-#print '################################\n'
+isBinFile=False
+
+#output_file=FileClasses.FileOut('Output_'+datTime, isBinFile)
+input_file=FileClasses.FileOut('Input_file', isBinFile)
+
+# Write headers to files
+input_file.header_cond('INPUT')
+#output_file.header('OUTPUT')
+
+# Write input file with settings
+input_file.input_writer_cond(settings, Sources, BCs, domain.T)
+input_file.close()
+print '################################\n'
 
 print 'Saving data to numpy array files...'
 np.save('T_'+'0.000000', domain.T, False)
@@ -142,7 +142,7 @@ np.save('Y', domain.Y, False)
 ##########################################################################
 # -------------------------------------Solve
 ##########################################################################
-t,nt=0,0
+t,nt,tign=0,0,0
 output_data_t,output_data_nt=0,0
 if settings['total_time_steps']=='None':
     settings['total_time_steps']=settings['total_time']*10**9
@@ -170,11 +170,14 @@ while nt<settings['total_time_steps'] and t<settings['total_time']:
         np.save('eta_'+'{:f}'.format(t), domain.eta, False)
         
     # Change boundary conditions
-    if np.amax(domain.eta)>=0.999 and not BCs_changed:
+    if np.amax(domain.T)>=1200 and not BCs_changed:
+#    if np.amax(domain.eta)>=0.999 and not BCs_changed:
         solver.BCs['bc_north']=['C',(5,300),(0,-1)]
         BCs_changed=True
+        tign=t
 #        break
     
+print 'Ignition time: %f'%tign
 #output_file.close()
 
 ##########################################################################

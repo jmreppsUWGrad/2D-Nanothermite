@@ -59,7 +59,8 @@ class Source_terms():
         detadt=self.A0*(1-eta)*np.exp(-self.Ea/self.R/T)
         eta+=dt*detadt
         
-        return rho*at*self.dH*detadt
+#        return rho*at*self.dH*detadt
+        return at*self.dH*detadt
     
     # Calculate source term for combustion (NEEDS MODIFYING)
     def Source_Comb(self, T, y_species, dx, dy):

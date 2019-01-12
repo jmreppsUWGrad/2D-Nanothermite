@@ -1,0 +1,6 @@
+Flux removed when T reached 1200K somewhere; Varying rho, k, Cv with eta; CHANGED COMBUSTION CALCULATION;
+Diverging values:
+1./1b.
+Ea=48000
+A0=4.89e6
+dH=63000000000

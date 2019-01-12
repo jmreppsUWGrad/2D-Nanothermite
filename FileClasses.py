@@ -46,7 +46,7 @@ class FileOut():
         self.Write_single_line('############### '+title+' FILE #########################')
         self.Write_single_line('##########'+self.name+'##################\n')
     
-    def input_writer_cond(self, settings, BCs, T):
+    def input_writer_cond(self, settings, Sources, BCs, T):
         self.Write_single_line('Settings:')
         keys=['Length','Width','Nodes_x','Nodes_y','k','Cp','rho']
         for i in keys:
@@ -55,13 +55,6 @@ class FileOut():
             self.Write_single_line(str(settings[i]))
 #            self.fout.write('\n')
         
-        self.Write_single_line('\nSource Terms:')
-        keys=['Source_Uniform','Source_Kim','Ea','A0','dH']
-        for i in keys:
-            self.fout.write(i)
-            self.fout.write(':')
-            self.Write_single_line(str(settings[i]))
-
         self.Write_single_line('\nMeshing details:')
         keys=['bias_type_x','bias_size_x','bias_type_y','bias_size_y']
         for i in keys:
@@ -70,10 +63,14 @@ class FileOut():
             self.Write_single_line(str(settings[i]))
 #            self.fout.write('\n')
         
+        self.Write_single_line('\nSource Terms:')
+        for i in keys_Sources:
+            self.fout.write(i)
+            self.fout.write(':')
+            self.Write_single_line(str(Sources[i]))
+
         self.Write_single_line('\nTime advancement:')
-        keys=['Fo','dt','total_time_steps', 'Time_Scheme','Convergence',\
-              'Max_iterations','Output_directory']
-        for i in keys:
+        for i in keys_Time_adv:
             self.fout.write(i)
             self.fout.write(':')
             self.Write_single_line(str(settings[i]))
@@ -86,10 +83,10 @@ class FileOut():
             self.Write_single_line(str(BCs[i]))
 #            self.fout.write('\n')
         
-        self.fout.write('\nInitial conditions:\n')
-        self.Write_single_line('T')
-        for i in range(len(T[:,0])):
-            self.Write_single_line(str(T[i,:]))
+#        self.fout.write('\nInitial conditions:\n')
+#        self.Write_single_line('T')
+#        for i in range(len(T[:,0])):
+#            self.Write_single_line(str(T[i,:]))
         
         self.fout.write('\n')
         
