@@ -26,7 +26,7 @@ Source Terms:
 Source_Uniform:None
 Source_Kim:True
 Ea:70000.0
-A0:48900000.0
+A0:4890000.0
 dH:63000000000.0
 
 Time advancement:

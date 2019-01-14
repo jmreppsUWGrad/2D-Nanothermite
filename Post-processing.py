@@ -129,12 +129,22 @@ print('#              Created by J. Mark Epps               #')
 print('#          Part of Masters Thesis at UW 2018-2020    #')
 print('######################################################\n')
 
-
-A0=4.89e6
-Ea=70000
-
 os.chdir('Tests/Tign/4')
 
+# Get Arrhenius parameters
+A0=-1.0
+Ea=-1.0
+input_file=open('Input_file.txt')
+while A0<0 or Ea<0:
+    line=input_file.readline()
+    if st.find(line, 'Ea')==0:
+        Ea=float(st.split(line, ':')[1])
+    elif st.find(line, 'A0')==0:
+        A0=float(st.split(line, ':')[1])
+input_file.close()
+#print 'Ea=%f, A0=%f'%(Ea,A0)
+
+# Get times to process
 times=os.listdir('.')
 i=len(times)
 j=0
@@ -146,6 +156,7 @@ while i>j:
         del times[j]
         i-=1
 
+# Generate graphs
 for time in times:
     X=np.load('X.npy', False)
     Y=np.load('Y.npy', False)

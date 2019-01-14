@@ -170,8 +170,8 @@ while nt<settings['total_time_steps'] and t<settings['total_time']:
         np.save('eta_'+'{:f}'.format(t), domain.eta, False)
         
     # Change boundary conditions
-    if np.amax(domain.T)>=1200 and not BCs_changed:
-#    if np.amax(domain.eta)>=0.999 and not BCs_changed:
+#    if np.amax(domain.T)>=1200 and not BCs_changed:
+    if np.amax(domain.eta)>=0.999 and not BCs_changed:
         solver.BCs['bc_north']=['C',(5,300),(0,-1)]
         BCs_changed=True
         tign=t

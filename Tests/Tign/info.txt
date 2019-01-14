@@ -18,9 +18,9 @@ A0=4.89e6
 dH=63000000000
 tign=0.22 ms
 v~0 m/s
-4.
-Ea=
-A0=
-dH=
-tign=0. ms
-v= m/s
+4. [change to eta~1 condition to remove flux]
+Ea=70000
+A0=4.89e6
+dH=63000000000
+tign=0.18 ms
+v=7.0 m/s
