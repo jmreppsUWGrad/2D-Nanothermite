@@ -1,0 +1,42 @@
+Flux removed when eta reached ### somewhere; Varying rho, k, Cv with eta; CHANGED COMBUSTION CALCULATION;
+Diverging values:
+1.
+eta>=0.999
+Ea=70000
+A0=4.89e6
+dH=63000000000
+tign=0.18 ms
+v=7.0 m/s
+Tmax~20000-24000 K
+2.
+eta>=0.90
+Ea=70000
+A0=4.89e6
+dH=63000000000
+tign= 0.18 ms
+v= 7.0 m/s
+Tmax~20000-24000 K
+3.
+eta>=0.80
+Ea=70000
+A0=4.89e6
+dH=63000000000
+tign= 0.18 ms
+v= 7.0 m/s
+Tmax~20000-24000 K
+4.
+eta>=0.70
+Ea=70000
+A0=4.89e6
+dH=63000000000
+tign= 0.18 ms
+v= 7.0 m/s
+Tmax~20000-24000 K
+5.
+eta>=0.50
+Ea=70000
+A0=4.89e6
+dH=63000000000
+tign= 0.18 ms
+v= 7.0 m/s
+Tmax~20000-24000 K

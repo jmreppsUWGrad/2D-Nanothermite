@@ -11,7 +11,8 @@ solver object.
 
 Assumptions:
     -equal discretization spacings in either x or y (want to adjust)
-    -constant thermal conductivity (eventually make distribution)
+    -thermal conductivity, specific heat and density varies in space and
+    with reaction progress (eta)
 
 Features:
     -time step based on Fourrier number and local discretizations in x and y

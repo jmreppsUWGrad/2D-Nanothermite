@@ -129,7 +129,7 @@ print('#              Created by J. Mark Epps               #')
 print('#          Part of Masters Thesis at UW 2018-2020    #')
 print('######################################################\n')
 
-os.chdir('Tests/Tign/4')
+os.chdir('Tests/dH/2')
 
 # Get Arrhenius parameters
 A0=-1.0

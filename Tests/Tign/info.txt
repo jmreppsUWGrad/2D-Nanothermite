@@ -1,26 +1,55 @@
-Flux removed when T reached 1200K somewhere; Varying rho, k, Cv with eta; CHANGED COMBUSTION CALCULATION;
+Flux removed when T reached ####K somewhere; Varying rho, k, Cv with eta; CHANGED COMBUSTION CALCULATION;
 Diverging values:Ea=70000, A0=4.89e7, dH=63000000000; 
 1.
+T=1200 K
 Ea=48000
 A0=4.89e6
 dH=63000000000
 tign=0.049ms
 v=8.7 m/s
 2.
+T=1200 K
 Ea=70000
 A0=4.89e6
 dH=63000000000
 tign=0.17 ms
 v=6.9 m/s
 3.
+T=1200 K
 Ea=78000
 A0=4.89e6
 dH=63000000000
 tign=0.22 ms
 v~0 m/s
-4. [change to eta~1 condition to remove flux]
+4. 
+T= 800 K
 Ea=70000
 A0=4.89e6
 dH=63000000000
-tign=0.18 ms
-v=7.0 m/s
+tign=0.096 ms
+v~0m/s
+Tmax~400 K
+5. 
+T= 900 K
+Ea=70000
+A0=4.89e6
+dH=63000000000
+tign=0.13 ms
+v~0m/s
+Tmax~460 K
+6. 
+T= 1000 K
+Ea=70000
+A0=4.89e6
+dH=63000000000
+tign=0.15 ms
+v~0m/s
+Tmax~500 K
+7. 
+T= 800 K
+Ea=48000
+A0=4.89e6
+dH=63000000000
+tign=0.045 ms
+v~m/s
+Tmax~ K
