@@ -1,5 +1,5 @@
 FOLDERS:
-ChangingProp-first tests with thermal properties dep. on eta
+ChangingProp-first tests with thermal properties dep. on eta; further folders follow this
 Tign-testing different Temperature values for removing flux BC
 Eign-testing different eta values for removing flux BC
 Flux-testing different flux values (then adjusting other param)
