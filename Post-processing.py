@@ -129,8 +129,14 @@ print('#              Created by J. Mark Epps               #')
 print('#          Part of Masters Thesis at UW 2018-2020    #')
 print('######################################################\n')
 
-os.chdir('Tests/4')
+inputargs=sys.argv
+if len(inputargs)>1:
+    dir_files=inputargs[1]
 
+try:
+    os.chdir(dir_files)
+except:
+    sys.exit('Directory "'+dir_files+'" not found')
 # Get Arrhenius parameters
 A0=-1.0
 Ea=-1.0

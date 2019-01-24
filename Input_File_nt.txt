@@ -20,7 +20,7 @@
 Length:0.001
 Width:0.006
 Nodes_x:101
-Nodes_y:601
+Nodes_y:1201
 k:70
 Cp:550
 rho:6000
@@ -41,7 +41,7 @@ dH:63000000000
 #        A0=1e8 # [1/s] Fudged value
 #        dH=1200 # [J/mol] Value taken from V. Baijot et al., A multi-phase ..., Combustion and Flame, 2017.
 #        dH=30000 #[J/kg] approx from ...
-#   dH=63000000000, 4070000
+#   dH=63000000000, 4070000 [density]
 
 ######################################################
 #			Meshing details
@@ -70,7 +70,7 @@ bias_size_y:1e-06
 
 Fo:0.2
 dt:None
-total_time_steps:1000
+total_time_steps:6000
 total_time:None
 Time_Scheme:Explicit
 
@@ -79,7 +79,7 @@ Max_iterations:100
 
 #Output_directory:C:\Users\mepps\Documents\Research\2D_Conduction\Tests\4
 #Output_directory:C:\Users\Joseph\Documents\School\Research\2D_Conduction\Tests\Nanothermite\2
-Number_Data_Output:1
+Number_Data_Output:6
 
 ######################################################
 #			Boundary conditions

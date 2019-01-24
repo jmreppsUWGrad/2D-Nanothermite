@@ -302,6 +302,7 @@ class TwoDimPlanarSolve():
     def Advance_Soln_Cond(self, nt, t):
         T_0=self.Domain.T.copy()
         T_c=self.Domain.T.copy()
+        deta=0
         
         # Calculate properties based on eta
         self.Domain.calcProp()

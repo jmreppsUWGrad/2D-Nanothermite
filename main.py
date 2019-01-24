@@ -188,7 +188,7 @@ while nt<settings['total_time_steps'] and t<settings['total_time']:
         tign=t
 #        break
     
-print 'Ignition time: %f'%tign
+print 'Ignition time: %f ms'%(tign*1000)
 #output_file.close()
 
 ##########################################################################
