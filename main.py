@@ -56,6 +56,7 @@ import numpy as np
 #from mpl_toolkits.mplot3d import Axes3D
 #from datetime import datetime
 import os
+import sys
 #import CoolProp.CoolProp as CP
 
 #from GeomClasses import OneDimLine as OneDimLine
@@ -78,17 +79,27 @@ print('#              Created by J. Mark Epps               #')
 print('#          Part of Masters Thesis at UW 2018-2020    #')
 print('######################################################\n')
 
+# Get arguments to script execution
+settings={}
+BCs={}
+Sources={}
+inputargs=sys.argv
+if len(inputargs)>1:
+    input_file=inputargs[1]
+    settings['Output_directory']=inputargs[2]
 ##########################################################################
 # -------------------------------------Read input file
 ##########################################################################
 print 'Reading input file...'
-settings={}
-BCs={}
-Sources={}
 #fin=FileClasses.FileIn('Input_File', 0)
-fin=FileClasses.FileIn('Input_File_nt', 0)
+#fin=FileClasses.FileIn('Input_File_nt', 0)
+fin=FileClasses.FileIn(input_file, 0)
 fin.Read_Input(settings, Sources, BCs)
-os.chdir(settings['Output_directory'])
+try:
+    os.chdir(settings['Output_directory'])
+except:
+    os.makedirs(settings['Output_directory'])
+    os.chdir(settings['Output_directory'])
 
 print '################################'
 

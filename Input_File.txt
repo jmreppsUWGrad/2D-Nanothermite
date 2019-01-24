@@ -33,6 +33,9 @@ rho:8000
 
 Source_Uniform:None
 Source_Kim:None
+Ea:48000
+A0:4890000
+dH:63000000000
 
 ######################################################
 #			Meshing details
@@ -55,7 +58,7 @@ bias_size_y:1e-06
 
 Fo:1.5
 dt:None
-total_time_steps:1000
+total_time_steps:100
 total_time:None
 Time_Scheme:Implicit
 
@@ -64,7 +67,7 @@ Max_iterations:100
 
 Output_directory:C:\Users\mepps\Documents\Research\2D_Conduction\Tests\Non-nt
 #Output_directory:C:\Users\Joseph\Documents\School\Research\2D_Conduction\Tests
-Number_Data_Output:1
+Number_Data_Output:10
 
 ######################################################
 #			Boundary conditions

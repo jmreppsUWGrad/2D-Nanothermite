@@ -24,7 +24,7 @@ Features:
 
 @author: Joseph
 """
-import numpy
+import numpy as np
 
 class TwoDimPlanar:
     def __init__(self, settings, solver):
@@ -33,10 +33,10 @@ class TwoDimPlanar:
         self.W=settings['Width']
         self.Nx=settings['Nodes_x']
         self.Ny=settings['Nodes_y']
-        self.x=numpy.zeros(self.Nx)
-        self.y=numpy.zeros(self.Ny)
-        self.dx=numpy.zeros(self.Nx) # NOTE: SIZE MADE TO MATCH REST OF ARRAYS (FOR NOW)
-        self.dy=numpy.zeros(self.Ny) # NOTE: SIZE MADE TO MATCH REST OF ARRAYS (FOR NOW)
+        self.x=np.zeros(self.Nx)
+        self.y=np.zeros(self.Ny)
+        self.dx=np.zeros(self.Nx) # NOTE: SIZE MADE TO MATCH REST OF ARRAYS (FOR NOW)
+        self.dy=np.zeros(self.Ny) # NOTE: SIZE MADE TO MATCH REST OF ARRAYS (FOR NOW)
 #        self.k=settings['k']
         # Fluid solver
         if solver=='Fluid':
@@ -45,25 +45,23 @@ class TwoDimPlanar:
             self.mu=settings['mu']
             self.R=settings['R']
             # Setup variable arrays
-            self.tau11=numpy.zeros((self.Ny, self.Nx)) # Shear stress arrays
-            self.tau12=numpy.zeros((self.Ny, self.Nx))
-            self.tau22=numpy.zeros((self.Ny, self.Nx))
-            self.rhoE=numpy.zeros((self.Ny, self.Nx)) # Conservative arrays
-            self.rhou=numpy.zeros((self.Ny,self.Nx))
-            self.rhov=numpy.zeros((self.Ny,self.Nx))
-            self.rho=numpy.zeros((self.Ny,self.Nx)) # Primitive arrays
+            self.tau11=np.zeros((self.Ny, self.Nx)) # Shear stress arrays
+            self.tau12=np.zeros((self.Ny, self.Nx))
+            self.tau22=np.zeros((self.Ny, self.Nx))
+            self.rhoE=np.zeros((self.Ny, self.Nx)) # Conservative arrays
+            self.rhou=np.zeros((self.Ny,self.Nx))
+            self.rhov=np.zeros((self.Ny,self.Nx))
+            self.rho=np.zeros((self.Ny,self.Nx)) # Primitive arrays
             
             self.Cv=self.R/(self.gamma-1)
         else:
-#            self.Cv=settings['Cp']
-#            self.rho=settings['rho']
-            self.T=numpy.zeros((self.Ny, self.Nx))
-            self.eta=numpy.zeros((self.Ny, self.Nx))
-            self.k=numpy.zeros((self.Ny, self.Nx))
-            self.rho=numpy.zeros((self.Ny, self.Nx))
-            self.Cv=numpy.zeros((self.Ny, self.Nx))
-#            self.Y_species=numpy.zeros((self.Ny, self.Nx, 15)) # species array
-#            self.P=numpy.zeros((self.Ny, self.Nx))
+            self.T=np.zeros((self.Ny, self.Nx))
+            self.eta=np.zeros((self.Ny, self.Nx))
+            self.k=np.zeros((self.Ny, self.Nx))
+            self.rho=np.zeros((self.Ny, self.Nx))
+            self.Cv=np.zeros((self.Ny, self.Nx))
+#            self.Y_species=np.zeros((self.Ny, self.Nx, 15)) # species array
+#            self.P=np.zeros((self.Ny, self.Nx))
         
         # Biasing options       
         self.xbias=[settings['bias_type_x'], settings['bias_size_x']]
@@ -77,27 +75,27 @@ class TwoDimPlanar:
         # Discretize x
         if self.xbias[0]=='OneWayUp':
             smallest=self.xbias[1]
-            self.dx[:-1]=numpy.linspace(2*self.L/(self.Nx-1)-smallest,smallest,self.Nx-1)
+            self.dx[:-1]=np.linspace(2*self.L/(self.Nx-1)-smallest,smallest,self.Nx-1)
             self.dx[-1]=self.dx[-2]
             print 'One way biasing in x: smallest element at x=%2f'%self.L
             print 'Element size range: %2f, %2f'%(smallest, 2*self.L/(self.Nx-1)-smallest)
         elif self.xbias[0]=='OneWayDown':
             smallest=self.xbias[1]
-            self.dx[:-1]=numpy.linspace(smallest,2*self.L/(self.Nx-1)-smallest,self.Nx-1)
+            self.dx[:-1]=np.linspace(smallest,2*self.L/(self.Nx-1)-smallest,self.Nx-1)
             self.dx[-1]=self.dx[-2]
             print 'One way biasing in x: smallest element at x=0'
             print 'Element size range: %2f, %2f'%(smallest, 2*self.L/(self.Nx-1)-smallest)
         elif self.xbias[0]=='TwoWayEnd':
             smallest=self.xbias[1]
-            self.dx[:int(self.Nx/2)]=numpy.linspace(smallest,2*self.L/(self.Nx-1)-smallest,(self.Nx-1)/2)
-            self.dx[int(self.Nx/2):-1]=numpy.linspace(2*self.L/(self.Nx-1)-smallest,smallest,(self.Nx-1)/2)
+            self.dx[:int(self.Nx/2)]=np.linspace(smallest,2*self.L/(self.Nx-1)-smallest,(self.Nx-1)/2)
+            self.dx[int(self.Nx/2):-1]=np.linspace(2*self.L/(self.Nx-1)-smallest,smallest,(self.Nx-1)/2)
             self.dx[-1]=self.dx[-2]
             print 'Two way biasing in x: smallest elements at x=0 and %2f'%self.L
             print 'Element size range: %2f, %2f'%(smallest, 2*self.L/(self.Nx-1)-smallest)
         elif self.xbias[0]=='TwoWayMid':
             smallest=self.xbias[1]
-            self.dx[:int(self.Nx/2)]=numpy.linspace(2*self.L/(self.Nx-1)-smallest,smallest,(self.Nx-1)/2)
-            self.dx[int(self.Nx/2):-1]=numpy.linspace(smallest,2*self.L/(self.Nx-1)-smallest,(self.Nx-1)/2)
+            self.dx[:int(self.Nx/2)]=np.linspace(2*self.L/(self.Nx-1)-smallest,smallest,(self.Nx-1)/2)
+            self.dx[int(self.Nx/2):-1]=np.linspace(smallest,2*self.L/(self.Nx-1)-smallest,(self.Nx-1)/2)
             self.dx[-1]=self.dx[-2]
             print 'Two way biasing in x: smallest elements around x=%2f'%(self.L/2)
             print 'Element size range: %2f, %2f'%(smallest, 2*self.L/(self.Nx-1)-smallest)
@@ -108,27 +106,27 @@ class TwoDimPlanar:
         # Discretize y
         if self.ybias[0]=='OneWayUp':
             smallest=self.ybias[1]
-            self.dy[:-1]=numpy.linspace(2*self.W/(self.Ny-1)-smallest,smallest,self.Ny-1)
+            self.dy[:-1]=np.linspace(2*self.W/(self.Ny-1)-smallest,smallest,self.Ny-1)
             self.dy[-1]=self.dy[-2]
             print 'One way biasing in y: smallest element at y=%2f'%self.W
             print 'Element size range: %2f, %2f'%(smallest, 2*self.W/(self.Ny-1)-smallest)
         elif self.ybias[0]=='OneWayDown':
             smallest=self.ybias[1]
-            self.dy[:-1]=numpy.linspace(smallest,2*self.W/(self.Ny-1)-smallest,self.Ny-1)
+            self.dy[:-1]=np.linspace(smallest,2*self.W/(self.Ny-1)-smallest,self.Ny-1)
             self.dy[-1]=self.dy[-2]
             print 'One way biasing in y: smallest element at y=0'
             print 'Element size range: %2f, %2f'%(smallest, 2*self.W/(self.Ny-1)-smallest)
         elif self.ybias[0]=='TwoWayEnd':
             smallest=self.ybias[1]
-            self.dy[:int(self.Ny/2)]=numpy.linspace(smallest,2*self.W/(self.Ny-1)-smallest,(self.Ny-1)/2)
-            self.dy[int(self.Ny/2):-1]=numpy.linspace(2*self.W/(self.Ny-1)-smallest,smallest,(self.Ny-1)/2)
+            self.dy[:int(self.Ny/2)]=np.linspace(smallest,2*self.W/(self.Ny-1)-smallest,(self.Ny-1)/2)
+            self.dy[int(self.Ny/2):-1]=np.linspace(2*self.W/(self.Ny-1)-smallest,smallest,(self.Ny-1)/2)
             self.dy[-1]=self.dy[-2]
             print 'Two way biasing in y: smallest elements at y=0 and %2f'%self.W
             print 'Element size range: %2f, %2f'%(smallest, 2*self.W/(self.Ny-1)-smallest)
         elif self.ybias[0]=='TwoWayMid':
             smallest=self.ybias[1]
-            self.dy[:int(self.Ny/2)]=numpy.linspace(2*self.W/(self.Ny-1)-smallest,smallest,(self.Ny-1)/2)
-            self.dy[int(self.Ny/2):-1]=numpy.linspace(smallest,2*self.W/(self.Ny-1)-smallest,(self.Ny-1)/2)
+            self.dy[:int(self.Ny/2)]=np.linspace(2*self.W/(self.Ny-1)-smallest,smallest,(self.Ny-1)/2)
+            self.dy[int(self.Ny/2):-1]=np.linspace(smallest,2*self.W/(self.Ny-1)-smallest,(self.Ny-1)/2)
             self.dy[-1]=self.dy[-2]
             print 'Two way biasing in y: smallest elements around y=%2f'%(self.W/2)
             print 'Element size range: %2f, %2f'%(smallest, 2*self.W/(self.Ny-1)-smallest)
@@ -140,7 +138,7 @@ class TwoDimPlanar:
             self.x[i+1]=self.x[i]+self.dx[i]
         for i in range(self.Ny-1):
             self.y[i+1]=self.y[i]+self.dy[i]
-        self.X,self.Y=numpy.meshgrid(self.x,self.y)
+        self.X,self.Y=np.meshgrid(self.x,self.y)
         
         self.isMeshed=True
     

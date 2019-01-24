@@ -43,24 +43,25 @@ class Source_terms():
     # K. Kim, "Computational Modeling of Combustion Wave in Nanoscale Thermite Reaction",
     # Int. J of Energy and Power engineering, vol.8, no.7, pp. 612-615, 2014.
     def Source_Comb_Kim(self, rho, T, eta, dx, dy, dt):
-        at=np.zeros_like(dx)
+#        at=np.zeros_like(dx)
         
         # CV dimensions
-        at[1:-1,1:-1]=0.25*(dx[1:-1,1:-1]+dx[1:-1,:-2])*(dy[1:-1,1:-1]+dy[:-2,1:-1])
-        at[0,0]      =0.25*(dx[0,0])*(dy[0,0])
-        at[0,1:-1]   =0.25*(dx[0,1:-1]+dx[0,:-2])*(dy[0,1:-1])
-        at[1:-1,0]   =0.25*(dx[1:-1,0])*(dy[1:-1,0]+dy[:-2,0])
-        at[0,-1]     =0.25*(dx[0,-1])*(dy[0,-1])
-        at[-1,0]     =0.25*(dx[-1,0])*(dy[-1,0])
-        at[-1,1:-1]  =0.25*(dx[-1,1:-1]+dx[-1,:-2])*(dy[-1,1:-1])
-        at[1:-1,-1]  =0.25*(dx[1:-1,-1])*(dy[1:-1,-1]+dy[:-2,-1])
-        at[-1,-1]    =0.25*(dx[-1,-1])*(dy[-1,-1])
+#        at[1:-1,1:-1]=0.25*(dx[1:-1,1:-1]+dx[1:-1,:-2])*(dy[1:-1,1:-1]+dy[:-2,1:-1])
+#        at[0,0]      =0.25*(dx[0,0])*(dy[0,0])
+#        at[0,1:-1]   =0.25*(dx[0,1:-1]+dx[0,:-2])*(dy[0,1:-1])
+#        at[1:-1,0]   =0.25*(dx[1:-1,0])*(dy[1:-1,0]+dy[:-2,0])
+#        at[0,-1]     =0.25*(dx[0,-1])*(dy[0,-1])
+#        at[-1,0]     =0.25*(dx[-1,0])*(dy[-1,0])
+#        at[-1,1:-1]  =0.25*(dx[-1,1:-1]+dx[-1,:-2])*(dy[-1,1:-1])
+#        at[1:-1,-1]  =0.25*(dx[1:-1,-1])*(dy[1:-1,-1]+dy[:-2,-1])
+#        at[-1,-1]    =0.25*(dx[-1,-1])*(dy[-1,-1])
         
         detadt=self.A0*(1-eta)*np.exp(-self.Ea/self.R/T)
-        eta+=dt*detadt
+#        eta+=dt*detadt
         
 #        return rho*at*self.dH*detadt
-        return at*self.dH*detadt
+#        return at*self.dH*detadt
+        return detadt, self.dH
     
     # Calculate source term for combustion (NEEDS MODIFYING)
     def Source_Comb(self, T, y_species, dx, dy):
