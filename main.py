@@ -172,6 +172,9 @@ while nt<settings['total_time_steps'] and t<settings['total_time']:
 #    print 'Time step %i, Step size=%.7f, Time elapsed=%f;'%(nt+1,dt, t)
     if err==1:
         print '#################### Solver aborted #######################'
+        print 'Saving data to numpy array files...'
+        np.save('T_'+'{:f}'.format(t), domain.T, False)
+        np.save('eta_'+'{:f}'.format(t), domain.eta, False)
         break
     
     # Output data to numpy files

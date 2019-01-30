@@ -11,7 +11,7 @@ Settings:
 Length:0.001
 Width:0.006
 Nodes_x:101
-Nodes_y:601
+Nodes_y:1201
 k:70.0
 Cp:550.0
 rho:6000.0
@@ -32,13 +32,13 @@ dH:63000000000.0
 Time advancement:
 Fo:0.2
 dt:None
-total_time_steps:1000
+total_time_steps:6000
 total_time:None
 Time_Scheme:Explicit
 Convergence:0.0001
 Max_iterations:100
 Output_directory:Tests/4
-Number_Data_Output:1
+Number_Data_Output:6
 
 Boundary conditions:
 bc_left:['F', 0.0, (0, -1)]

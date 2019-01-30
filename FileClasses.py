@@ -105,7 +105,7 @@ class FileIn():
             read_type='rb'
         else:
             read_type='r'
-        self.fin=open(filename+'.txt', read_type)
+        self.fin=open(filename, read_type)
         
     def Read_Input(self, settings, Sources, BCs):
         for line in self.fin:

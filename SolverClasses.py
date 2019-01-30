@@ -302,7 +302,6 @@ class TwoDimPlanarSolve():
     def Advance_Soln_Cond(self, nt, t):
         T_0=self.Domain.T.copy()
         T_c=self.Domain.T.copy()
-        deta=0
         
         # Calculate properties based on eta
         self.Domain.calcProp()
@@ -338,8 +337,7 @@ class TwoDimPlanarSolve():
             if self.source_unif!='None':
                 self.Domain.T     += self.get_source.Source_Uniform(self.source_unif, self.dx, self.dy)
             if self.source_Kim=='True':
-                deta,dH=self.get_source.Source_Comb_Kim(self.Domain.rho, T_c, self.Domain.eta, self.dx, self.dy, dt)
-                self.Domain.T     +=(at/self.Domain.rho/self.Domain.Cv*dt)*dH*deta
+                self.Domain.T     +=self.get_source.Source_Comb_Kim(self.Domain.rho, T_c, self.Domain.eta, self.dx, self.dy, dt)
             
             ###################################################################
             # Apply temperature from previous time step and boundary conditions
@@ -372,7 +370,6 @@ class TwoDimPlanarSolve():
         ###################################################################
         # Output data to file?????
         ###################################################################
-        self.Domain.eta+=deta*dt
         
         if count==self.countmax:
             print '*************No convergence reached*****************'
