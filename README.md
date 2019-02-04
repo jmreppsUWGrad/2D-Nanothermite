@@ -18,7 +18,7 @@ python main.py [input file name] [Output directory]
 
 where:
 
-[input file name]-name of input file; must be txt file; do NOT include extension in name
+[input file name]-name of input file including extension in name (.txt files have been tested)
 
 [Output directory]-directory to save data files to; based on current directory; will create if non-existent
 

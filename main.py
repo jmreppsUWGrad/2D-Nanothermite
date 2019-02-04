@@ -84,9 +84,16 @@ settings={}
 BCs={}
 Sources={}
 inputargs=sys.argv
-if len(inputargs)>1:
+if len(inputargs)>2:
     input_file=inputargs[1]
     settings['Output_directory']=inputargs[2]
+else:
+    print 'Usage is: python main.py [Input file] [Output directory]\n'
+    print 'where\n'
+    print '[Input file] is the name of the input file with extension; must be in current directory'
+    print '[Output directory] is the directory to output the data; will create relative to current directory if it does not exist'
+    print '***********************************'
+    sys.exit('Solver not started')
 ##########################################################################
 # -------------------------------------Read input file
 ##########################################################################

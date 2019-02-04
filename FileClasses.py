@@ -115,19 +115,19 @@ class FileIn():
                 if line[0] in keys_Settings:
                     if line[0]=='Nodes_x' or line[0]=='Nodes_y':
                         settings[line[0]]=int(line[1])
-                    elif line[1]=='None\n':
+                    elif st.find(line[1], 'None')>=0:
                         settings[line[0]]=st.split(line[1], '\n')[0]
                     else:
                         settings[line[0]]=float(line[1])
                 # Source term info
                 elif line[0] in keys_Sources:
-                    if line[1]=='None\n' or line[1]=='True\n':
+                    if st.find(line[1], 'None')>=0 or st.find(line[1], 'True')>=0:
                         Sources[line[0]]=st.split(line[1], '\n')[0]
                     else:
                         Sources[line[0]]=float(line[1])
                 # Time advancement details
                 elif line[0] in keys_Time_adv:
-                    if line[0]=='Time_Scheme' or line[1]=='None\n':
+                    if line[0]=='Time_Scheme' or st.find(line[1], 'None')>=0:
                         settings[line[0]]=st.split(line[1], '\n')[0]
                     elif line[0]=='total_time_steps' or line[0]=='Max_iterations'\
                         or line[0]=='Number_Data_Output':
