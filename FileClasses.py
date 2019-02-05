@@ -46,7 +46,7 @@ class FileOut():
         self.Write_single_line('############### '+title+' FILE #########################')
         self.Write_single_line('##########'+self.name+'##################\n')
     
-    def input_writer_cond(self, settings, Sources, BCs, T):
+    def input_writer_cond(self, settings, Sources, BCs):
         self.Write_single_line('Settings:')
         keys=['Length','Width','Nodes_x','Nodes_y','k','Cp','rho']
         for i in keys:

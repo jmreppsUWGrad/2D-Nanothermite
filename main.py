@@ -129,7 +129,17 @@ solver=Solvers.TwoDimPlanarSolve(domain, settings, Sources, BCs, 'Solid')
 print '################################'
 
 print 'Initializing domain...'
-domain.T[:,:]=300
+at=np.zeros_like(domain.E)
+at[1:-1,1:-1]=0.25*(solver.dx[1:-1,1:-1]+solver.dx[1:-1,:-2])*(solver.dy[1:-1,1:-1]+solver.dy[:-2,1:-1])
+at[0,0]      =0.25*(solver.dx[0,0])*(solver.dy[0,0])
+at[0,1:-1]   =0.25*(solver.dx[0,1:-1]+solver.dx[0,:-2])*(solver.dy[0,1:-1])
+at[1:-1,0]   =0.25*(solver.dx[1:-1,0])*(solver.dy[1:-1,0]+solver.dy[:-2,0])
+at[0,-1]     =0.25*(solver.dx[0,-1])*(solver.dy[0,-1])
+at[-1,0]     =0.25*(solver.dx[-1,0])*(solver.dy[-1,0])
+at[-1,1:-1]  =0.25*(solver.dx[-1,1:-1]+solver.dx[-1,:-2])*(solver.dy[-1,1:-1])
+at[1:-1,-1]  =0.25*(solver.dx[1:-1,-1])*(solver.dy[1:-1,-1]+solver.dy[:-2,-1])
+at[-1,-1]    =0.25*(solver.dx[-1,-1])*(solver.dy[-1,-1])
+domain.E[:,:]=300*5643*599*at
 #T[:2,:]=600
 print '################################'
 ##########################################################################
@@ -147,12 +157,13 @@ input_file.header_cond('INPUT')
 #output_file.header('OUTPUT')
 
 # Write input file with settings
-input_file.input_writer_cond(settings, Sources, BCs, domain.T)
+input_file.input_writer_cond(settings, Sources, BCs)
 input_file.close()
 print '################################\n'
 
 print 'Saving data to numpy array files...'
-np.save('T_'+'0.000000', domain.T, False)
+T=domain.TempFromConserv()
+np.save('T_'+'0.000000', T, False)
 np.save('eta_'+'0.000000', domain.eta, False)
 np.save('X', domain.X, False)
 np.save('Y', domain.Y, False)
@@ -180,22 +191,24 @@ while nt<settings['total_time_steps'] and t<settings['total_time']:
     if err==1:
         print '#################### Solver aborted #######################'
         print 'Saving data to numpy array files...'
-        np.save('T_'+'{:f}'.format(t), domain.T, False)
+        T=domain.TempFromConserv()
+        np.save('T_'+'{:f}'.format(t), T, False)
         np.save('eta_'+'{:f}'.format(t), domain.eta, False)
         break
     
     # Output data to numpy files
     if output_data_nt!=0 and nt%output_data_nt==0:
         print 'Saving data to numpy array files...'
-        np.save('T_'+'{:f}'.format(t), domain.T, False)
+        T=domain.TempFromConserv()
+        np.save('T_'+'{:f}'.format(t), T, False)
         np.save('eta_'+'{:f}'.format(t), domain.eta, False)
         
     # Change boundary conditions
-    if np.amax(domain.T)>=1200 and not BCs_changed:
+#    if np.amax(domain.T)>=1200 and not BCs_changed:
 #    if np.amax(domain.eta)>=0.50 and not BCs_changed:
-        solver.BCs['bc_north']=['C',(30,300),(0,-1)]
-        BCs_changed=True
-        tign=t
+#        solver.BCs['bc_north']=['C',(30,300),(0,-1)]
+#        BCs_changed=True
+#        tign=t
 #        break
     
 print 'Ignition time: %f ms'%(tign*1000)
@@ -204,7 +217,7 @@ print 'Ignition time: %f ms'%(tign*1000)
 ##########################################################################
 # ------------------------------------Post-processing
 ##########################################################################
-T, eta=domain.T, domain.eta
+T, eta=domain.TempFromConserv(), domain.eta
 #fig2=pyplot.figure(figsize=(7,7))
 #pyplot.plot(domain.Y[:,1]*1000, domain.T[:,1],marker='x')
 #pyplot.xlabel('$y$ (mm)')

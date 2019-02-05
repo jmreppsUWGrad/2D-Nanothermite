@@ -56,7 +56,7 @@ bias_size_y:1e-06
 #	[IN PROGRESS] Number_Data_Output: Number of T variable files to be output over the time/number of steps specified
 ######################################################
 
-Fo:0.7
+Fo:0.2
 dt:None
 total_time_steps:200
 total_time:None
@@ -81,11 +81,11 @@ Number_Data_Output:20
 #  [IN PROGRESS] Profiles possible; must be same size as number of nodes on that boundary
 ######################################################
 
-bc_left:T, 300, 0, -1
+bc_left:F, 1000, 0, -1
 bc_left_rad:None
-bc_right:T, 600, 0, -1
+bc_right:F, 1000, 0, -1
 bc_right_rad:None
-bc_south:T, 600, 0, -1
+bc_south:C, 10, 300, 0, -1
 bc_south_rad:None
-bc_north:T, 300, 0, -1
+bc_north:C, 10, 300, 0, -1
 bc_north_rad:None

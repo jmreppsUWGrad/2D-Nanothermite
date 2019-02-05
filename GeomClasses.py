@@ -55,11 +55,8 @@ class TwoDimPlanar:
             
             self.Cv=self.R/(self.gamma-1)
         else:
-            self.T=np.zeros((self.Ny, self.Nx))
+            self.E=np.zeros((self.Ny, self.Nx))
             self.eta=np.zeros((self.Ny, self.Nx))
-            self.k=np.zeros((self.Ny, self.Nx))
-            self.rho=np.zeros((self.Ny, self.Nx))
-            self.Cv=np.zeros((self.Ny, self.Nx))
 #            self.Y_species=np.zeros((self.Ny, self.Nx, 15)) # species array
 #            self.P=np.zeros((self.Ny, self.Nx))
         
@@ -154,19 +151,42 @@ class TwoDimPlanar:
     
     # Calculate temperature dependent properties
     def calcProp(self):
+        k=np.zeros_like(self.eta)
+        rho=np.zeros_like(self.eta)
+        Cv=np.zeros_like(self.eta)
+        
         rho1,Cv1,k1=7191,518,108
         rho0,Cv0,k0=5643,599,39
         
         # Changing with eta
-        self.k=(self.eta/k1+(1-self.eta)/k0)**(-1)
-        self.rho=self.eta*rho1+(1-self.eta)*rho0
-        self.Cv=self.eta*Cv1+(1-self.eta)*Cv0
+        k=(self.eta/k1+(1-self.eta)/k0)**(-1)
+        rho=self.eta*rho1+(1-self.eta)*rho0
+        Cv=self.eta*Cv1+(1-self.eta)*Cv0
         
         # Constant
-#        self.k[:,:]=70
-#        self.rho[:,:]=6000
-#        self.Cv[:,:]=550
+#        k[:,:]=70
+#        rho[:,:]=6000
+#        Cv[:,:]=550
+        
+        return k, rho, Cv
     
+    # Calculate temperature from energy
+    def TempFromConserv(self):
+        v=np.zeros_like(self.eta)
+        dx,dy=np.meshgrid(self.dx, self.dy)
+        v[1:-1,1:-1]=0.25*(dx[1:-1,1:-1]+dx[1:-1,:-2])*(dy[1:-1,1:-1]+dy[:-2,1:-1])
+        v[0,0]      =0.25*(dx[0,0])*(dy[0,0])
+        v[0,1:-1]   =0.25*(dx[0,1:-1]+dx[0,:-2])*(dy[0,1:-1])
+        v[1:-1,0]   =0.25*(dx[1:-1,0])*(dy[1:-1,0]+dy[:-2,0])
+        v[0,-1]     =0.25*(dx[0,-1])*(dy[0,-1])
+        v[-1,0]     =0.25*(dx[-1,0])*(dy[-1,0])
+        v[-1,1:-1]  =0.25*(dx[-1,1:-1]+dx[-1,:-2])*(dy[-1,1:-1])
+        v[1:-1,-1]   =0.25*(dx[1:-1,-1])*(dy[1:-1,-1]+dy[:-2,-1])
+        v[-1,-1]    =0.25*(dx[-1,-1])*(dy[-1,-1])
+        
+        k,rho,Cv=self.calcProp()
+        
+        return self.E/Cv/rho/v
     # Check everything before solving
     def IsReadyToSolve(self):
         if self.isMeshed:
