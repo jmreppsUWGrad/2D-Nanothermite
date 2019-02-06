@@ -129,18 +129,7 @@ solver=Solvers.TwoDimPlanarSolve(domain, settings, Sources, BCs, 'Solid')
 print '################################'
 
 print 'Initializing domain...'
-at=np.zeros_like(domain.E)
-at[1:-1,1:-1]=0.25*(solver.dx[1:-1,1:-1]+solver.dx[1:-1,:-2])*(solver.dy[1:-1,1:-1]+solver.dy[:-2,1:-1])
-at[0,0]      =0.25*(solver.dx[0,0])*(solver.dy[0,0])
-at[0,1:-1]   =0.25*(solver.dx[0,1:-1]+solver.dx[0,:-2])*(solver.dy[0,1:-1])
-at[1:-1,0]   =0.25*(solver.dx[1:-1,0])*(solver.dy[1:-1,0]+solver.dy[:-2,0])
-at[0,-1]     =0.25*(solver.dx[0,-1])*(solver.dy[0,-1])
-at[-1,0]     =0.25*(solver.dx[-1,0])*(solver.dy[-1,0])
-at[-1,1:-1]  =0.25*(solver.dx[-1,1:-1]+solver.dx[-1,:-2])*(solver.dy[-1,1:-1])
-at[1:-1,-1]  =0.25*(solver.dx[1:-1,-1])*(solver.dy[1:-1,-1]+solver.dy[:-2,-1])
-at[-1,-1]    =0.25*(solver.dx[-1,-1])*(solver.dy[-1,-1])
-domain.E[:,:]=300*5643*599*at
-#T[:2,:]=600
+domain.E[:,:]=300*5643*599*domain.CV_vol()
 print '################################'
 ##########################################################################
 # -------------------------------------File setups
@@ -204,11 +193,12 @@ while nt<settings['total_time_steps'] and t<settings['total_time']:
         np.save('eta_'+'{:f}'.format(t), domain.eta, False)
         
     # Change boundary conditions
-#    if np.amax(domain.T)>=1200 and not BCs_changed:
+    T=domain.TempFromConserv()
+    if np.amax(T)>=1200 and not BCs_changed:
 #    if np.amax(domain.eta)>=0.50 and not BCs_changed:
-#        solver.BCs['bc_north']=['C',(30,300),(0,-1)]
-#        BCs_changed=True
-#        tign=t
+        solver.BCs['bc_north']=['C',(30,300),(0,-1)]
+        BCs_changed=True
+        tign=t
 #        break
     
 print 'Ignition time: %f ms'%(tign*1000)

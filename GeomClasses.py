@@ -149,6 +149,21 @@ class TwoDimPlanar:
         
         return u,v,p,T
     
+    # Calculate and return volume of each node
+    def CV_vol(self):
+        v=np.zeros_like(self.eta)
+        dx,dy=np.meshgrid(self.dx, self.dy)
+        v[1:-1,1:-1]=0.25*(dx[1:-1,1:-1]+dx[1:-1,:-2])*(dy[1:-1,1:-1]+dy[:-2,1:-1])
+        v[0,0]      =0.25*(dx[0,0])*(dy[0,0])
+        v[0,1:-1]   =0.25*(dx[0,1:-1]+dx[0,:-2])*(dy[0,1:-1])
+        v[1:-1,0]   =0.25*(dx[1:-1,0])*(dy[1:-1,0]+dy[:-2,0])
+        v[0,-1]     =0.25*(dx[0,-1])*(dy[0,-1])
+        v[-1,0]     =0.25*(dx[-1,0])*(dy[-1,0])
+        v[-1,1:-1]  =0.25*(dx[-1,1:-1]+dx[-1,:-2])*(dy[-1,1:-1])
+        v[1:-1,-1]   =0.25*(dx[1:-1,-1])*(dy[1:-1,-1]+dy[:-2,-1])
+        v[-1,-1]    =0.25*(dx[-1,-1])*(dy[-1,-1])
+        return v
+    
     # Calculate temperature dependent properties
     def calcProp(self):
         k=np.zeros_like(self.eta)
@@ -172,21 +187,8 @@ class TwoDimPlanar:
     
     # Calculate temperature from energy
     def TempFromConserv(self):
-        v=np.zeros_like(self.eta)
-        dx,dy=np.meshgrid(self.dx, self.dy)
-        v[1:-1,1:-1]=0.25*(dx[1:-1,1:-1]+dx[1:-1,:-2])*(dy[1:-1,1:-1]+dy[:-2,1:-1])
-        v[0,0]      =0.25*(dx[0,0])*(dy[0,0])
-        v[0,1:-1]   =0.25*(dx[0,1:-1]+dx[0,:-2])*(dy[0,1:-1])
-        v[1:-1,0]   =0.25*(dx[1:-1,0])*(dy[1:-1,0]+dy[:-2,0])
-        v[0,-1]     =0.25*(dx[0,-1])*(dy[0,-1])
-        v[-1,0]     =0.25*(dx[-1,0])*(dy[-1,0])
-        v[-1,1:-1]  =0.25*(dx[-1,1:-1]+dx[-1,:-2])*(dy[-1,1:-1])
-        v[1:-1,-1]   =0.25*(dx[1:-1,-1])*(dy[1:-1,-1]+dy[:-2,-1])
-        v[-1,-1]    =0.25*(dx[-1,-1])*(dy[-1,-1])
-        
         k,rho,Cv=self.calcProp()
-        
-        return self.E/Cv/rho/v
+        return self.E/Cv/rho/self.CV_vol()
     # Check everything before solving
     def IsReadyToSolve(self):
         if self.isMeshed:

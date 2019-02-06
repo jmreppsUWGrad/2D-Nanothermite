@@ -53,32 +53,13 @@ class TwoDimPlanarSolve():
         
     # Time step check with dx, dy, Fo number
     def getdt(self, k, rho, Cv):
-        dt=numpy.zeros_like(self.dx)
         # Stability check for Fourrier number
         if self.time_scheme=='Explicit':
             self.Fo=min(self.Fo, 1.0)
         elif self.Fo=='None':
             self.Fo=1.0
         
-        dt[1:-1,1:-1]=0.25*self.Fo*rho[1:-1,1:-1]*Cv[1:-1,1:-1]/k[1:-1,1:-1]*\
-            (self.dx[1:-1,1:-1]+self.dx[1:-1,:-2])*(self.dy[1:-1,1:-1]+self.dy[:-2,1:-1])
-        dt[0,0]      =0.25*self.Fo*rho[0,0]*Cv[0,0]/k[0,0]*\
-            (self.dx[0,0])*(self.dy[0,0])
-        dt[0,1:-1]   =0.25*self.Fo*rho[0,1:-1]*Cv[0,1:-1]/k[0,1:-1]*\
-            (self.dx[0,1:-1]+self.dx[0,:-2])*(self.dy[0,1:-1])
-        dt[1:-1,0]   =0.25*self.Fo*rho[1:-1,0]*Cv[1:-1,0]/k[1:-1,0]*\
-            (self.dx[1:-1,0])*(self.dy[1:-1,0]+self.dy[:-2,0])
-        dt[0,-1]     =0.25*self.Fo*rho[0,-1]*Cv[0,-1]/k[0,-1]*\
-            (self.dx[0,-1])*(self.dy[0,-1])
-        dt[-1,0]     =0.25*self.Fo*rho[-1,0]*Cv[-1,0]/k[-1,0]*\
-            (self.dx[-1,0])*(self.dy[-1,0])
-        dt[-1,1:-1]  =0.25*self.Fo*rho[-1,1:-1]*Cv[-1,1:-1]/k[-1,1:-1]*\
-            (self.dx[-1,1:-1]+self.dx[-1,:-2])*(self.dy[-1,1:-1])
-        dt[1:-1,-1]  =0.25*self.Fo*rho[1:-1,-1]*Cv[1:-1,-1]/k[1:-1,-1]*\
-            (self.dx[1:-1,-1])*(self.dy[1:-1,-1]+self.dy[:-2,-1])
-        dt[-1,-1]    =0.25*self.Fo*rho[-1,-1]*Cv[-1,-1]/k[-1,-1]*\
-            (self.dx[-1,-1])*(self.dy[-1,-1])
-        
+        dt=self.Fo*rho*Cv/k*self.Domain.CV_vol()
         return numpy.amin(dt)
 
     # Convergence checker
@@ -96,27 +77,6 @@ class TwoDimPlanarSolve():
         aE=numpy.zeros_like(dx)
         aS=numpy.zeros_like(dx)
         aN=numpy.zeros_like(dx)
-        at=numpy.zeros_like(dx)
-        
-        # Storage coefficient
-        at[1:-1,1:-1]=rho[1:-1,1:-1]*Cv[1:-1,1:-1]/dt*\
-            0.25*(self.dx[1:-1,1:-1]+self.dx[1:-1,:-2])*(self.dy[1:-1,1:-1]+self.dy[:-2,1:-1])
-        at[0,0]      =rho[0,0]*Cv[0,0]/dt*\
-            0.25*(self.dx[0,0])*(self.dy[0,0])
-        at[0,1:-1]   =rho[0,1:-1]*Cv[0,1:-1]/dt*\
-            0.25*(self.dx[0,1:-1]+self.dx[0,:-2])*(self.dy[0,1:-1])
-        at[1:-1,0]   =rho[1:-1,0]*Cv[1:-1,0]/dt*\
-            0.25*(self.dx[1:-1,0])*(self.dy[1:-1,0]+self.dy[:-2,0])
-        at[0,-1]     =rho[0,-1]*Cv[0,-1]/dt*\
-            0.25*(self.dx[0,-1])*(self.dy[0,-1])
-        at[-1,0]     =rho[-1,0]*Cv[-1,0]/dt*\
-            0.25*(self.dx[-1,0])*(self.dy[-1,0])
-        at[-1,1:-1]  =rho[-1,1:-1]*Cv[-1,1:-1]/dt*\
-            0.25*(self.dx[-1,1:-1]+self.dx[-1,:-2])*(self.dy[-1,1:-1])
-        at[1:-1,-1]   =rho[1:-1,-1]*Cv[1:-1,-1]/dt*\
-            0.25*(self.dx[1:-1,-1])*(self.dy[1:-1,-1]+self.dy[:-2,-1])
-        at[-1,-1]    =rho[-1,-1]*Cv[-1,-1]/dt*\
-            0.25*(self.dx[-1,-1])*(self.dy[-1,-1])
         
         # Left/right face factors
         aW[1:-1,1:-1] =0.5*(2*k[1:-1,1:-1]*k[1:-1,:-2])/(k[1:-1,1:-1]+k[1:-1,:-2])\
@@ -180,7 +140,7 @@ class TwoDimPlanarSolve():
         aS[-1,-1]     =0.5*(2*k[-1,-1]*k[-2,-1])/(k[-1,-1]+k[-2,-1])\
             *dx[-1,-1]/dy[-1,-1]
         
-        return aW,aE,aS,aN,at
+        return aW,aE,aS,aN
     
     # Bondary condition handler
     def Apply_BCs_Cond(self, E, T_prev, dt, rho, Cv):
@@ -189,7 +149,7 @@ class TwoDimPlanarSolve():
             st=self.BCs['bc_left'][2+3*i][0]
             en=self.BCs['bc_left'][2+3*i][1]
             if self.BCs['bc_left'][3*i]=='T':
-                E[st:en,0]=self.BCs['bc_left'][1+3*i]*rho[st:en,0]*Cv[st:en,0]
+                E[st:en,0]=self.BCs['bc_left'][1+3*i]*rho[st:en,0]*Cv[st:en,0]*self.Domain.CV_vol()[st:en,0]
                 if len(self.BCs['bc_left'])/3-i==1:
                     E[-1,0]=self.BCs['bc_left'][-2]*rho[-1,0]*Cv[-1,0]
             
@@ -213,7 +173,7 @@ class TwoDimPlanarSolve():
             st=self.BCs['bc_right'][2+3*i][0]
             en=self.BCs['bc_right'][2+3*i][1]
             if self.BCs['bc_right'][3*i]=='T':
-                E[st:en,-1]=self.BCs['bc_right'][1+3*i]*rho[st:en,-1]*Cv[st:en,-1]
+                E[st:en,-1]=self.BCs['bc_right'][1+3*i]*rho[st:en,-1]*Cv[st:en,-1]*self.Domain.CV_vol()[st:en,-1]
                 if len(self.BCs['bc_right'])/3-i==1:
                     E[-1,-1]=self.BCs['bc_right'][-2]*rho[-1,-1]*Cv[-1,-1]
             
@@ -237,7 +197,7 @@ class TwoDimPlanarSolve():
             st=self.BCs['bc_south'][2+3*i][0]
             en=self.BCs['bc_south'][2+3*i][1]
             if self.BCs['bc_south'][3*i]=='T':
-                E[0,st:en]=self.BCs['bc_south'][1+3*i]*rho[0,st:en]*Cv[0,st:en]
+                E[0,st:en]=self.BCs['bc_south'][1+3*i]*rho[0,st:en]*Cv[0,st:en]*self.Domain.CV_vol()[0,st:en]
                 if len(self.BCs['bc_south'])/3-i==1:
                     E[0,-1]=self.BCs['bc_south'][-2]*rho[0,-1]*Cv[0,-1]
             
@@ -261,7 +221,7 @@ class TwoDimPlanarSolve():
             st=self.BCs['bc_north'][2+3*i][0]
             en=self.BCs['bc_north'][2+3*i][1]
             if self.BCs['bc_north'][3*i]=='T':
-                E[-1,st:en]=self.BCs['bc_north'][1+3*i]*rho[-1,st:en]*Cv[-1,st:en]
+                E[-1,st:en]=self.BCs['bc_north'][1+3*i]*rho[-1,st:en]*Cv[-1,st:en]*self.Domain.CV_vol()[-1,st:en]
                 if len(self.BCs['bc_north'])/3-i==1:
                     E[-1,-1]=self.BCs['bc_north'][-2]*rho[-1,-1]*Cv[-1,-1]
             
@@ -300,10 +260,11 @@ class TwoDimPlanarSolve():
         
     # Main solver (1 time step)
     def Advance_Soln_Cond(self, nt, t):
-        E_0=self.Domain.E.copy()
-        E_c=self.Domain.E.copy()
+        E_0=self.Domain.E.copy()# Data from previous time step
+        T_0=self.Domain.TempFromConserv()
+        E_c=self.Domain.E.copy()# Copy of data for implicit solver
         
-        # Calculate properties based on eta
+        # Calculate properties
         k, rho, Cv=self.Domain.calcProp()
         
         if self.dt=='None':
@@ -317,7 +278,7 @@ class TwoDimPlanarSolve():
         print 'Time step %i, Step size=%.7f, Time elapsed=%f;'%(nt+1,dt, t+dt)
         
         # Calculate flux coefficients
-        aW,aE,aS,aN,at=self.get_Coeff(self.dx,self.dy, dt, k, rho, Cv)
+        aW,aE,aS,aN=self.get_Coeff(self.dx,self.dy, dt, k, rho, Cv)
         
         count=0
         while (count<self.countmax):
@@ -333,6 +294,7 @@ class TwoDimPlanarSolve():
             self.Domain.E[:,1:-1] += aE[:,1:-1]*T_c[:,2:]
             self.Domain.E[1:,:]   += aS[1:,:]*T_c[:-1,:]
             self.Domain.E[:-1,:]  += aN[:-1,:]*T_c[1:,:]
+            self.Domain.E         -= (aW+aE+aS+aN)*T_c
             
             # Source terms (units of W/m)
             if self.source_unif!='None':
