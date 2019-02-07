@@ -261,8 +261,8 @@ class TwoDimPlanarSolve():
     # Main solver (1 time step)
     def Advance_Soln_Cond(self, nt, t):
         E_0=self.Domain.E.copy()# Data from previous time step
-        T_0=self.Domain.TempFromConserv()
-        E_c=self.Domain.E.copy()# Copy of data for implicit solver
+#        T_0=self.Domain.TempFromConserv()
+#        E_c=self.Domain.E.copy()# Copy of data for implicit solver
         
         # Calculate properties
         k, rho, Cv=self.Domain.calcProp()
@@ -308,14 +308,14 @@ class TwoDimPlanarSolve():
             ###################################################################
             # Apply temperature from previous time step and boundary conditions
             ###################################################################
-            if self.time_scheme=='Explicit':
-                self.Domain.E*= dt
-                self.Domain.E+= E_0
-                self.Apply_BCs_Cond(self.Domain.E, T_c, dt, rho, Cv)
-            else:
-                self.Domain.T+= (at)*T_0
-                self.Domain.T/= (at+aW+aE+aS+aN)
-                self.Apply_BCs_Cond(self.Domain.T, self.Domain.T, at+aW+aE+aS+aN)
+#            if self.time_scheme=='Explicit':
+            self.Domain.E*= dt
+            self.Domain.E+= E_0
+            self.Apply_BCs_Cond(self.Domain.E, T_c, dt, rho, Cv)
+#            else:
+#                self.Domain.T+= (at)*T_0
+#                self.Domain.T/= (at+aW+aE+aS+aN)
+#                self.Apply_BCs_Cond(self.Domain.T, self.Domain.T, at+aW+aE+aS+aN)
             
             ###################################################################
             # Divergence/Convergence checks
@@ -327,12 +327,12 @@ class TwoDimPlanarSolve():
                 return 1, dt
             
             # Break while loop if converged OR is explicit solve
-            if (self.time_scheme=='Explicit'):
-                break
-            elif (self.CheckConv(E_c, self.Domain.E)):
-                break
-            count+=1
-            E_c=self.Domain.E.copy()
+#            if (self.time_scheme=='Explicit'):
+            break
+#            elif (self.CheckConv(E_c, self.Domain.E)):
+#                break
+#            count+=1
+#            E_c=self.Domain.E.copy()
         ###################################################################
         # Output data to file?????
         ###################################################################
