@@ -140,13 +140,16 @@ except:
 # Get Arrhenius parameters
 A0=-1.0
 Ea=-1.0
+source='False'
 input_file=open('Input_file.txt')
-while A0<0 or Ea<0:
+while A0<0 or Ea<0 or source=='False':
     line=input_file.readline()
     if st.find(line, 'Ea')==0:
         Ea=float(st.split(line, ':')[1])
     elif st.find(line, 'A0')==0:
         A0=float(st.split(line, ':')[1])
+    elif st.find(line, 'Source_Kim')==0:
+        source=st.split(line, ':')[1]
 input_file.close()
 #print 'Ea=%f, A0=%f'%(Ea,A0)
 
@@ -155,7 +158,7 @@ times=os.listdir('.')
 i=len(times)
 j=0
 while i>j:
-    if st.find(times[j],'eta')==0 and st.find(times[j],'.npy')>0:
+    if st.find(times[j],'T')==0 and st.find(times[j],'.npy')>0:
         times[j]=st.split(st.split(times[j],'_')[1],'.npy')[0]
         j+=1
     else:
@@ -167,7 +170,8 @@ for time in times:
     X=np.load('X.npy', False)
     Y=np.load('Y.npy', False)
     T=np.load('T_'+time+'.npy', False)
-    eta=np.load('eta_'+time+'.npy', False)
+    if st.find(source,'True')>=0:
+        eta=np.load('eta_'+time+'.npy', False)
     
     
     # Temperature contour
@@ -181,27 +185,28 @@ for time in times:
     fig.savefig('T_'+time+'.png',dpi=300)
     pyplot.close(fig)
     
-    # Progress contour
-    fig=pyplot.figure(figsize=(6, 6))
-    pyplot.contourf(X, Y, eta, alpha=0.5, cmap=cm.viridis)#, vmin=0.0, vmax=1.0)  
-    pyplot.colorbar()
-    pyplot.xlabel('$x$ (m)')
-    pyplot.ylabel('$y$ (m)')
-#    pyplot.clim(0.0, 1.0)
-    pyplot.title('Progress distribution t='+time);
-    fig.savefig('eta_'+time+'.png',dpi=300)
-    pyplot.close(fig)
-    
-    # Reaction rate contour
-    fig=pyplot.figure(figsize=(6, 6))
-    pyplot.contourf(X, Y, A0*(1-eta)*np.exp(-Ea/8.314/T), alpha=0.5, cmap=cm.viridis)#, vmin=0.0, vmax=1.0)  
-    pyplot.colorbar()
-    pyplot.xlabel('$x$ (m)')
-    pyplot.ylabel('$y$ (m)')
-#    pyplot.clim(0.0, 1.0)
-    pyplot.title('Reaction rate t='+time);
-    fig.savefig('Phi_'+time+'.png',dpi=300)
-    pyplot.close(fig)
+    if st.find(source,'True')>=0:
+        # Progress contour
+        fig=pyplot.figure(figsize=(6, 6))
+        pyplot.contourf(X, Y, eta, alpha=0.5, cmap=cm.viridis)#, vmin=0.0, vmax=1.0)  
+        pyplot.colorbar()
+        pyplot.xlabel('$x$ (m)')
+        pyplot.ylabel('$y$ (m)')
+    #    pyplot.clim(0.0, 1.0)
+        pyplot.title('Progress distribution t='+time);
+        fig.savefig('eta_'+time+'.png',dpi=300)
+        pyplot.close(fig)
+        
+        # Reaction rate contour
+        fig=pyplot.figure(figsize=(6, 6))
+        pyplot.contourf(X, Y, A0*(1-eta)*np.exp(-Ea/8.314/T), alpha=0.5, cmap=cm.viridis)#, vmin=0.0, vmax=1.0)  
+        pyplot.colorbar()
+        pyplot.xlabel('$x$ (m)')
+        pyplot.ylabel('$y$ (m)')
+    #    pyplot.clim(0.0, 1.0)
+        pyplot.title('Reaction rate t='+time);
+        fig.savefig('Phi_'+time+'.png',dpi=300)
+        pyplot.close(fig)
     
     print 'Processed '+time
 

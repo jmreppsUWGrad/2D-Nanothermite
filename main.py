@@ -52,6 +52,7 @@ pyplot.ylim(5,6);
 # ----------------------------------Libraries and classes
 ##########################################################################
 import numpy as np
+import string as st
 #from matplotlib import pyplot, cm
 #from mpl_toolkits.mplot3d import Axes3D
 #from datetime import datetime
@@ -153,7 +154,8 @@ print '################################\n'
 print 'Saving data to numpy array files...'
 T=domain.TempFromConserv()
 np.save('T_'+'0.000000', T, False)
-np.save('eta_'+'0.000000', domain.eta, False)
+if st.find(Sources['Source_Kim'],'True')>=0:
+    np.save('eta_'+'0.000000', domain.eta, False)
 np.save('X', domain.X, False)
 np.save('Y', domain.Y, False)
 
@@ -182,7 +184,8 @@ while nt<settings['total_time_steps'] and t<settings['total_time']:
         print 'Saving data to numpy array files...'
         T=domain.TempFromConserv()
         np.save('T_'+'{:f}'.format(t), T, False)
-        np.save('eta_'+'{:f}'.format(t), domain.eta, False)
+        if st.find(Sources['Source_Kim'],'True')>=0:
+            np.save('eta_'+'{:f}'.format(t), domain.eta, False)
         break
     
     # Output data to numpy files
@@ -190,7 +193,8 @@ while nt<settings['total_time_steps'] and t<settings['total_time']:
         print 'Saving data to numpy array files...'
         T=domain.TempFromConserv()
         np.save('T_'+'{:f}'.format(t), T, False)
-        np.save('eta_'+'{:f}'.format(t), domain.eta, False)
+        if st.find(Sources['Source_Kim'],'True')>=0:
+            np.save('eta_'+'{:f}'.format(t), domain.eta, False)
         
     # Change boundary conditions
     T=domain.TempFromConserv()

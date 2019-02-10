@@ -37,7 +37,7 @@ total_time:None
 Time_Scheme:Explicit
 Convergence:0.0001
 Max_iterations:100
-Output_directory:Tests/4
+Output_directory:Tests\4
 Number_Data_Output:1
 
 Boundary conditions:
