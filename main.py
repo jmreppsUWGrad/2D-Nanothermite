@@ -58,6 +58,7 @@ import string as st
 #from datetime import datetime
 import os
 import sys
+import time
 #import CoolProp.CoolProp as CP
 
 #from GeomClasses import OneDimLine as OneDimLine
@@ -79,6 +80,9 @@ print('#             2D Heat Conduction Solver              #')
 print('#              Created by J. Mark Epps               #')
 print('#          Part of Masters Thesis at UW 2018-2020    #')
 print('######################################################\n')
+
+# Start timer
+time_begin=time.time()
 
 # Get arguments to script execution
 settings={}
@@ -198,14 +202,16 @@ while nt<settings['total_time_steps'] and t<settings['total_time']:
         
     # Change boundary conditions
     T=domain.TempFromConserv()
-    if np.amax(T)>=1200 and not BCs_changed:
-#    if np.amax(domain.eta)>=0.50 and not BCs_changed:
+#    if np.amax(T)>=1200 and not BCs_changed:
+    if np.amax(domain.eta)>=0.70 and not BCs_changed:
         solver.BCs['bc_north']=['C',(30,300),(0,-1)]
         BCs_changed=True
         tign=t
 #        break
     
+time_end=time.time()
 print 'Ignition time: %f ms'%(tign*1000)
+print 'Solver time: %f min'%((time_end-time_begin)/60.0)
 #output_file.close()
 
 ##########################################################################

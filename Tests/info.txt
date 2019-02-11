@@ -5,6 +5,7 @@ Eign-testing different eta values for removing flux BC
 Flux-testing different flux values (then adjusting other param)
 dH-testing different enthalpies of reaction (then adjusting other param)
 Non-nt-tests of conduction solver not related to nano-thermite
+Conserv-CONSERVATIVE FORMULATION OF 2D CONDUCTION CODE testing areas
 
 Flux removed when eta reached 1.0 somewhere; Constant rho, k, Cv
 Diverging values: Ea=4000, A0=1e6, dH=300000; Ea=4000, A0=1e8, dH=300000;

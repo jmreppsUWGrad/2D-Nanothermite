@@ -36,7 +36,7 @@ Source_Uniform:None
 Source_Kim:True
 Ea:70000
 A0:4890000
-dH:63000000000
+dH:20600000000
 
 #Ea=40000 # [J/mol] Approx value from Kim's paper
 #        A0=1e8 # [1/s] Fudged value
@@ -71,7 +71,7 @@ bias_size_y:1e-06
 
 Fo:0.2
 dt:None
-total_time_steps:2000
+total_time_steps:5000
 total_time:None
 Time_Scheme:Explicit
 
@@ -80,7 +80,7 @@ Max_iterations:100
 
 #Output_directory:C:\Users\mepps\Documents\Research\2D_Conduction\Tests\4
 #Output_directory:C:\Users\Joseph\Documents\School\Research\2D_Conduction\Tests\Nanothermite\2
-Number_Data_Output:1
+Number_Data_Output:5
 
 ######################################################
 #			Boundary conditions
