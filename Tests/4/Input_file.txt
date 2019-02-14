@@ -27,17 +27,18 @@ Source_Uniform:None
 Source_Kim:True
 Ea:70000.0
 A0:4890000.0
-dH:63000000000.0
+dH:20600000000.0
+Ignition:Temp,1200
 
 Time advancement:
 Fo:0.2
 dt:None
-total_time_steps:2000
+total_time_steps:1
 total_time:None
 Time_Scheme:Explicit
 Convergence:0.0001
 Max_iterations:100
-Output_directory:Tests\4
+Output_directory:Tests/4
 Number_Data_Output:1
 
 Boundary conditions:

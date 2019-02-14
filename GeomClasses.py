@@ -25,6 +25,7 @@ Features:
 @author: Joseph
 """
 import numpy as np
+import string as st
 
 class TwoDimPlanar:
     def __init__(self, settings, solver):
@@ -37,7 +38,7 @@ class TwoDimPlanar:
         self.y=np.zeros(self.Ny)
         self.dx=np.zeros(self.Nx) # NOTE: SIZE MADE TO MATCH REST OF ARRAYS (FOR NOW)
         self.dy=np.zeros(self.Ny) # NOTE: SIZE MADE TO MATCH REST OF ARRAYS (FOR NOW)
-#        self.k=settings['k']
+        self.k=settings['k']
         # Fluid solver
         if solver=='Fluid':
             self.fluid=settings['Fluid']
@@ -57,8 +58,22 @@ class TwoDimPlanar:
         else:
             self.E=np.zeros((self.Ny, self.Nx))
             self.eta=np.zeros((self.Ny, self.Nx))
+            self.rho=settings['rho']
+            self.Cv=settings['Cp']
 #            self.Y_species=np.zeros((self.Ny, self.Nx, 15)) # species array
 #            self.P=np.zeros((self.Ny, self.Nx))
+            if type(self.rho) is str:
+                line=st.split(self.rho, ',')
+                self.rho0=float(line[1])
+                self.rho1=float(line[2])
+            if type(self.Cv) is str:
+                line=st.split(self.Cv, ',')
+                self.Cv0=float(line[1])
+                self.Cv1=float(line[2])
+            if type(self.k) is str:
+                line=st.split(self.k, ',')
+                self.k0=float(line[1])
+                self.k1=float(line[2])
         
         # Biasing options       
         self.xbias=[settings['bias_type_x'], settings['bias_size_x']]
@@ -170,19 +185,20 @@ class TwoDimPlanar:
         rho=np.zeros_like(self.eta)
         Cv=np.zeros_like(self.eta)
         
-        rho1,Cv1,k1=7191,518,108
-        rho0,Cv0,k0=5643,599,39
-        
-        # Changing with eta
-        k=(self.eta/k1+(1-self.eta)/k0)**(-1)
-        rho=self.eta*rho1+(1-self.eta)*rho0
-        Cv=self.eta*Cv1+(1-self.eta)*Cv0
-        
-        # Constant
-#        k[:,:]=70
-#        rho[:,:]=6000
-#        Cv[:,:]=550
-        
+        # Calculate properties based on eta or constant
+        if type(self.k) is str:
+            k=(self.eta/self.k1+(1-self.eta)/self.k0)**(-1)
+        else:
+            k[:,:]=self.k
+        if type(self.Cv) is str:
+            Cv=self.eta*self.Cv1+(1-self.eta)*self.Cv0
+        else:
+            Cv[:,:]=self.Cv
+        if type(self.rho) is str:
+            rho=self.eta*self.rho1+(1-self.eta)*self.rho0
+        else:
+            rho[:,:]=self.rho
+                
         return k, rho, Cv
     
     # Calculate temperature from energy

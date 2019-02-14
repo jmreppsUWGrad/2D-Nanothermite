@@ -174,8 +174,10 @@ if settings['total_time_steps']=='None':
 elif settings['total_time']=='None':
     settings['total_time']=settings['total_time_steps']*10**9
     output_data_nt=int(settings['total_time_steps']/settings['Number_Data_Output'])
-
+Sources['Ignition']=st.split(Sources['Ignition'], ',')
+Sources['Ignition'][1]=float(Sources['Ignition'][1])
 BCs_changed=False
+
 print 'Solving:'
 while nt<settings['total_time_steps'] and t<settings['total_time']:
 #for nt in range(settings['total_time_steps']):
@@ -202,9 +204,10 @@ while nt<settings['total_time_steps'] and t<settings['total_time']:
         
     # Change boundary conditions
     T=domain.TempFromConserv()
-#    if np.amax(T)>=1200 and not BCs_changed:
-    if np.amax(domain.eta)>=0.70 and not BCs_changed:
-        solver.BCs['bc_north']=['C',(30,300),(0,-1)]
+    if ((Sources['Ignition'][0]=='eta' and np.amax(domain.eta)>=Sources['Ignition'][1])\
+        or (Sources['Ignition'][0]=='Temp' and np.amax(T)>=Sources['Ignition'][1]))\
+        and not BCs_changed:
+        solver.BCs['bc_north']=solver.BCs['bc_right']
         BCs_changed=True
         tign=t
 #        break
