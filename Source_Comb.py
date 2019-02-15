@@ -12,6 +12,7 @@ Notes on implementing Cantera:
 """
 
 import numpy as np
+import string as st
 #import cantera as ct
 
 class Source_terms():
@@ -19,7 +20,8 @@ class Source_terms():
         self.R=8.314 # J/mol/K
         self.Ea=Ea # J/mol
         self.A0=A0
-        self.dH=dH # J/mol
+        self.dH=st.split(dH, ',')
+        self.dH[1]=float(self.dH[1])
         self.n=0.2 # Temperature exponent
 #        self.species=key_species
     
@@ -59,9 +61,10 @@ class Source_terms():
         detadt=self.A0*(1-eta)*np.exp(-self.Ea/self.R/T)
         eta+=dt*detadt
         
-#        return rho*at*self.dH*detadt
-        return at*self.dH*detadt
-#        return detadt, self.dH
+        if st.find(self.dH[0], 'vol')>=0:
+            return at*self.dH[1]*detadt
+        else:
+            return rho*at*self.dH[1]*detadt
     
     # Calculate source term for combustion (NEEDS MODIFYING)
     def Source_Comb(self, T, y_species, dx, dy):

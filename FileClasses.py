@@ -122,7 +122,8 @@ class FileIn():
                 # Source term info
                 elif line[0] in keys_Sources:
                     if st.find(line[1], 'None')>=0 or st.find(line[1], 'True')>=0\
-                        or st.find(line[1], 'eta')>=0 or st.find(line[1], 'Temp')>=0:
+                        or st.find(line[1], 'eta')>=0 or st.find(line[1], 'Temp')>=0\
+                        or st.find(line[1], 'rho')>=0 or st.find(line[1], 'vol')>=0:
                         Sources[line[0]]=st.split(line[1], '\n')[0]
                     else:
                         Sources[line[0]]=float(line[1])

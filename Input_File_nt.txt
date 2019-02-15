@@ -33,8 +33,9 @@ rho:eta,5643,7191
 #			Source terms
 #	Source_uniform: specify volumetric heating in W/m^3 or None
 #	Source_Kim: True or None
-#	Ea: J/mol, A0 [unit depends], dH [units J/m^3 or J/kg; check Source_Comb.py for calculation]
-#	Ignition: in form [variable],[variable threshold]
+#	Ea: J/mol, A0 [unit depends]
+#	dH: form [vol or rho],[value]; is volume or mass based enthalpy
+#	Ignition: Condition to remove flux BC in form [variable],[variable threshold]
 #		where [variable] can be eta or Temp
 ######################################################
 
@@ -42,7 +43,7 @@ Source_Uniform:None
 Source_Kim:True
 Ea:70000
 A0:4890000
-dH:20600000000
+dH:vol,20600000000
 #Ignition:eta,0.7
 Ignition:Temp,1200
 
