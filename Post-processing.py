@@ -200,7 +200,7 @@ for time in times:
         # Reaction rate contour
         fig=pyplot.figure(figsize=(6, 6))
         pyplot.contourf(X, Y, A0*(1-eta)*np.exp(-Ea/8.314/T), alpha=0.5, cmap=cm.viridis)#, vmin=0.0, vmax=1.0)  
-        pyplot.colorbar()
+        pyplot.colorbar(format='%.2e')
         pyplot.xlabel('$x$ (m)')
         pyplot.ylabel('$y$ (m)')
     #    pyplot.clim(0.0, 1.0)
