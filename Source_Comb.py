@@ -1,14 +1,24 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Nov 06 15:19:15 2018
+######################################################
+#             2D Heat Conduction Solver              #
+#              Created by J. Mark Epps               #
+#          Part of Masters Thesis at UW 2018-2020    #
+######################################################
+
+This file contains the Combustion source term classes:
+    -Uniform heat source; returns energy generated at each node
+    -Combustion source term from Kim paper; returns energy generated
+    
+Features of Source_Kim:
+    -Activation energy, pre-exponential factor, enthalpy of combustion
+    -Enthalpy of combustion can be density or volume based (input file)
 
 Notes on implementing Cantera:
     -sol=ct.Solution('___.cti') -> define solution mechanisms?
     -ct.SolutionArray() -> able to define an array of states
     https://cantera.org/documentation/docs-2.4/sphinx/html/cython/importing.html#representing-multiple-states
     
-
-@author: Joseph
 """
 
 import numpy as np
@@ -23,8 +33,7 @@ class Source_terms():
         self.dH=st.split(dH, ',')
         self.dH[1]=float(self.dH[1])
         self.n=0.2 # Temperature exponent
-#        self.species=key_species
-    
+        
     # Uniform volumetric generation
     def Source_Uniform(self, Q, dx, dy):
         at=np.zeros_like(dx)

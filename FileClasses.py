@@ -1,13 +1,19 @@
 
 # -*- coding: utf-8 -*-
 """
-Created on Tue Oct 02 13:32:07 2018
+######################################################
+#             2D Heat Conduction Solver              #
+#              Created by J. Mark Epps               #
+#          Part of Masters Thesis at UW 2018-2020    #
+######################################################
 
-@author: Joseph
-
-This contains classes for reading and writing files in good format
+This file contains classes for reading and writing files in proper format:
+    -write input file with domain and solver settings
+    -read input file as input to solver
 
 """
+
+# Dictionaries containing expected input file data; organized by type
 
 keys_Settings=['Length','Width','Nodes_x','Nodes_y','k','Cp','rho',\
                'bias_type_x','bias_size_x','bias_type_y','bias_size_y']
@@ -74,28 +80,19 @@ class FileOut():
             self.fout.write(i)
             self.fout.write(':')
             self.Write_single_line(str(settings[i]))
-#            self.fout.write('\n')
-        
+            
         self.Write_single_line('\nBoundary conditions:')
         for i in keys_BCs:
             self.fout.write(i)
             self.fout.write(':')
             self.Write_single_line(str(BCs[i]))
-#            self.fout.write('\n')
-        
+            
 #        self.fout.write('\nInitial conditions:\n')
 #        self.Write_single_line('T')
 #        for i in range(len(T[:,0])):
 #            self.Write_single_line(str(T[i,:]))
         
         self.fout.write('\n')
-        
-    def Write_timestep_data(self, timeStep, dt):
-        self.fout.write('Time step: '+timeStep+'\n')
-        self.fout.write('Time step size: '+dt+'\n\n')
-        
-    
-    def close(self):
         self.fout.close()
         
 class FileIn():

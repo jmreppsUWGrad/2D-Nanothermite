@@ -1,29 +1,27 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sat Sep 29 13:17:11 2018
+######################################################
+#             2D Heat Conduction Solver              #
+#              Created by J. Mark Epps               #
+#          Part of Masters Thesis at UW 2018-2020    #
+######################################################
 
-@author: Joseph
+This file contains the solver classes for 2D planar Heat Conduction:
+    -Modifies geometry class variables directly
+    -Calculate time step based on Fourier number
+    -Compute 2D conduction equations
+    -Add source terms as needed
+    -Applies boundary conditions (can vary along a side)
 
-Solver classes for 2D Heat Conduction. Takes in given object (geometry),
-time step and convergence information and alters the object's temperature. 
-BCs are applied as appropriate, but must be defined and copied into the 
-solver object.
-
-Assumptions:
-    -equal discretization spacings in either x or y (want to adjust)
-    -thermal conductivity, specific heat and density varies in space and
-    with reaction progress (eta)
-
-Features:
+Features/assumptions:
     -time step based on Fourrier number and local discretizations in x and y
-    -
-
+    -equal node spacing in x or y
+    -thermal properties can vary in space (call from geometry object)
+    -Radiation boundary conditions
 
 """
 
-import numpy
-#import GeomClasses
-#import MatClasses
+import numpy as np
 #import CoolProp.CoolProp as CP
 #import temporal_schemes
 import Source_Comb
@@ -33,18 +31,12 @@ class TwoDimPlanarSolve():
     def __init__(self, geom_obj, settings, Sources, BCs, solver):
         self.Domain=geom_obj # Geometry object
         self.time_scheme=settings['Time_Scheme']
-        self.dx,self.dy=numpy.meshgrid(geom_obj.dx,geom_obj.dy)
+        self.dx,self.dy=np.meshgrid(geom_obj.dx,geom_obj.dy)
         self.BCs=BCs
-        
-        if solver=='Fluid':
-            self.CFL=settings['CFL']
-            self.gx=settings['Gravity_x']
-            self.gy=settings['Gravity_y']
-        else:
-            self.Fo=settings['Fo']
-            self.dt=settings['dt']
-            self.conv=settings['Convergence']
-            self.countmax=settings['Max_iterations']
+        self.Fo=settings['Fo']
+        self.dt=settings['dt']
+        self.conv=settings['Convergence']
+        self.countmax=settings['Max_iterations']
         
         # Define source terms and pointer to source object here
         self.get_source=Source_Comb.Source_terms(Sources['Ea'], Sources['A0'], Sources['dH'])
@@ -60,11 +52,11 @@ class TwoDimPlanarSolve():
             self.Fo=1.0
         
         dt=self.Fo*rho*Cv/k*self.Domain.CV_vol()
-        return numpy.amin(dt)
+        return np.amin(dt)
 
     # Convergence checker
     def CheckConv(self, Tprev, Tnew):
-        diff=numpy.sum(numpy.abs(Tnew-Tprev))/numpy.sum(numpy.abs(Tprev))
+        diff=np.sum(np.abs(Tnew-Tprev))/np.sum(np.abs(Tprev))
         print(diff)
         if diff<=self.conv:
             return True
@@ -73,10 +65,10 @@ class TwoDimPlanarSolve():
 
     # coefficients for temperature weighting in Advance_Soln_Cond
     def get_Coeff(self, dx, dy, dt, k, rho, Cv):
-        aW=numpy.zeros_like(dx)
-        aE=numpy.zeros_like(dx)
-        aS=numpy.zeros_like(dx)
-        aN=numpy.zeros_like(dx)
+        aW=np.zeros_like(dx)
+        aE=np.zeros_like(dx)
+        aS=np.zeros_like(dx)
+        aN=np.zeros_like(dx)
         
         # Left/right face factors
         aW[1:-1,1:-1] =0.5*(2*k[1:-1,1:-1]*k[1:-1,:-2])/(k[1:-1,1:-1]+k[1:-1,:-2])\
@@ -261,7 +253,6 @@ class TwoDimPlanarSolve():
     # Main solver (1 time step)
     def Advance_Soln_Cond(self, nt, t):
         E_0=self.Domain.E.copy()# Data from previous time step
-#        T_0=self.Domain.TempFromConserv()
 #        E_c=self.Domain.E.copy()# Copy of data for implicit solver
         
         # Calculate properties
@@ -272,7 +263,7 @@ class TwoDimPlanarSolve():
         else:
             dt=min(self.dt,self.getdt(k, rho, Cv))
             
-        if (numpy.isnan(dt)) or (dt<=0):
+        if (np.isnan(dt)) or (dt<=0):
             print '*********Diverging time step***********'
             return 1, dt
         print 'Time step %i, Step size=%.7f, Time elapsed=%f;'%(nt+1,dt, t+dt)
@@ -280,65 +271,46 @@ class TwoDimPlanarSolve():
         # Calculate flux coefficients
         aW,aE,aS,aN=self.get_Coeff(self.dx,self.dy, dt, k, rho, Cv)
         
-        count=0
-        while (count<self.countmax):
-            T_c=self.Domain.TempFromConserv()
-            ###################################################################
-            # Temperature (2nd order central schemes)
-            ###################################################################
-            # Sum up all contributing temperatures
-            
-            self.Domain.E[:,1:]    = aW[:,1:]*T_c[:,:-1]
-            self.Domain.E[:,0]     = aE[:,0]*T_c[:,1]
-            
-            self.Domain.E[:,1:-1] += aE[:,1:-1]*T_c[:,2:]
-            self.Domain.E[1:,:]   += aS[1:,:]*T_c[:-1,:]
-            self.Domain.E[:-1,:]  += aN[:-1,:]*T_c[1:,:]
-            self.Domain.E         -= (aW+aE+aS+aN)*T_c
-            
-            # Source terms (units of W/m)
-            if self.source_unif!='None':
-                self.Domain.E     += self.get_source.Source_Uniform(self.source_unif, self.dx, self.dy)
-            if self.source_Kim=='True':
-                self.Domain.E     +=self.get_source.Source_Comb_Kim(rho, T_c, self.Domain.eta, self.dx, self.dy, dt)
-            
-#            # Radiation effects
-#            self.Domain.T[1:-1,1:-1]+=0.8*5.67*10**(-8)*(T_c[:-2,1:-1]**4+T_c[2:,1:-1]**4+T_c[1:-1,:-2]**4+T_c[1:-1,2:]**4)
-            
-            ###################################################################
-            # Apply temperature from previous time step and boundary conditions
-            ###################################################################
-#            if self.time_scheme=='Explicit':
-            self.Domain.E*= dt
-            self.Domain.E+= E_0
-            self.Apply_BCs_Cond(self.Domain.E, T_c, dt, rho, Cv)
-#            else:
-#                self.Domain.T+= (at)*T_0
-#                self.Domain.T/= (at+aW+aE+aS+aN)
-#                self.Apply_BCs_Cond(self.Domain.T, self.Domain.T, at+aW+aE+aS+aN)
-            
-            ###################################################################
-            # Divergence/Convergence checks
-            ###################################################################
-            if (numpy.isnan(numpy.amax(self.Domain.E))) \
-            or (numpy.amax(self.Domain.E)>100*numpy.amax(E_0)) \
-            or (numpy.amin(self.Domain.E)<=0) or (numpy.amax(self.Domain.eta)>1.0):
-                print '**************Divergence detected****************'
-                return 1, dt
-            
-            # Break while loop if converged OR is explicit solve
-#            if (self.time_scheme=='Explicit'):
-            break
-#            elif (self.CheckConv(E_c, self.Domain.E)):
-#                break
-#            count+=1
-#            E_c=self.Domain.E.copy()
+        T_c=self.Domain.TempFromConserv()
         ###################################################################
-        # Output data to file?????
+        # Temperature (2nd order central schemes)
+        ###################################################################
+        # Sum up all contributing temperatures
+        
+        self.Domain.E[:,1:]    = aW[:,1:]*T_c[:,:-1]
+        self.Domain.E[:,0]     = aE[:,0]*T_c[:,1]
+        
+        self.Domain.E[:,1:-1] += aE[:,1:-1]*T_c[:,2:]
+        self.Domain.E[1:,:]   += aS[1:,:]*T_c[:-1,:]
+        self.Domain.E[:-1,:]  += aN[:-1,:]*T_c[1:,:]
+        self.Domain.E         -= (aW+aE+aS+aN)*T_c
+        
+        ###################################################################
+        # Source terms
         ###################################################################
         
-        if count==self.countmax:
-            print '*************No convergence reached*****************'
+        if self.source_unif!='None':
+            self.Domain.E     += self.get_source.Source_Uniform(self.source_unif, self.dx, self.dy)
+        if self.source_Kim=='True':
+            self.Domain.E     +=self.get_source.Source_Comb_Kim(rho, T_c, self.Domain.eta, self.dx, self.dy, dt)
+        
+#            # Radiation effects
+#            self.Domain.T[1:-1,1:-1]+=0.8*5.67*10**(-8)*(T_c[:-2,1:-1]**4+T_c[2:,1:-1]**4+T_c[1:-1,:-2]**4+T_c[1:-1,2:]**4)
+        
+        ###################################################################
+        # Apply energy from previous time step and boundary conditions
+        ###################################################################
+        self.Domain.E*= dt
+        self.Domain.E+= E_0
+        self.Apply_BCs_Cond(self.Domain.E, T_c, dt, rho, Cv)
+        
+        ###################################################################
+        # Divergence/Convergence checks
+        ###################################################################
+        if (np.isnan(np.amax(self.Domain.E))) \
+        or (np.amax(self.Domain.E)>100*np.amax(E_0)) \
+        or (np.amin(self.Domain.E)<=0) or (np.amax(self.Domain.eta)>1.0):
+            print '**************Divergence detected****************'
             return 1, dt
         else:
             return 0, dt
