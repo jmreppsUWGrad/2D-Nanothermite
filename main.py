@@ -171,7 +171,9 @@ while nt<settings['total_time_steps'] and t<settings['total_time']:
 time_end=time.time()
 print 'Ignition time: %f ms'%(tign*1000)
 print 'Solver time: %f min'%((time_end-time_begin)/60.0)
-
+input_file.Write_single_line('Ignition time: %f ms'%(tign*1000))
+input_file.Write_single_line('Solver time: %f min'%((time_end-time_begin)/60.0))
+input_file.close()
 T, eta=domain.TempFromConserv(), domain.eta
 
 print('Solver has finished its run')

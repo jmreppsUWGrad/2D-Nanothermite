@@ -93,6 +93,8 @@ class FileOut():
 #            self.Write_single_line(str(T[i,:]))
         
         self.fout.write('\n')
+        
+    def close(self):
         self.fout.close()
         
 class FileIn():
