@@ -124,7 +124,8 @@ np.save('Y', domain.Y, False)
 ##########################################################################
 # -------------------------------------Solve
 ##########################################################################
-t,nt,tign=0,0,0
+t,nt,tign=0,0,0 # time, number steps and ignition time initializations
+v_0,v_1,v,N=0,0,0,0 #combustion wave speed variable initialization
 output_data_t,output_data_nt=0,0
 if settings['total_time_steps']=='None':
     settings['total_time_steps']=settings['total_time']*10**9
@@ -138,6 +139,10 @@ BCs_changed=False
 
 print 'Solving:'
 while nt<settings['total_time_steps'] and t<settings['total_time']:
+    # First point in calculating combustion propagation speed
+    if st.find(Sources['Source_Kim'],'True')>=0 and BCs_changed:
+#        v_0=np.sum(domain.eta[:,int(len(domain.eta[0,:])/2)]*domain.dy)
+        v_0=np.sum(domain.eta*solver.dy)/len(domain.eta[0,:])
     err,dt=solver.Advance_Soln_Cond(nt, t)
     t+=dt
     nt+=1
@@ -146,6 +151,7 @@ while nt<settings['total_time_steps'] and t<settings['total_time']:
         print 'Saving data to numpy array files...'
         T=domain.TempFromConserv()
         np.save('T_'+'{:f}'.format(t), T, False)
+        input_file.close()
         if st.find(Sources['Source_Kim'],'True')>=0:
             np.save('eta_'+'{:f}'.format(t), domain.eta, False)
         break
@@ -167,12 +173,21 @@ while nt<settings['total_time_steps'] and t<settings['total_time']:
         BCs_changed=True
         tign=t
 #        break
-    
+    # Second point in calculating combustion propagation speed
+    if st.find(Sources['Source_Kim'],'True')>=0 and BCs_changed:
+#        v_1=np.sum(domain.eta[:,int(len(domain.eta[0,:])/2)]*domain.dy)
+        v_1=np.sum(domain.eta*solver.dy)/len(domain.eta[0,:])
+        if (v_1-v_0)/dt>0.001:
+            v+=(v_1-v_0)/dt
+            N+=1
+        
 time_end=time.time()
 print 'Ignition time: %f ms'%(tign*1000)
-print 'Solver time: %f min'%((time_end-time_begin)/60.0)
+print 'Solver time per 1000 time steps: %f min'%((time_end-time_begin)/60.0*1000/nt)
+print 'Average wave speed: %f m/s'%(v/N)
 input_file.Write_single_line('Ignition time: %f ms'%(tign*1000))
-input_file.Write_single_line('Solver time: %f min'%((time_end-time_begin)/60.0))
+input_file.Write_single_line('Solver time per 1000 time steps: %f min'%((time_end-time_begin)/60.0*1000/nt))
+input_file.Write_single_line('Average wave speed: %f m/s'%(v/N))
 input_file.close()
 T, eta=domain.TempFromConserv(), domain.eta
 

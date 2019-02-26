@@ -12,9 +12,9 @@ Length:0.001
 Width:0.006
 Nodes_x:101
 Nodes_y:601
-k:70.0
-Cp:550.0
-rho:6000.0
+k:eta,39,108
+Cp:eta,599,518
+rho:eta,5643,7191
 
 Meshing details:
 bias_type_x:None
@@ -27,7 +27,8 @@ Source_Uniform:None
 Source_Kim:True
 Ea:70000.0
 A0:4890000.0
-dH:20600000000.0
+dH:vol,20600000000
+Ignition:eta,0.7
 
 Time advancement:
 Fo:0.2
@@ -50,3 +51,6 @@ bc_south_rad:None
 bc_north:['F', 400000000.0, (0, -81), 'C', (30.0, 300.0), (20, -1)]
 bc_north_rad:None
 
+Ignition time: 0.270295 ms
+Solver time per 1000 time steps: 0.261630 min
+Average wave speed: 2.929365 m/s

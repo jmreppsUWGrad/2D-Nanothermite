@@ -43,9 +43,9 @@ Source_Uniform:None
 Source_Kim:True
 Ea:48000
 A0:4890000
-dH:vol,63000000000
+dH:rho,4070000
 #Ignition:eta,0.7
-Ignition:Temp,800
+Ignition:Temp,1200
 
 #Ea=40000 # [J/mol] Approx value from Kim's paper
 #        A0=1e8 # [1/s] Fudged value
