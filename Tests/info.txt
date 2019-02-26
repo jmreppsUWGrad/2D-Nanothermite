@@ -1,50 +1,9 @@
-FOLDERS:
-ChangingProp-first tests with thermal properties dep. on eta; further folders follow this
-Tign-testing different Temperature values for removing flux BC
-Eign-testing different eta values for removing flux BC
-Flux-testing different flux values (then adjusting other param)
-dH-testing different enthalpies of reaction (then adjusting other param)
-Non-nt-tests of conduction solver not related to nano-thermite
-Conserv-CONSERVATIVE FORMULATION OF 2D CONDUCTION CODE testing areas
+4,5-DUMMY FOLDERS; NOT MONITORED BY GIT
 
-Flux removed when eta reached 1.0 somewhere; Constant rho, k, Cv
-Diverging values: Ea=4000, A0=1e6, dH=300000; Ea=4000, A0=1e8, dH=300000;
-1./1b.
-Ea=40000
-A0=1e8
-dH=300000
-v=1.7 m/s
-2.
-Ea=40000
-A0=1e8
-dH=30000
-v is small
-3.
-Ea=40000
-A0=1e8
-dH=1200
-v is small
-4.
-DUMMY FOLDER
-5.
-DUMMY FOLDER
-6.
-Ea=40000
-A0=1e6
-dH=30000
-v is small
-7.
-Ea=40000
-A0=1e7
-dH=300000
-v is small
-8.
-Ea=70000
-A0=1e8
-dH=300000
-v is small
-9.
-Ea=170000
-A0=1e8
-dH=300000
-v is small
+Conserv-Folder contains test cases when conservative formulation of conduction is used
+
+ConstPropForm-contains all first test cases when constant properties formulation was used; 
+	also when changing properties based on eta was implemented WITHOUT changing the conduction formulation
+	Folders: A0, ChangingProp, dH, Eign, Flux, Mesh, Non-nt, NoSource, Tign
+
+All_Data.xlsx-spreadsheet containing all data collected from every test run
