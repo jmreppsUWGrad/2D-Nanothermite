@@ -80,14 +80,14 @@ bias_size_y:1e-06
 
 Fo:0.2
 dt:None
-total_time_steps:5000
+total_time_steps:500
 total_time:None
 Time_Scheme:Explicit
 
 Convergence:0.0001
 Max_iterations:100
 
-Number_Data_Output:5
+Number_Data_Output:2
 
 ######################################################
 #			Boundary conditions

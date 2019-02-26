@@ -71,9 +71,9 @@ class Source_terms():
         eta+=dt*detadt
         
         if st.find(self.dH[0], 'vol')>=0:
-            return at*self.dH[1]*detadt
+            return at*self.dH[1]*detadt, detadt
         else:
-            return rho*at*self.dH[1]*detadt
+            return rho*at*self.dH[1]*detadt, detadt
     
     # Calculate source term for combustion (NEEDS MODIFYING)
     def Source_Comb(self, T, y_species, dx, dy):

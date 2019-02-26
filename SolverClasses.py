@@ -25,6 +25,7 @@ import numpy as np
 #import CoolProp.CoolProp as CP
 #import temporal_schemes
 import Source_Comb
+#import PorousClass
 
 # 2D solver
 class TwoDimPlanarSolve():
@@ -43,6 +44,9 @@ class TwoDimPlanarSolve():
         self.source_unif=Sources['Source_Uniform']
         self.source_Kim=Sources['Source_Kim']
         
+        # Species solver
+#        self.solve_species=PorousClass(0,0,0)
+        
     # Time step check with dx, dy, Fo number
     def getdt(self, k, rho, Cv):
         # Stability check for Fourrier number
@@ -53,16 +57,7 @@ class TwoDimPlanarSolve():
         
         dt=self.Fo*rho*Cv/k*self.Domain.CV_vol()
         return np.amin(dt)
-
-    # Convergence checker
-    def CheckConv(self, Tprev, Tnew):
-        diff=np.sum(np.abs(Tnew-Tprev))/np.sum(np.abs(Tprev))
-        print(diff)
-        if diff<=self.conv:
-            return True
-        else:
-            return False
-
+    
     # coefficients for temperature weighting in Advance_Soln_Cond
     def get_Coeff(self, dx, dy, dt, k, rho, Cv):
         aW=np.zeros_like(dx)
@@ -249,11 +244,10 @@ class TwoDimPlanarSolve():
             E[-1,:]+=self.dx[-1,:]*dt*\
                 self.BCs['bc_north_rad'][0]*5.67*10**(-8)*\
                 (self.BCs['bc_north_rad'][1]**4-T_prev[-1,:]**4)
-        
+    
     # Main solver (1 time step)
     def Advance_Soln_Cond(self, nt, t):
         E_0=self.Domain.E.copy()# Data from previous time step
-#        E_c=self.Domain.E.copy()# Copy of data for implicit solver
         
         # Calculate properties
         k, rho, Cv=self.Domain.calcProp()
@@ -273,10 +267,9 @@ class TwoDimPlanarSolve():
         
         T_c=self.Domain.TempFromConserv()
         ###################################################################
-        # Temperature (2nd order central schemes)
+        # Conservation of Energy
         ###################################################################
-        # Sum up all contributing temperatures
-        
+        # Conduction contribution (2nd order central schemes)
         self.Domain.E[:,1:]    = aW[:,1:]*T_c[:,:-1]
         self.Domain.E[:,0]     = aE[:,0]*T_c[:,1]
         
@@ -285,24 +278,27 @@ class TwoDimPlanarSolve():
         self.Domain.E[:-1,:]  += aN[:-1,:]*T_c[1:,:]
         self.Domain.E         -= (aW+aE+aS+aN)*T_c
         
-        ###################################################################
         # Source terms
-        ###################################################################
-        
         if self.source_unif!='None':
             self.Domain.E     += self.get_source.Source_Uniform(self.source_unif, self.dx, self.dy)
         if self.source_Kim=='True':
-            self.Domain.E     +=self.get_source.Source_Comb_Kim(rho, T_c, self.Domain.eta, self.dx, self.dy, dt)
+            E_kim, deta=self.get_source.Source_Comb_Kim(rho, T_c, self.Domain.eta, self.dx, self.dy, dt)
+            self.Domain.E     +=E_kim
         
-#            # Radiation effects
-#            self.Domain.T[1:-1,1:-1]+=0.8*5.67*10**(-8)*(T_c[:-2,1:-1]**4+T_c[2:,1:-1]**4+T_c[1:-1,:-2]**4+T_c[1:-1,2:]**4)
+#        # Radiation effects
+#        self.Domain.T[1:-1,1:-1]+=0.8*5.67*10**(-8)*(T_c[:-2,1:-1]**4+T_c[2:,1:-1]**4+T_c[1:-1,:-2]**4+T_c[1:-1,2:]**4)
         
-        ###################################################################
         # Apply energy from previous time step and boundary conditions
-        ###################################################################
         self.Domain.E*= dt
         self.Domain.E+= E_0
         self.Apply_BCs_Cond(self.Domain.E, T_c, dt, rho, Cv)
+        
+        ###################################################################
+        # Conservation of species
+        ###################################################################
+        # Species generated/destroyed during reaction
+        self.Domain.Y_species[:,:,0]+=deta*dt
+        self.Domain.Y_species[:,:,1]-=deta*dt
         
         ###################################################################
         # Divergence/Convergence checks

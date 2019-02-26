@@ -44,7 +44,7 @@ class TwoDimPlanar:
         self.eta=np.zeros((self.Ny, self.Nx))
         self.rho=settings['rho']
         self.Cv=settings['Cp']
-#        self.Y_species=np.zeros((self.Ny, self.Nx, 15)) # species array
+        self.Y_species=np.zeros((self.Ny, self.Nx, 2)) # species array
 #        self.P=np.zeros((self.Ny, self.Nx))
         if type(self.rho) is str:
             line=st.split(self.rho, ',')

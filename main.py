@@ -96,6 +96,7 @@ print '################################'
 
 print 'Initializing domain...'
 domain.E[:,:]=300*5643*599*domain.CV_vol()
+domain.Y_species[:,:,1]=1.0
 print '################################'
 ##########################################################################
 # ------------------------Write Input File settings to output directory
