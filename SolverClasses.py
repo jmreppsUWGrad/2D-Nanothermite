@@ -44,8 +44,8 @@ class TwoDimPlanarSolve():
         self.source_unif=Sources['Source_Uniform']
         self.source_Kim=Sources['Source_Kim']
         
-        # Species solver
-#        self.solve_species=PorousClass(0,0,0)
+        # Porous medium solver
+#        self.Porous_Eqns=PorousClass(0,0,0)
         
     # Time step check with dx, dy, Fo number
     def getdt(self, k, rho, Cv):
@@ -266,6 +266,20 @@ class TwoDimPlanarSolve():
         aW,aE,aS,aN=self.get_Coeff(self.dx,self.dy, dt, k, rho, Cv)
         
         T_c=self.Domain.TempFromConserv()
+        
+        ###################################################################
+        # Calculate source and Porous medium terms
+        ###################################################################
+        # Source terms
+        E_unif,E_kim=0,0
+        if self.source_unif!='None':
+            E_unif      = self.get_source.Source_Uniform(self.source_unif, self.dx, self.dy)
+        if self.source_Kim=='True':
+            E_kim, deta =self.get_source.Source_Comb_Kim(rho, T_c, self.Domain.eta, self.dx, self.dy, dt)
+            
+        # Porous medium equations [TO BE CONTINUED]
+#        self.Porous_Eqns
+        
         ###################################################################
         # Conservation of Energy
         ###################################################################
@@ -279,11 +293,11 @@ class TwoDimPlanarSolve():
         self.Domain.E         -= (aW+aE+aS+aN)*T_c
         
         # Source terms
-        if self.source_unif!='None':
-            self.Domain.E     += self.get_source.Source_Uniform(self.source_unif, self.dx, self.dy)
-        if self.source_Kim=='True':
-            E_kim, deta=self.get_source.Source_Comb_Kim(rho, T_c, self.Domain.eta, self.dx, self.dy, dt)
-            self.Domain.E     +=E_kim
+        self.Domain.E +=E_unif
+        self.Domain.E +=E_kim
+        
+        # Porous medium advection [TO BE CONTINUED]
+        
         
 #        # Radiation effects
 #        self.Domain.T[1:-1,1:-1]+=0.8*5.67*10**(-8)*(T_c[:-2,1:-1]**4+T_c[2:,1:-1]**4+T_c[1:-1,:-2]**4+T_c[1:-1,2:]**4)
@@ -299,6 +313,9 @@ class TwoDimPlanarSolve():
         # Species generated/destroyed during reaction
         self.Domain.Y_species[:,:,0]+=deta*dt
         self.Domain.Y_species[:,:,1]-=deta*dt
+        
+        # Species advected from Porous medium equations [TO BE CONTINUED]
+        
         
         ###################################################################
         # Divergence/Convergence checks

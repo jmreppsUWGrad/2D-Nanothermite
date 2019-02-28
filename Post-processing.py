@@ -85,6 +85,8 @@ for time in times:
     T=np.load('T_'+time+'.npy', False)
     if st.find(source,'True')>=0:
         eta=np.load('eta_'+time+'.npy', False)
+        Y_0=np.load('Y_0_'+time+'.npy', False)
+        Y_1=np.load('Y_1_'+time+'.npy', False)
     
     
     # Temperature contour
@@ -119,6 +121,27 @@ for time in times:
     #    pyplot.clim(0.0, 1.0)
         pyplot.title('Reaction rate t='+time);
         fig.savefig('Phi_'+time+'.png',dpi=300)
+        pyplot.close(fig)
+        
+        # Mass fraction contours
+        fig=pyplot.figure(figsize=(6, 6))
+        pyplot.contourf(X, Y, Y_0, alpha=0.5, cmap=cm.viridis)#, vmin=0.0, vmax=1.0)  
+        pyplot.colorbar()
+        pyplot.xlabel('$x$ (m)')
+        pyplot.ylabel('$y$ (m)')
+    #    pyplot.clim(0.0, 1.0)
+        pyplot.title('Mass fraction; Species 0, t='+time);
+        fig.savefig('Y_0_'+time+'.png',dpi=300)
+        pyplot.close(fig)
+        
+        fig=pyplot.figure(figsize=(6, 6))
+        pyplot.contourf(X, Y, Y_1, alpha=0.5, cmap=cm.viridis)#, vmin=0.0, vmax=1.0)  
+        pyplot.colorbar()
+        pyplot.xlabel('$x$ (m)')
+        pyplot.ylabel('$y$ (m)')
+    #    pyplot.clim(0.0, 1.0)
+        pyplot.title('Mass fraction; Species 1, t='+time);
+        fig.savefig('Y_1_'+time+'.png',dpi=300)
         pyplot.close(fig)
     
     print 'Processed '+time
