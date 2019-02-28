@@ -20,7 +20,7 @@ keys_Settings=['Length','Width','Nodes_x','Nodes_y','k','Cp','rho',\
                
 keys_Sources=['Source_Uniform','Source_Kim','Ea','A0','dH', 'Ignition']
 keys_Time_adv=['Fo','dt','total_time_steps', 'total_time','Time_Scheme',\
-               'Convergence','Max_iterations','Output_directory','Number_Data_Output']
+               'Convergence','Max_iterations','Number_Data_Output']
 keys_BCs=     ['bc_left','bc_left_rad',\
               'bc_right','bc_right_rad',\
               'bc_south','bc_south_rad',\
@@ -80,12 +80,39 @@ class FileOut():
             self.fout.write(i)
             self.fout.write(':')
             self.Write_single_line(str(settings[i]))
+        self.fout.write('Output_directory')
+        self.fout.write(':')
+        self.Write_single_line(str(settings['Output_directory']))
             
         self.Write_single_line('\nBoundary conditions:')
         for i in keys_BCs:
+            # User readable BC format
+            self.fout.write('#')
             self.fout.write(i)
             self.fout.write(':')
             self.Write_single_line(str(BCs[i]))
+            # Input file readable format
+            self.fout.write(i)
+            self.fout.write(':')
+            if st.find(i,'rad')>=0:
+                if BCs[i]=='None':
+                    self.Write_single_line('None')
+                else:
+                    self.Write_single_line(str(BCs[i][0])+','+str(BCs[i][1]))
+            else:
+                for j in range(len(BCs[i])/3):
+                    self.fout.write(BCs[i][3*j]+',')
+                    if BCs[i][3*j]=='C':
+                        self.fout.write(str(BCs[i][1+3*j][0])+',')
+                        self.fout.write(str(BCs[i][1+3*j][1])+',')
+                    else:
+                        self.fout.write(str(BCs[i][1+3*j])+',')
+                    self.fout.write(str(BCs[i][2+3*j][0])+',')
+                    self.fout.write(str(BCs[i][2+3*j][1]))
+                    if len(BCs[i])/3-j!=1:
+                        self.fout.write(',')
+                    else:
+                        self.fout.write('\n')
             
 #        self.fout.write('\nInitial conditions:\n')
 #        self.Write_single_line('T')
