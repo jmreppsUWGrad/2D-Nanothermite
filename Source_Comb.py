@@ -70,6 +70,9 @@ class Source_terms():
         detadt=self.A0*(1-eta)*np.exp(-self.Ea/self.R/T)
         eta+=dt*detadt
         
+        # Clipping to 0
+        eta[eta<10**(-5)]=0
+        
         if st.find(self.dH[0], 'vol')>=0:
             return at*self.dH[1]*detadt, detadt
         else:
