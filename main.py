@@ -95,8 +95,11 @@ solver=Solvers.TwoDimPlanarSolve(domain, settings, Sources, BCs, 'Solid')
 print '################################'
 
 print 'Initializing domain...'
-domain.E[:,:]=300*5643*599*domain.CV_vol()
-domain.Y_species[:,:,1]=1.0
+k,rho,Cv=domain.calcProp()
+domain.E[:,:]=rho*Cv*domain.CV_vol()*300
+del k,rho,Cv
+domain.Y_species[:,:,0]=2.0/5
+domain.Y_species[:,:,1]=3.0/5
 print '################################'
 ##########################################################################
 # ------------------------Write Input File settings to output directory
@@ -128,7 +131,7 @@ np.save('Y', domain.Y, False)
 # -------------------------------------Solve
 ##########################################################################
 t,nt,tign=0,0,0 # time, number steps and ignition time initializations
-v_0,v_1,v,N=0,0,0,0 #combustion wave speed variable initialization
+v_0,v_1,v,N=0,0,0,0 #combustion wave speed variables initialization
 output_data_t,output_data_nt=0,0
 if settings['total_time_steps']=='None':
     settings['total_time_steps']=settings['total_time']*10**9

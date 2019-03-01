@@ -77,17 +77,16 @@ while i>j:
     else:
         del times[j]
         i-=1
-
+    
 # Generate graphs
+X=np.load('X.npy', False)
+Y=np.load('Y.npy', False)
 for time in times:
-    X=np.load('X.npy', False)
-    Y=np.load('Y.npy', False)
     T=np.load('T_'+time+'.npy', False)
     if st.find(source,'True')>=0:
         eta=np.load('eta_'+time+'.npy', False)
-        Y_0=np.load('Y_0_'+time+'.npy', False)
-        Y_1=np.load('Y_1_'+time+'.npy', False)
-    
+        Y_tot=np.zeros_like(Y)
+        titles=['$Al$','$CuO$','$Al_2O_3$','$Cu$']
     
     # Temperature contour
     fig=pyplot.figure(figsize=(6, 6))
@@ -124,26 +123,21 @@ for time in times:
         pyplot.close(fig)
         
         # Mass fraction contours
-        fig=pyplot.figure(figsize=(6, 6))
-        pyplot.contourf(X, Y, Y_0, alpha=0.5, cmap=cm.viridis)#, vmin=0.0, vmax=1.0)  
-        pyplot.colorbar()
-        pyplot.xlabel('$x$ (m)')
-        pyplot.ylabel('$y$ (m)')
-    #    pyplot.clim(0.0, 1.0)
-        pyplot.title('Mass fraction; Species 0, t='+time);
-        fig.savefig('Y_0_'+time+'.png',dpi=300)
-        pyplot.close(fig)
+        for i in range(len(titles)):
+            Y_0=np.load('Y_'+str(i)+'_'+time+'.npy', False)
+            fig=pyplot.figure(figsize=(6, 6))
+            pyplot.contourf(X, Y, Y_0, alpha=0.5, cmap=cm.viridis)#, vmin=0.0, vmax=1.0)  
+            pyplot.colorbar()
+            pyplot.xlabel('$x$ (m)')
+            pyplot.ylabel('$y$ (m)')
+        #    pyplot.clim(0.0, 1.0)
+            pyplot.title('Mass fraction; '+titles[i]+', t='+time);
+            fig.savefig('Y_'+str(i)+'_'+time+'.png',dpi=300)
+            pyplot.close(fig)
+            Y_tot+=Y_0
         
-        fig=pyplot.figure(figsize=(6, 6))
-        pyplot.contourf(X, Y, Y_1, alpha=0.5, cmap=cm.viridis)#, vmin=0.0, vmax=1.0)  
-        pyplot.colorbar()
-        pyplot.xlabel('$x$ (m)')
-        pyplot.ylabel('$y$ (m)')
-    #    pyplot.clim(0.0, 1.0)
-        pyplot.title('Mass fraction; Species 1, t='+time);
-        fig.savefig('Y_1_'+time+'.png',dpi=300)
-        pyplot.close(fig)
-    
     print 'Processed '+time
+    if st.find(source,'True')>=0:
+        print '     Mass balance residual: %8f'%(1-np.amax(Y_tot))
 
 print '\nPost-processing complete'

@@ -311,8 +311,11 @@ class TwoDimPlanarSolve():
         # Conservation of species
         ###################################################################
         # Species generated/destroyed during reaction
-        self.Domain.Y_species[:,:,0]+=deta*dt
-        self.Domain.Y_species[:,:,1]-=deta*dt
+        self.Domain.Y_species[:,:,0]-=2.0/5*deta*dt # Al
+        self.Domain.Y_species[:,:,1]-=3.0/5*deta*dt # CuO
+        
+        self.Domain.Y_species[:,:,2]+=1.0/4*deta*dt # Al2O3
+        self.Domain.Y_species[:,:,3]+=3.0/4*deta*dt # Cu
         
         # Species advected from Porous medium equations [TO BE CONTINUED]
         
