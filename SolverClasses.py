@@ -273,9 +273,10 @@ class TwoDimPlanarSolve():
         # Source terms
         E_unif,E_kim=0,0
         if self.source_unif!='None':
-            E_unif      = self.get_source.Source_Uniform(self.source_unif, self.dx, self.dy)
+            E_unif      = self.get_source.Source_Uniform(self.source_unif, self.Domain.CV_vol())
         if self.source_Kim=='True':
-            E_kim, deta =self.get_source.Source_Comb_Kim(rho, T_c, self.Domain.eta, self.dx, self.dy, dt)
+            E_kim, deta =self.get_source.Source_Comb_Kim(rho, T_c, self.Domain.eta, self.Domain.CV_vol(), dt)
+#            E_kim, deta =self.get_source.Source_Comb_Umbrajkar(rho, T_c, self.Domain.eta, self.Domain.CV_vol(), dt)
             
         # Porous medium equations [TO BE CONTINUED]
 #        self.Porous_Eqns

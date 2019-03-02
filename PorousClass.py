@@ -31,6 +31,6 @@ class Porous_Equations():
         u_x=np.zeros_like(rho)
         u_y=np.zeros_like(rho)
         
-        u_x[:,1:-1]=self.perm*(P[:,2:]-P[:,:-2])/(dx[:,1:-1]+dx[:,:-2])
-        u_y[1:-1,:]=self.perm*(P[2:,:]-P[:-2,:])/(dy[1:-1,:]+dy[:-2,:])
+        u_x[:,1:-1]=-self.perm/self.mu*(P[:,2:]-P[:,:-2])/(dx[:,1:-1]+dx[:,:-2])
+        u_y[1:-1,:]=-self.perm/self.mu*(P[2:,:]-P[:-2,:])/(dy[1:-1,:]+dy[:-2,:])
     

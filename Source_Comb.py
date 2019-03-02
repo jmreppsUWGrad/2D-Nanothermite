@@ -35,38 +35,14 @@ class Source_terms():
         self.n=0.2 # Temperature exponent
         
     # Uniform volumetric generation
-    def Source_Uniform(self, Q, dx, dy):
-        at=np.zeros_like(dx)
+    def Source_Uniform(self, Q, V):
         
-        at[1:-1,1:-1]=0.25*(dx[1:-1,1:-1]+dx[1:-1,:-2])*(dy[1:-1,1:-1]+dy[:-2,1:-1])
-        at[0,0]      =0.25*(dx[0,0])*(dy[0,0])
-        at[0,1:-1]   =0.25*(dx[0,1:-1]+dx[0,:-2])*(dy[0,1:-1])
-        at[1:-1,0]   =0.25*(dx[1:-1,0])*(dy[1:-1,0]+dy[:-2,0])
-        at[0,-1]     =0.25*(dx[0,-1])*(dy[0,-1])
-        at[-1,0]     =0.25*(dx[-1,0])*(dy[-1,0])
-        at[-1,1:-1]  =0.25*(dx[-1,1:-1]+dx[-1,:-2])*(dy[-1,1:-1])
-        at[1:-1,-1]  =0.25*(dx[1:-1,-1])*(dy[1:-1,-1]+dy[:-2,-1])
-        at[-1,-1]    =0.25*(dx[-1,-1])*(dy[-1,-1])
-        
-        return Q*at
+        return Q*V
     
     # Calculate source term for combustion based on
     # K. Kim, "Computational Modeling of Combustion Wave in Nanoscale Thermite Reaction",
     # Int. J of Energy and Power engineering, vol.8, no.7, pp. 612-615, 2014.
-    def Source_Comb_Kim(self, rho, T, eta, dx, dy, dt):
-        at=np.zeros_like(dx)
-        
-        # CV dimensions
-        at[1:-1,1:-1]=0.25*(dx[1:-1,1:-1]+dx[1:-1,:-2])*(dy[1:-1,1:-1]+dy[:-2,1:-1])
-        at[0,0]      =0.25*(dx[0,0])*(dy[0,0])
-        at[0,1:-1]   =0.25*(dx[0,1:-1]+dx[0,:-2])*(dy[0,1:-1])
-        at[1:-1,0]   =0.25*(dx[1:-1,0])*(dy[1:-1,0]+dy[:-2,0])
-        at[0,-1]     =0.25*(dx[0,-1])*(dy[0,-1])
-        at[-1,0]     =0.25*(dx[-1,0])*(dy[-1,0])
-        at[-1,1:-1]  =0.25*(dx[-1,1:-1]+dx[-1,:-2])*(dy[-1,1:-1])
-        at[1:-1,-1]  =0.25*(dx[1:-1,-1])*(dy[1:-1,-1]+dy[:-2,-1])
-        at[-1,-1]    =0.25*(dx[-1,-1])*(dy[-1,-1])
-        
+    def Source_Comb_Kim(self, rho, T, eta, vol, dt):
         detadt=self.A0*(1-eta)*np.exp(-self.Ea/self.R/T)
         eta+=dt*detadt
         
@@ -74,9 +50,47 @@ class Source_terms():
         eta[eta<10**(-5)]=0
         
         if st.find(self.dH[0], 'vol')>=0:
-            return at*self.dH[1]*detadt, detadt
+            return vol*self.dH[1]*detadt, detadt
         else:
-            return rho*at*self.dH[1]*detadt, detadt
+            return rho*vol*self.dH[1]*detadt, detadt
+    
+    # Source term for combustion based on
+    # Umbrajkar, S et al., "Exothermic reactions in Al-CuO nanocomposites",
+    # Thermochimica Acta, vol.451, pp. 34-43, 2006.
+    def Source_Comb_Umbrajkar(self, rho, T, eta, vol, dt):
+        # First temp range
+        A=10**(6.68)
+        n=0.6
+        Ea=78000
+        deta1=A*n*(eta-1)*np.log((1-eta)**(1-1/n))*np.exp(-Ea/8.314/T)
+        # Second temp range
+        A=10**(5.15)
+        n=3.9
+        Ea=79000
+        deta2=A*(1-eta)**n*np.exp(-Ea/8.314/T)
+        # Third temp range
+        A=10**(5.03)
+        n=2.6
+        Ea=102000
+        deta3=A*(1-eta)**n*np.exp(-Ea/8.314/T)
+        # Fourth temp range
+        A=10**(13.3)
+        n=0.75
+        Ea=266000
+        deta4=A*n*(eta-1)*np.log((1-eta)**(1-1/n))*np.exp(-Ea/8.314/T)
+        
+#        deta4=self.A0*(1-eta)*np.exp(-self.Ea/self.R/T)
+        
+        detadt=deta1+deta2+deta3+deta4
+        eta+=dt*detadt
+        
+        # Clipping to 0
+        eta[eta<10**(-5)]=0
+        
+        if st.find(self.dH[0], 'vol')>=0:
+            return vol*self.dH[1]*detadt, detadt
+        else:
+            return rho*vol*self.dH[1]*detadt, detadt
     
     # Calculate source term for combustion (NEEDS MODIFYING)
     def Source_Comb(self, T, y_species, dx, dy):

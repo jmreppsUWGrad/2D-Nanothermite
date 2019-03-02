@@ -138,6 +138,6 @@ for time in times:
         
     print 'Processed '+time
     if st.find(source,'True')>=0:
-        print '     Mass balance residual: %8f'%(1-np.amax(Y_tot))
+        print '     Mass balance residual: %8f'%(1-np.amin(Y_tot))
 
 print '\nPost-processing complete'

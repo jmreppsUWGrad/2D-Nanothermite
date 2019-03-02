@@ -44,8 +44,8 @@ Source_Kim:True
 Ea:70000
 A0:4890000
 dH:vol,63000000000
-#Ignition:eta,0.7
-Ignition:Temp,1200
+Ignition:eta,0.7
+#Ignition:Temp,1200
 
 #Ea=40000 # [J/mol] Approx value from Kim's paper
 #        A0=1e8 # [1/s] Fudged value
@@ -80,14 +80,14 @@ bias_size_y:1e-06
 
 Fo:0.2
 dt:None
-total_time_steps:1000
+total_time_steps:2000
 total_time:None
 Time_Scheme:Explicit
 
 Convergence:0.0001
 Max_iterations:100
 
-Number_Data_Output:1
+Number_Data_Output:2
 
 ######################################################
 #			Boundary conditions
