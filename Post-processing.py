@@ -164,7 +164,6 @@ for time in times:
         print '     Mass balance residual: %8f'%(1-np.amin(Y_tot))
 
 print 'Creating 1D plots'
-# 1D Plots for every time step
 fig=pyplot.figure(figsize=(6, 6))
 for time in times:
     T=np.load('T_'+time+'.npy', False)
@@ -181,6 +180,7 @@ if st.find(source,'True')>=0:
     fig=pyplot.figure(figsize=(6, 6))
     for time in times:
         eta=np.load('eta_'+time+'.npy', False)
+        T=np.load('T_'+time+'.npy', False)
         phi=A0*(1-eta)*np.exp(-Ea/8.314/T)
         # 1D Reaction rate profile at centreline
         pyplot.plot(Y[:,1], phi[:,int(len(T[0,:])/2)], label='t='+time)
