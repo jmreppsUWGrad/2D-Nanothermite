@@ -99,6 +99,15 @@ for time in times:
     fig.savefig('T_'+time+'.png',dpi=300)
     pyplot.close(fig)
     
+    # 1D temperature profile at centreline
+    fig=pyplot.figure(figsize=(6, 6))
+    pyplot.plot(Y[:,1], T[:,int(len(T[0,:])/2)])
+    pyplot.xlabel('$y$ (m)')
+    pyplot.ylabel('T (K)')
+    pyplot.title('Centreline Temperature distribution t='+time)
+    fig.savefig('T_1D_'+time+'.png',dpi=300)
+    pyplot.close(fig)
+    
     if st.find(source,'True')>=0:
         # Progress contour
         fig=pyplot.figure(figsize=(6, 6))
@@ -112,8 +121,9 @@ for time in times:
         pyplot.close(fig)
         
         # Reaction rate contour
+        phi=A0*(1-eta)*np.exp(-Ea/8.314/T)
         fig=pyplot.figure(figsize=(6, 6))
-        pyplot.contourf(X, Y, A0*(1-eta)*np.exp(-Ea/8.314/T), alpha=0.5, cmap=cm.viridis)#, vmin=0.0, vmax=1.0)  
+        pyplot.contourf(X, Y, phi, alpha=0.5, cmap=cm.viridis)#, vmin=0.0, vmax=1.0)  
         pyplot.colorbar(format='%.2e')
         pyplot.xlabel('$x$ (m)')
         pyplot.ylabel('$y$ (m)')
@@ -122,22 +132,64 @@ for time in times:
         fig.savefig('Phi_'+time+'.png',dpi=300)
         pyplot.close(fig)
         
+        # 1D Reaction rate profile at centreline
+        fig=pyplot.figure(figsize=(6, 6))
+        pyplot.plot(Y[:,1], phi[:,int(len(T[0,:])/2)])
+        pyplot.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+        pyplot.xlabel('$y$ (m)')
+        pyplot.ylabel('$d\eta/dt$ ($s^{-1}$)')
+        pyplot.title('Centreline Reaction rate t='+time)
+        fig.savefig('Phi_1D_'+time+'.png',dpi=300)
+        pyplot.close(fig)
+    
         # Mass fraction contours
         for i in range(len(titles)):
-            Y_0=np.load('Y_'+str(i)+'_'+time+'.npy', False)
-            fig=pyplot.figure(figsize=(6, 6))
-            pyplot.contourf(X, Y, Y_0, alpha=0.5, cmap=cm.viridis)#, vmin=0.0, vmax=1.0)  
-            pyplot.colorbar()
-            pyplot.xlabel('$x$ (m)')
-            pyplot.ylabel('$y$ (m)')
-        #    pyplot.clim(0.0, 1.0)
-            pyplot.title('Mass fraction; '+titles[i]+', t='+time);
-            fig.savefig('Y_'+str(i)+'_'+time+'.png',dpi=300)
-            pyplot.close(fig)
-            Y_tot+=Y_0
+            try:
+                Y_0=np.load('Y_'+str(i)+'_'+time+'.npy', False)
+                fig=pyplot.figure(figsize=(6, 6))
+                pyplot.contourf(X, Y, Y_0, alpha=0.5, cmap=cm.viridis)#, vmin=0.0, vmax=1.0)  
+                pyplot.colorbar()
+                pyplot.xlabel('$x$ (m)')
+                pyplot.ylabel('$y$ (m)')
+            #    pyplot.clim(0.0, 1.0)
+                pyplot.title('Mass fraction; '+titles[i]+', t='+time);
+                fig.savefig('Y_'+str(i)+'_'+time+'.png',dpi=300)
+                pyplot.close(fig)
+                Y_tot+=Y_0
+            except:
+                continue
         
     print 'Processed '+time
     if st.find(source,'True')>=0:
         print '     Mass balance residual: %8f'%(1-np.amin(Y_tot))
+
+print 'Creating 1D plots'
+# 1D Plots for every time step
+fig=pyplot.figure(figsize=(6, 6))
+for time in times:
+    T=np.load('T_'+time+'.npy', False)
+    # 1D temperature profile at centreline
+    pyplot.plot(Y[:,1], T[:,int(len(T[0,:])/2)], label='t='+time)
+pyplot.xlabel('$y$ (m)')
+pyplot.ylabel('T (K)')
+pyplot.legend()
+pyplot.title('Centreline Temperature Evolution')
+fig.savefig('T_1D.png',dpi=300)
+pyplot.close(fig)
+    
+if st.find(source,'True')>=0:
+    fig=pyplot.figure(figsize=(6, 6))
+    for time in times:
+        eta=np.load('eta_'+time+'.npy', False)
+        phi=A0*(1-eta)*np.exp(-Ea/8.314/T)
+        # 1D Reaction rate profile at centreline
+        pyplot.plot(Y[:,1], phi[:,int(len(T[0,:])/2)], label='t='+time)
+    pyplot.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+    pyplot.xlabel('$y$ (m)')
+    pyplot.ylabel('$d\eta/dt$ ($s^{-1}$)')
+    pyplot.legend()
+    pyplot.title('Centreline Reaction rate Evolution')
+    fig.savefig('Phi_1D.png',dpi=300)
+    pyplot.close(fig)
 
 print '\nPost-processing complete'
