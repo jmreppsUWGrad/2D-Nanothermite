@@ -44,6 +44,7 @@ Source_Kim:True
 Ea:70000
 A0:4890000
 dH:vol,63000000000
+#dH:rho,4070000
 Ignition:eta,0.7
 #Ignition:Temp,1200
 
