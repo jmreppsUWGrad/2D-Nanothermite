@@ -22,61 +22,24 @@ Length:0.001
 Width:0.006
 Nodes_x:101
 Nodes_y:601
-k:78
+k:65
 Cp:625
-rho:1523
+rho:2020
 #k:eta,39,108
 #Cp:eta,599,518
 #rho:eta,5643,7191
 
-######################################################
-#			Source terms
-#	Source_uniform: specify volumetric heating in W/m^3 or None
-#	Source_Kim: True or None
-#	Ea: J/mol, A0 [unit depends]
-#	dH: form [vol or rho],[value]; is volume or mass based enthalpy
-#	Ignition: Condition to remove flux BC in form [variable],[variable threshold]
-#		where [variable] can be eta or Temp
-######################################################
+#Ea=48000, 70000 # [J/mol] Approx value from Kim's paper
+#        dH=1200 # [J/mol] Value taken from V. Baijot et al., A multi-phase ..., Combustion and Flame, 2017.
+#   dH=63000000000, 4070000 [density], 4700000
 
 Source_Uniform:None
 Source_Kim:True
 Ea:70000
 A0:4890000
 dH:rho,4700000
-#Ignition:eta,0.8
-Ignition:Temp,1200
-
-#Ea=40000 # [J/mol] Approx value from Kim's paper
-#        A0=1e8 # [1/s] Fudged value
-#        dH=1200 # [J/mol] Value taken from V. Baijot et al., A multi-phase ..., Combustion and Flame, 2017.
-#        dH=30000 #[J/kg] approx from ...
-#   dH=63000000000, 4070000 [density]
-
-######################################################
-#			Meshing details
-#	Currently not available
-#Biasing options:
-#    -'OneWayUp'   for linearly increasing element sizes with increasing x/y
-#    -'OneWayDown' for linearly decreasing element sizes with increasing x/y
-#    -'TwoWayEnd'  for linearly increasing sizes till middle, then decrease again
-#    -'TwoWayMid'  for linearly decreasing sizes till middle, then increase again
-#    -size         is the smallest element size based on above selection
-######################################################
-
-bias_type_x:None
-bias_size_x:0.003
-bias_type_y:None
-bias_size_y:1e-06
-
-######################################################
-#			Time advancement details
-#	'Fo' (in (0, 1.0)) OR 'dt' must be specified; if both are, then smallest will be used; Fo stability check to 1.0
-#	'total_time_steps' OR 'total_time' must be specified; if both, then smallest will be used
-#	Time schemes: Explicit
-#	'Convergence' and 'Max_iterations' are for implicit solver
-#	[IN PROGRESS] Number_Data_Output: Number of T variable files to be output over the time/number of steps specified
-######################################################
+Ignition:eta,0.8
+#Ignition:Temp,1200
 
 Fo:0.2
 dt:None
@@ -89,19 +52,6 @@ Max_iterations:100
 
 Number_Data_Output:8
 
-######################################################
-#			Boundary conditions
-# Format: [type of BC], [values for BC], [first node #], [last node #]
-#	[type of BC]  -T or F for const. temp or flux; each requires one value for [values for BC]
-#	[type of BC]  -C for convective BC; requires conv. HT coeff AND T_infty for [values for BC]
-#	[first node #]-first node number to apply BC; 0 based index; must be positive
-#	[last node #] -last node number to apply BC; must be negative/relative to last node; node-Nodes_x
-#		Mulitple BCs can be specified along a boundary; separate everything with commas;
-#	e.g. F, 1000, 0,-10,C,10,300,10,-1
-#  [IN PROGRESS] Profiles possible; must be same size as number of nodes on that boundary
-# [IN PROGRESS] Radiation options: None or [emissivity, surrounding_Temp]
-######################################################
-
 bc_left:F, 0, 0, -1
 bc_left_rad:None
 bc_right:C, 30, 300, 0, -1
@@ -113,3 +63,9 @@ bc_south_rad:None
 bc_north:F, 200000000, 0, -81,C, 30, 300, 20, -1
 bc_north_rad:None
 # numpy.linspace(400, 900, settings['Nodes_x'])
+
+bias_type_x:None
+bias_size_x:0.003
+bias_type_y:None
+bias_size_y:1e-06
+
