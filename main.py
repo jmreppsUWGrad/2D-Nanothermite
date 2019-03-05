@@ -122,8 +122,8 @@ T=domain.TempFromConserv()
 np.save('T_'+'0.000000', T, False)
 if st.find(Sources['Source_Kim'],'True')>=0:
     np.save('eta_'+'0.000000', domain.eta, False)
-    for i in range(len(domain.Y_species[0,0,:])):
-        np.save('Y_'+str(i)+'_'+'0.000000', domain.Y_species[:,:,i], False)
+#    for i in range(len(domain.Y_species[0,0,:])):
+#        np.save('Y_'+str(i)+'_'+'0.000000', domain.Y_species[:,:,i], False)
 np.save('X', domain.X, False)
 np.save('Y', domain.Y, False)
 
@@ -157,11 +157,10 @@ while nt<settings['total_time_steps'] and t<settings['total_time']:
         print 'Saving data to numpy array files...'
         T=domain.TempFromConserv()
         np.save('T_'+'{:f}'.format(t), T, False)
-        input_file.close()
         if st.find(Sources['Source_Kim'],'True')>=0:
             np.save('eta_'+'{:f}'.format(t), domain.eta, False)
-            for i in range(len(domain.Y_species[0,0,:])):
-                np.save('Y_'+str(i)+'_'+'{:f}'.format(t), domain.Y_species[:,:,i], False)
+#            for i in range(len(domain.Y_species[0,0,:])):
+#                np.save('Y_'+str(i)+'_'+'{:f}'.format(t), domain.Y_species[:,:,i], False)
         break
     
     # Output data to numpy files
@@ -171,8 +170,8 @@ while nt<settings['total_time_steps'] and t<settings['total_time']:
         np.save('T_'+'{:f}'.format(t), T, False)
         if st.find(Sources['Source_Kim'],'True')>=0:
             np.save('eta_'+'{:f}'.format(t), domain.eta, False)
-            for i in range(len(domain.Y_species[0,0,:])):
-                np.save('Y_'+str(i)+'_'+'{:f}'.format(t), domain.Y_species[:,:,i], False)
+#            for i in range(len(domain.Y_species[0,0,:])):
+#                np.save('Y_'+str(i)+'_'+'{:f}'.format(t), domain.Y_species[:,:,i], False)
         
     # Change boundary conditions
     T=domain.TempFromConserv()

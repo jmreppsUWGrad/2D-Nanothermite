@@ -22,12 +22,12 @@ Length:0.001
 Width:0.006
 Nodes_x:101
 Nodes_y:601
-#k:70
-#Cp:550
-#rho:6000
-k:eta,39,108
-Cp:eta,599,518
-rho:eta,5643,7191
+k:78
+Cp:625
+rho:1523
+#k:eta,39,108
+#Cp:eta,599,518
+#rho:eta,5643,7191
 
 ######################################################
 #			Source terms
@@ -41,10 +41,10 @@ rho:eta,5643,7191
 
 Source_Uniform:None
 Source_Kim:True
-Ea:48000
+Ea:70000
 A0:4890000
-dH:vol,63000000000
-#Ignition:eta,0.7
+dH:rho,4700000
+#Ignition:eta,0.8
 Ignition:Temp,1200
 
 #Ea=40000 # [J/mol] Approx value from Kim's paper
@@ -80,14 +80,14 @@ bias_size_y:1e-06
 
 Fo:0.2
 dt:None
-total_time_steps:5000
+total_time_steps:8000
 total_time:None
 Time_Scheme:Explicit
 
 Convergence:0.0001
 Max_iterations:100
 
-Number_Data_Output:5
+Number_Data_Output:8
 
 ######################################################
 #			Boundary conditions

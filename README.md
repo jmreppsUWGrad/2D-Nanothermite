@@ -3,9 +3,9 @@
 This repository contains the Python code to solve the 2D Heat conduction equations.
 
 # Current state:
--solve 2D heat conduction with no source terms (Explicit or implicit)
+-solve 2D heat conduction with no source terms (Explicit)
 
--Combustion source term from Kim (Explicit only)
+-Combustion source term from Kim (Explicit)
 
 -can be run from command prompt
 
@@ -18,7 +18,7 @@ python main.py [input file name] [Output directory]
 
 where:
 
-[input file name]-name of input file including extension in name (.txt files have been tested)
+[input file name]-name of input file including extension in name (.txt files have been tested); based on current directory
 
 [Output directory]-directory to save data files to; based on current directory; will create if non-existent
 
