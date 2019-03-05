@@ -192,12 +192,16 @@ while nt<settings['total_time_steps'] and t<settings['total_time']:
         
 time_end=time.time()
 print 'Ignition time: %f ms'%(tign*1000)
-print 'Solver time per 1000 time steps: %f min'%((time_end-time_begin)/60.0*1000/nt)
-print 'Average wave speed: %f m/s'%(v/N)
 input_file.Write_single_line('Ignition time: %f ms'%(tign*1000))
+print 'Solver time per 1000 time steps: %f min'%((time_end-time_begin)/60.0*1000/nt)
 input_file.Write_single_line('Solver time per 1000 time steps: %f min'%((time_end-time_begin)/60.0*1000/nt))
-input_file.Write_single_line('Average wave speed: %f m/s'%(v/N))
-input_file.close()
-T, eta=domain.TempFromConserv(), domain.eta
+try:
+    print 'Average wave speed: %f m/s'%(v/N)
+    input_file.Write_single_line('Average wave speed: %f m/s'%(v/N))
+    input_file.close()
+except:
+    print 'Average wave speed: 0 m/s'
+    input_file.Write_single_line('Average wave speed: 0 m/s')
+    input_file.close()
 
 print('Solver has finished its run')
