@@ -325,9 +325,12 @@ class TwoDimPlanarSolve():
         # Divergence/Convergence checks
         ###################################################################
         if (np.isnan(np.amax(self.Domain.E))) \
-        or (np.amax(self.Domain.E)>100*np.amax(E_0)) \
-        or (np.amin(self.Domain.E)<=0) or (np.amax(self.Domain.eta)>1.0):
-            print '**************Divergence detected****************'
+        or (np.amax(self.Domain.E)>100*np.amax(E_0))\
+        or (np.amin(self.Domain.E)<=0):
+            print '***********Divergence detected - energy************'
+            return 1, dt
+        elif (np.amax(self.Domain.eta)>1.0):
+            print '***********Divergence detected - reaction progress************'
             return 1, dt
         else:
             return 0, dt
