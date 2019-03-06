@@ -39,7 +39,7 @@ Time_Scheme:Explicit
 Convergence:0.0001
 Max_iterations:100
 Number_Data_Output:5
-Output_directory:Tests/1
+Output_directory:Tests\Conserv\AlMoO3\Mesh\8a
 
 Boundary conditions:
 #bc_left:['F', 0.0, (0, -1)]
@@ -58,3 +58,7 @@ bc_south_rad:None
 bc_north:F,200000000.0,0,-81,C,30.0,300.0,20,-1
 #bc_north_rad:None
 bc_north_rad:None
+
+Ignition time: 0.440590 ms
+Solver time per 1000 time steps: 1.758654 min
+Average wave speed: 9.120339 m/s
