@@ -24,7 +24,7 @@ Nodes_x:101
 Nodes_y:601
 k:65
 Cp:625
-rho:2020
+rho:1523
 #k:eta,39,108
 #Cp:eta,599,518
 #rho:eta,5643,7191
@@ -35,7 +35,7 @@ rho:2020
 
 Source_Uniform:None
 Source_Kim:True
-Ea:70000
+Ea:48000
 A0:4890000
 dH:rho,4700000
 Ignition:eta,0.8

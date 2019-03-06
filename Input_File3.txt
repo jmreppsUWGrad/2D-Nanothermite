@@ -22,9 +22,9 @@ Length:0.001
 Width:0.006
 Nodes_x:101
 Nodes_y:601
-k:65
+k:78
 Cp:625
-rho:2020
+rho:1523
 #k:eta,39,108
 #Cp:eta,599,518
 #rho:eta,5643,7191
@@ -32,25 +32,26 @@ rho:2020
 #Ea=48000, 70000 # [J/mol] Approx value from Kim's paper
 #        dH=1200 # [J/mol] Value taken from V. Baijot et al., A multi-phase ..., Combustion and Flame, 2017.
 #   dH=63000000000, 4070000 [density], 4700000
+# A0 4890000
 
 Source_Uniform:None
 Source_Kim:True
-Ea:70000
-A0:4890000
+Ea:48000
+A0:141000
 dH:rho,4700000
-Ignition:eta,0.8
-#Ignition:Temp,1200
+#Ignition:eta,0.8
+Ignition:Temp,1200
 
 Fo:0.2
 dt:None
-total_time_steps:8000
+total_time_steps:20000
 total_time:None
 Time_Scheme:Explicit
 
 Convergence:0.0001
 Max_iterations:100
 
-Number_Data_Output:8
+Number_Data_Output:10
 
 bc_left:F, 0, 0, -1
 bc_left_rad:None

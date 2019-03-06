@@ -24,7 +24,7 @@ Nodes_x:101
 Nodes_y:601
 k:65
 Cp:625
-rho:2020
+rho:1523
 #k:eta,39,108
 #Cp:eta,599,518
 #rho:eta,5643,7191
@@ -43,14 +43,14 @@ Ignition:eta,0.8
 
 Fo:0.2
 dt:None
-total_time_steps:15000
+total_time_steps:8000
 total_time:None
 Time_Scheme:Explicit
 
 Convergence:0.0001
 Max_iterations:100
 
-Number_Data_Output:5
+Number_Data_Output:8
 
 bc_left:F, 0, 0, -1
 bc_left_rad:None
