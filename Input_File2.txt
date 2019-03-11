@@ -12,7 +12,7 @@ Length:0.001
 Width:0.006
 Nodes_x:201
 Nodes_y:1201
-k:65.0
+k:156.0
 Cp:625.0
 rho:1523.0
 
@@ -25,21 +25,21 @@ bias_size_y:1e-06
 Source Terms:
 Source_Uniform:None
 Source_Kim:True
-Ea:48000.0
+Ea:70000.0
 A0:4890000.0
 dH:rho,4700000
-Ignition:eta,0.8
+Ignition:Temp,1200
 
 Time advancement:
 Fo:0.2
 dt:None
-total_time_steps:16000
+total_time_steps:60000
 total_time:None
 Time_Scheme:Explicit
 Convergence:0.0001
 Max_iterations:100
-Number_Data_Output:8
-Output_directory:Tests\Conserv\AlMoO3\11
+Number_Data_Output:5
+Output_directory:Tests\Conserv\AlMoO3\9
 
 Boundary conditions:
 #bc_left:['F', 0.0, (0, -1)]
@@ -58,3 +58,7 @@ bc_south_rad:None
 bc_north:F,200000000.0,0,-81,C,30.0,300.0,20,-1
 #bc_north_rad:None
 bc_north_rad:None
+
+Ignition time: 0.812206 ms
+Solver time per 1000 time steps: 0.308500 min
+Average wave speed: 8.809879 m/s
