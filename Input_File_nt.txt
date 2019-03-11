@@ -20,11 +20,11 @@
 
 Length:0.001
 Width:0.006
-Nodes_x:101
-Nodes_y:601
-k:156
+Nodes_x:201
+Nodes_y:1201
+k:65
 Cp:625
-rho:3808
+rho:1523
 #k:eta,39,108
 #Cp:eta,599,518
 #rho:eta,5643,7191
@@ -41,12 +41,12 @@ rho:3808
 
 Source_Uniform:None
 Source_Kim:True
-Ea:48000
+Ea:70000
 A0:4890000
 #dH:vol,63000000000
-dH:rho,4700000
-#Ignition:eta,0.7
-Ignition:Temp,1200
+dH:rho,4000000
+Ignition:eta,0.8
+#Ignition:Temp,1200
 
 #Ea=40000 # [J/mol] Approx value from Kim's paper
 #        A0=1e8 # [1/s] Fudged value
@@ -82,7 +82,7 @@ bias_size_y:1e-06
 
 Fo:0.2
 dt:None
-total_time_steps:20000
+total_time_steps:60000
 total_time:None
 Time_Scheme:Explicit
 

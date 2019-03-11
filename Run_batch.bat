@@ -1,10 +1,10 @@
 @echo OFF
 
-set fold1=Tests\Conserv\AlMoO3\1
+set fold1=Tests\Conserv\AlMoO3\Mesh\9a
 python main.py Input_File1.txt %fold1%
 python Post-processing.py %fold1%
 
-set fold2=Tests\Conserv\AlMoO3\2
+set fold2=Tests\Conserv\AlMoO3\16
 python main.py Input_File2.txt %fold2%
 python Post-processing.py %fold2%
 
