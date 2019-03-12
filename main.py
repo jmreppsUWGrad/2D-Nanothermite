@@ -39,6 +39,14 @@ from GeomClasses import TwoDimPlanar as TwoDimPlanar
 import SolverClasses as Solvers
 import FileClasses
 
+def save_data(Domain, Sources, time):
+    T=Domain.TempFromConserv()
+    np.save('T_'+time, T, False)
+    if st.find(Sources['Source_Kim'],'True')>=0:
+        np.save('eta_'+time, Domain.eta, False)
+#        for i in range(len(Domain.Y_species[0,0,:])):
+#            np.save('Y_'+str(i)+'_'+time, Domain.Y_species[:,:,i], False)
+
 print('######################################################')
 print('#             2D Heat Conduction Solver              #')
 print('#              Created by J. Mark Epps               #')
@@ -118,12 +126,7 @@ input_file.input_writer_cond(settings, Sources, BCs)
 print '################################\n'
 
 print 'Saving data to numpy array files...'
-T=domain.TempFromConserv()
-np.save('T_'+'0.000000', T, False)
-if st.find(Sources['Source_Kim'],'True')>=0:
-    np.save('eta_'+'0.000000', domain.eta, False)
-#    for i in range(len(domain.Y_species[0,0,:])):
-#        np.save('Y_'+str(i)+'_'+'0.000000', domain.Y_species[:,:,i], False)
+save_data(domain, Sources, '0.000000')
 np.save('X', domain.X, False)
 np.save('Y', domain.Y, False)
 
@@ -155,23 +158,13 @@ while nt<settings['total_time_steps'] and t<settings['total_time']:
     if err==1:
         print '#################### Solver aborted #######################'
         print 'Saving data to numpy array files...'
-        T=domain.TempFromConserv()
-        np.save('T_'+'{:f}'.format(t), T, False)
-        if st.find(Sources['Source_Kim'],'True')>=0:
-            np.save('eta_'+'{:f}'.format(t), domain.eta, False)
-#            for i in range(len(domain.Y_species[0,0,:])):
-#                np.save('Y_'+str(i)+'_'+'{:f}'.format(t), domain.Y_species[:,:,i], False)
+        save_data(domain, Sources, '{:f}'.format(t))
         break
     
     # Output data to numpy files
     if output_data_nt!=0 and nt%output_data_nt==0:
         print 'Saving data to numpy array files...'
-        T=domain.TempFromConserv()
-        np.save('T_'+'{:f}'.format(t), T, False)
-        if st.find(Sources['Source_Kim'],'True')>=0:
-            np.save('eta_'+'{:f}'.format(t), domain.eta, False)
-#            for i in range(len(domain.Y_species[0,0,:])):
-#                np.save('Y_'+str(i)+'_'+'{:f}'.format(t), domain.Y_species[:,:,i], False)
+        save_data(domain, Sources, '{:f}'.format(t))
         
     # Change boundary conditions
     T=domain.TempFromConserv()
@@ -181,7 +174,15 @@ while nt<settings['total_time_steps'] and t<settings['total_time']:
         solver.BCs['bc_north']=solver.BCs['bc_right']
         BCs_changed=True
         tign=t
-#        break
+#    if not BCs_changed:
+#        k,rho,Cv=domain.calcProp()
+#        T_theo=300+2*solver.BCs['bc_north'][1]/k[-1,0]\
+#            *np.sqrt(k[-1,0]/rho[-1,0]/Cv[-1,0]*t/np.pi)
+#        if T_theo-T[-1,0]<0:
+#            solver.BCs['bc_north']=solver.BCs['bc_right']
+#            BCs_changed=True
+#            tign=t
+    
     # Second point in calculating combustion propagation speed
     if st.find(Sources['Source_Kim'],'True')>=0 and BCs_changed:
 #        v_1=np.sum(domain.eta[:,int(len(domain.eta[0,:])/2)]*domain.dy)
