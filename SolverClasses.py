@@ -272,11 +272,6 @@ class TwoDimPlanarSolve():
         Y_c=self.Domain.Y_species.copy()
         E_0=self.Domain.E.copy()
         
-        # Calculate flux coefficients
-        aW,aE,aS,aN=self.get_Coeff(self.dx,self.dy, dt, k, 'Harmonic')
-        
-        T_c=self.Domain.TempFromConserv()
-        
         ###################################################################
         # Calculate source and Porous medium terms
         ###################################################################
@@ -290,33 +285,6 @@ class TwoDimPlanarSolve():
             
         # Porous medium equations [TO BE CONTINUED]
 #        self.Porous_Eqns
-        
-        ###################################################################
-        # Conservation of Energy
-        ###################################################################
-        # Conduction contribution (2nd order central schemes)
-        self.Domain.E[:,1:]    = aW[:,1:]*T_c[:,:-1]
-        self.Domain.E[:,0]     = aE[:,0]*T_c[:,1]
-        
-        self.Domain.E[:,1:-1] += aE[:,1:-1]*T_c[:,2:]
-        self.Domain.E[1:,:]   += aS[1:,:]*T_c[:-1,:]
-        self.Domain.E[:-1,:]  += aN[:-1,:]*T_c[1:,:]
-        self.Domain.E         -= (aW+aE+aS+aN)*T_c
-        
-        # Source terms
-        self.Domain.E +=E_unif
-        self.Domain.E +=E_kim
-        
-        # Porous medium advection [TO BE CONTINUED]
-        
-        
-#        # Radiation effects
-#        self.Domain.T[1:-1,1:-1]+=0.8*5.67*10**(-8)*(T_c[:-2,1:-1]**4+T_c[2:,1:-1]**4+T_c[1:-1,:-2]**4+T_c[1:-1,2:]**4)
-        
-        # Apply energy from previous time step and boundary conditions
-        self.Domain.E*= dt
-        self.Domain.E+= E_0
-        self.Apply_BCs_Cond(self.Domain.E, T_c, dt, rho, Cv)
         
         ###################################################################
         # Conservation of species
@@ -351,6 +319,36 @@ class TwoDimPlanarSolve():
             self.Domain.Y_species[:,:,i]*= dt
             self.Domain.Y_species[:,:,i]+= Y_c[:,:,i]
             # IMPLICITLY MAKING SPECIES FLUX 0 AT BOUNDARIES
+        
+        ###################################################################
+        # Conservation of Energy
+        ###################################################################
+        # Calculate flux coefficients
+        aW,aE,aS,aN=self.get_Coeff(self.dx,self.dy, dt, k, 'Harmonic')
+        
+        # Heat diffusion contribution (2nd order central schemes)
+        self.Domain.E[:,1:]    = aW[:,1:]*T_c[:,:-1]
+        self.Domain.E[:,0]     = aE[:,0]*T_c[:,1]
+        
+        self.Domain.E[:,1:-1] += aE[:,1:-1]*T_c[:,2:]
+        self.Domain.E[1:,:]   += aS[1:,:]*T_c[:-1,:]
+        self.Domain.E[:-1,:]  += aN[:-1,:]*T_c[1:,:]
+        self.Domain.E         -= (aW+aE+aS+aN)*T_c
+        
+        # Source terms
+        self.Domain.E +=E_unif
+        self.Domain.E +=E_kim
+        
+        # Porous medium advection [TO BE CONTINUED]
+        
+        
+#        # Radiation effects
+#        self.Domain.T[1:-1,1:-1]+=0.8*5.67*10**(-8)*(T_c[:-2,1:-1]**4+T_c[2:,1:-1]**4+T_c[1:-1,:-2]**4+T_c[1:-1,2:]**4)
+        
+        # Apply energy from previous time step and boundary conditions
+        self.Domain.E*= dt
+        self.Domain.E+= E_0
+        self.Apply_BCs_Cond(self.Domain.E, T_c, dt, rho, Cv)
         
         ###################################################################
         # Divergence/Convergence checks
