@@ -103,9 +103,9 @@ solver=Solvers.TwoDimPlanarSolve(domain, settings, Sources, BCs, 'Solid')
 print '################################'
 
 print 'Initializing domain...'
-k,rho,Cv=domain.calcProp()
+k,rho,Cv,D=domain.calcProp()
 domain.E[:,:]=rho*Cv*domain.CV_vol()*300
-del k,rho,Cv
+del k,rho,Cv,D
 domain.Y_species[:,:,0]=2.0/5
 domain.Y_species[:,:,1]=3.0/5
 print '################################'

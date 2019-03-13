@@ -158,6 +158,7 @@ class TwoDimPlanar:
         k=np.zeros_like(self.eta)
         rho=np.zeros_like(self.eta)
         Cv=np.zeros_like(self.eta)
+        D=np.zeros_like(self.Y_species)
         
         # Calculate properties based on eta or constant
         if type(self.k) is str:
@@ -172,8 +173,12 @@ class TwoDimPlanar:
             rho=self.eta*self.rho1+(1-self.eta)*self.rho0
         else:
             rho[:,:]=self.rho
-                
-        return k, rho, Cv
+        
+        # Mass diffusion coefficient; Al, CuO, Al2O3, Cu
+        for i in range(len(self.Y_species[0,0,:])):
+            D[:,:,i]=0
+        
+        return k, rho, Cv, D
     
     # Calculate temperature from energy
     def TempFromConserv(self):
