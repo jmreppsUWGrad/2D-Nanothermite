@@ -58,73 +58,80 @@ class TwoDimPlanarSolve():
         dt=self.Fo*rho*Cv/k*self.Domain.CV_vol()
         return np.amin(dt)
     
+    # Interpolation function
+    def interpolate(self, k1, k2, func):
+        if func=='Linear':
+            return 0.5*k1+0.5*k2
+        else:
+            return 2*k1*k2/(k1+k2)
+        
     # coefficients for temperature weighting in Advance_Soln_Cond
-    def get_Coeff(self, dx, dy, dt, k, rho, Cv):
+    def get_Coeff(self, dx, dy, dt, k, inter_type):
         aW=np.zeros_like(dx)
         aE=np.zeros_like(dx)
         aS=np.zeros_like(dx)
         aN=np.zeros_like(dx)
         
         # Left/right face factors
-        aW[1:-1,1:-1] =0.5*(2*k[1:-1,1:-1]*k[1:-1,:-2])/(k[1:-1,1:-1]+k[1:-1,:-2])\
+        aW[1:-1,1:-1] =0.5*self.interpolate(k[1:-1,1:-1], k[1:-1,:-2], inter_type)\
                     *(dy[1:-1,1:-1]+dy[:-2,1:-1])/(dx[1:-1,:-2])
-        aE[1:-1,1:-1] =0.5*(2*k[1:-1,1:-1]*k[1:-1,2:])/(k[1:-1,1:-1]+k[1:-1,2:])\
+        aE[1:-1,1:-1] =0.5*self.interpolate(k[1:-1,1:-1],k[1:-1,2:], inter_type)\
                     *(dy[1:-1,1:-1]+dy[:-2,1:-1])/(dx[1:-1,1:-1])
         # At north/south bondaries
-        aW[0,1:-1]    =0.5*(2*k[0,1:-1]*k[0,:-2])/(k[0,1:-1]+k[0,:-2])\
+        aW[0,1:-1]    =0.5*self.interpolate(k[0,1:-1],k[0,:-2], inter_type)\
             *(dy[0,1:-1])/(dx[0,:-2])
-        aE[0,1:-1]    =0.5*(2*k[0,1:-1]*k[0,2:])/(k[0,1:-1]+k[0,2:])\
+        aE[0,1:-1]    =0.5*self.interpolate(k[0,1:-1],k[0,2:], inter_type)\
             *(dy[0,1:-1])/(dx[0,1:-1])
-        aW[-1,1:-1]   =0.5*(2*k[-1,1:-1]*k[-1,:-2])/(k[-1,1:-1]+k[-1,:-2])\
+        aW[-1,1:-1]   =0.5*self.interpolate(k[-1,1:-1],k[-1,:-2], inter_type)\
             *(dy[-1,1:-1])/(dx[-1,:-2])
-        aE[-1,1:-1]   =0.5*(2*k[-1,1:-1]*k[-1,2:])/(k[-1,1:-1]+k[-1,2:])\
+        aE[-1,1:-1]   =0.5*self.interpolate(k[-1,1:-1],k[-1,2:], inter_type)\
             *(dy[-1,1:-1])/(dx[-1,1:-1])
         # At Left/right boundaries
-        aE[0,0]       =0.5*(2*k[0,0]*k[0,1])/(k[0,0]+k[0,1])\
+        aE[0,0]       =0.5*self.interpolate(k[0,0],k[0,1], inter_type)\
             *(dy[0,0])/dx[0,0]
-        aE[1:-1,0]    =0.5*(2*k[1:-1,0]*k[1:-1,1])/(k[1:-1,0]+k[1:-1,1])\
+        aE[1:-1,0]    =0.5*self.interpolate(k[1:-1,0],k[1:-1,1], inter_type)\
             *(dy[1:-1,0]+dy[:-2,0])/dx[1:-1,0]
-        aE[-1,0]      =0.5*(2*k[-1,0]*k[-1,1])/(k[-1,0]+k[-1,1])\
+        aE[-1,0]      =0.5*self.interpolate(k[-1,0],k[-1,1], inter_type)\
             *(dy[-1,0])/dx[-1,0]
-        aW[0,-1]      =0.5*(2*k[0,-1]*k[0,-2])/(k[0,-1]+k[0,-2])\
+        aW[0,-1]      =0.5*self.interpolate(k[0,-1],k[0,-2], inter_type)\
             *(dy[0,-1])/dx[0,-1]
-        aW[1:-1,-1]   =0.5*(2*k[1:-1,-1]*k[1:-1,-2])/(k[1:-1,-1]+k[1:-1,-2])\
+        aW[1:-1,-1]   =0.5*self.interpolate(k[1:-1,-1],k[1:-1,-2], inter_type)\
             *(dy[1:-1,-1]+dy[:-2,-1])/dx[1:-1,-1]
-        aW[-1,-1]     =0.5*(2*k[-1,-1]*k[-1,-2])/(k[-1,-1]+k[-1,-2])\
+        aW[-1,-1]     =0.5*self.interpolate(k[-1,-1],k[-1,-2], inter_type)\
             *(dy[-1,-1])/dx[-1,-1]
         
         # South/north faces
-        aS[1:-1,1:-1]=0.5*(2*k[1:-1,1:-1]*k[:-2,1:-1])/(k[1:-1,1:-1]+k[:-2,1:-1])\
+        aS[1:-1,1:-1]=0.5*self.interpolate(k[1:-1,1:-1],k[:-2,1:-1], inter_type)\
             *(dx[1:-1,1:-1]+dx[1:-1,:-2])/dy[:-2,1:-1]
-        aN[1:-1,1:-1]=0.5*(2*k[1:-1,1:-1]*k[2:,1:-1])/(k[1:-1,1:-1]+k[2:,1:-1])\
+        aN[1:-1,1:-1]=0.5*self.interpolate(k[1:-1,1:-1],k[2:,1:-1], inter_type)\
             *(dx[1:-1,1:-1]+dx[1:-1,:-2])/dy[1:-1,1:-1]
         
         # Heat conduction in y direction (Central differences)
-        aS[1:-1,1:-1] =0.5*(2*k[1:-1,1:-1]*k[:-2,1:-1])/(k[1:-1,1:-1]+k[:-2,1:-1])\
+        aS[1:-1,1:-1] =0.5*self.interpolate(k[1:-1,1:-1],k[:-2,1:-1], inter_type)\
             *(dx[1:-1,1:-1]+dx[1:-1,:-2])/(dy[:-2,1:-1])
-        aN[1:-1,1:-1] =0.5*(2*k[1:-1,1:-1]*k[2:,1:-1])/(k[1:-1,1:-1]+k[2:,1:-1])\
+        aN[1:-1,1:-1] =0.5*self.interpolate(k[1:-1,1:-1],k[2:,1:-1], inter_type)\
             *(dx[1:-1,1:-1]+dx[1:-1,:-2])/(dy[1:-1,1:-1])
         # Area account for left/right boundary nodes
-        aS[1:-1,0]    =0.5*(2*k[1:-1,0]*k[:-2,0])/(k[1:-1,0]+k[:-2,0])\
+        aS[1:-1,0]    =0.5*self.interpolate(k[1:-1,0],k[:-2,0], inter_type)\
             *(dx[1:-1,0])/(dy[:-2,0])
-        aN[1:-1,0]    =0.5*(2*k[1:-1,0]*k[2:,0])/(k[1:-1,0]+k[2:,0])\
+        aN[1:-1,0]    =0.5*self.interpolate(k[1:-1,0],k[2:,0], inter_type)\
             *(dx[1:-1,0])/(dy[1:-1,0])
-        aS[1:-1,-1]   =0.5*(2*k[1:-1,-1]*k[:-2,-1])/(k[1:-1,-1]+k[:-2,-1])\
+        aS[1:-1,-1]   =0.5*self.interpolate(k[1:-1,-1],k[:-2,-1], inter_type)\
             *(dx[1:-1,-1])/(dy[:-2,-1])
-        aN[1:-1,-1]   =0.5*(2*k[1:-1,-1]*k[2:,-1])/(k[1:-1,-1]+k[2:,-1])\
+        aN[1:-1,-1]   =0.5*self.interpolate(k[1:-1,-1],k[2:,-1], inter_type)\
             *(dx[1:-1,-1])/(dy[1:-1,-1])
         # Forward/backward difference for north/south boundaries
-        aN[0,0]       =0.5*(2*k[0,0]*k[1,0])/(k[0,0]+k[1,0])\
+        aN[0,0]       =0.5*self.interpolate(k[0,0],k[1,0], inter_type)\
             *dx[0,0]/dy[0,0]
-        aN[0,1:-1]    =0.5*(2*k[0,1:-1]*k[1,1:-1])/(k[0,1:-1]+k[1,1:-1])\
+        aN[0,1:-1]    =0.5*self.interpolate(k[0,1:-1],k[1,1:-1], inter_type)\
             *(dx[0,1:-1]+dx[0,:-2])/dy[0,1:-1]
-        aN[0,-1]      =0.5*(2*k[0,-1]*k[1,-1])/(k[0,-1]+k[1,-1])\
+        aN[0,-1]      =0.5*self.interpolate(k[0,-1],k[1,-1], inter_type)\
             *dx[0,-1]/dy[0,-1]
-        aS[-1,0]      =0.5*(2*k[-1,0]*k[-2,0])/(k[-1,0]+k[-2,0])\
+        aS[-1,0]      =0.5*self.interpolate(k[-1,0],k[-2,0], inter_type)\
             *dx[-1,0]/dy[-1,0]
-        aS[-1,1:-1]   =0.5*(2*k[-1,1:-1]*k[-2,1:-1])/(k[-1,1:-1]+k[-2,1:-1])\
+        aS[-1,1:-1]   =0.5*self.interpolate(k[-1,1:-1],k[-2,1:-1], inter_type)\
             *(dx[0,1:-1]+dx[0,:-2])/dy[-1,1:-1]
-        aS[-1,-1]     =0.5*(2*k[-1,-1]*k[-2,-1])/(k[-1,-1]+k[-2,-1])\
+        aS[-1,-1]     =0.5*self.interpolate(k[-1,-1],k[-2,-1], inter_type)\
             *dx[-1,-1]/dy[-1,-1]
         
         return aW,aE,aS,aN
@@ -138,7 +145,7 @@ class TwoDimPlanarSolve():
             if self.BCs['bc_left'][3*i]=='T':
                 E[st:en,0]=self.BCs['bc_left'][1+3*i]*rho[st:en,0]*Cv[st:en,0]*self.Domain.CV_vol()[st:en,0]
                 if len(self.BCs['bc_left'])/3-i==1:
-                    E[-1,0]=self.BCs['bc_left'][-2]*rho[-1,0]*Cv[-1,0]
+                    E[-1,0]=self.BCs['bc_left'][-2]*rho[-1,0]*Cv[-1,0]*self.Domain.CV_vol()[-1,0]
             
             else:
                 if self.BCs['bc_left'][3*i]=='F':
@@ -162,7 +169,7 @@ class TwoDimPlanarSolve():
             if self.BCs['bc_right'][3*i]=='T':
                 E[st:en,-1]=self.BCs['bc_right'][1+3*i]*rho[st:en,-1]*Cv[st:en,-1]*self.Domain.CV_vol()[st:en,-1]
                 if len(self.BCs['bc_right'])/3-i==1:
-                    E[-1,-1]=self.BCs['bc_right'][-2]*rho[-1,-1]*Cv[-1,-1]
+                    E[-1,-1]=self.BCs['bc_right'][-2]*rho[-1,-1]*Cv[-1,-1]*self.Domain.CV_vol()[-1,-1]
             
             else:
                 if self.BCs['bc_right'][3*i]=='F':
@@ -186,7 +193,7 @@ class TwoDimPlanarSolve():
             if self.BCs['bc_south'][3*i]=='T':
                 E[0,st:en]=self.BCs['bc_south'][1+3*i]*rho[0,st:en]*Cv[0,st:en]*self.Domain.CV_vol()[0,st:en]
                 if len(self.BCs['bc_south'])/3-i==1:
-                    E[0,-1]=self.BCs['bc_south'][-2]*rho[0,-1]*Cv[0,-1]
+                    E[0,-1]=self.BCs['bc_south'][-2]*rho[0,-1]*Cv[0,-1]*self.Domain.CV_vol()[0,-1]
             
             else:
                 if self.BCs['bc_south'][3*i]=='F':
@@ -210,7 +217,7 @@ class TwoDimPlanarSolve():
             if self.BCs['bc_north'][3*i]=='T':
                 E[-1,st:en]=self.BCs['bc_north'][1+3*i]*rho[-1,st:en]*Cv[-1,st:en]*self.Domain.CV_vol()[-1,st:en]
                 if len(self.BCs['bc_north'])/3-i==1:
-                    E[-1,-1]=self.BCs['bc_north'][-2]*rho[-1,-1]*Cv[-1,-1]
+                    E[-1,-1]=self.BCs['bc_north'][-2]*rho[-1,-1]*Cv[-1,-1]*self.Domain.CV_vol()[-1,-1]
             
             else:
                 if self.BCs['bc_north'][3*i]=='F':
@@ -247,10 +254,8 @@ class TwoDimPlanarSolve():
     
     # Main solver (1 time step)
     def Advance_Soln_Cond(self, nt, t):
-        E_0=self.Domain.E.copy()# Data from previous time step
-        
         # Calculate properties
-        k, rho, Cv=self.Domain.calcProp()
+        k, rho, Cv, D=self.Domain.calcProp()
         
         if self.dt=='None':
             dt=self.getdt(k, rho, Cv)
@@ -262,8 +267,13 @@ class TwoDimPlanarSolve():
             return 1, dt
         print 'Time step %i, Step size=%.7f, Time elapsed=%f;'%(nt+1,dt, t+dt)
         
+        # Copy needed variables for conservation equations
+        T_c=self.Domain.TempFromConserv()
+        Y_c=self.Domain.Y_species.copy()
+        E_0=self.Domain.E.copy()
+        
         # Calculate flux coefficients
-        aW,aE,aS,aN=self.get_Coeff(self.dx,self.dy, dt, k, rho, Cv)
+        aW,aE,aS,aN=self.get_Coeff(self.dx,self.dy, dt, k, 'Harmonic')
         
         T_c=self.Domain.TempFromConserv()
         
@@ -311,15 +321,36 @@ class TwoDimPlanarSolve():
         ###################################################################
         # Conservation of species
         ###################################################################
-        # Species generated/destroyed during reaction
-        self.Domain.Y_species[:,:,0]-=2.0/5*deta*dt # Al
-        self.Domain.Y_species[:,:,1]-=3.0/5*deta*dt # CuO
+        # Mole ratios
+        mole_ratio=np.zeros(len(self.Domain.Y_species[0,0,:]))
+        mole_ratio[0]=-2.0/5 # Al
+        mole_ratio[1]=-3.0/5 # CuO
+        mole_ratio[2]=1.0/4  # Al2O3
+        mole_ratio[3]=3.0/4  # Cu
         
-        self.Domain.Y_species[:,:,2]+=1.0/4*deta*dt # Al2O3
-        self.Domain.Y_species[:,:,3]+=3.0/4*deta*dt # Cu
+        for i in range(len(self.Domain.Y_species[0,0,:])):
+            # Calculate flux coefficients
+            aW,aE,aS,aN=self.get_Coeff(self.dx,self.dy, dt, rho*D[:,:,i], 'Linear')
+            
+            # Diffusion contribution (2nd order central schemes)
+            self.Domain.Y_species[:,1:,i]    = aW[:,1:]*Y_c[:,:-1,i]
+            self.Domain.Y_species[:,0,i]     = aE[:,0]*Y_c[:,1,i]
+            
+            self.Domain.Y_species[:,1:-1,i] += aE[:,1:-1]*Y_c[:,2:,i]
+            self.Domain.Y_species[1:,:,i]   += aS[1:,:]*Y_c[:-1,:,i]
+            self.Domain.Y_species[:-1,:,i]  += aN[:-1,:]*Y_c[1:,:,i]
+            self.Domain.Y_species[:,:,i]    -= (aW+aE+aS+aN)*Y_c[:,:,i]
         
-        # Species advected from Porous medium equations [TO BE CONTINUED]
-        
+            # Species generated/destroyed during reaction
+            self.Domain.Y_species[:,:,i]+=mole_ratio[i]*deta
+            
+            # Species advected from Porous medium equations [TO BE CONTINUED]
+            
+            
+            # Apply data from previous time step
+            self.Domain.Y_species[:,:,i]*= dt
+            self.Domain.Y_species[:,:,i]+= Y_c[:,:,i]
+            # IMPLICITLY MAKING SPECIES FLUX 0 AT BOUNDARIES
         
         ###################################################################
         # Divergence/Convergence checks
@@ -329,8 +360,11 @@ class TwoDimPlanarSolve():
         or (np.amin(self.Domain.E)<=0):
             print '***********Divergence detected - energy************'
             return 1, dt
-        elif (np.amax(self.Domain.eta)>1.0):
+        elif (np.amax(self.Domain.eta)>1.0) or (np.amax(self.Domain.eta)<0):
             print '***********Divergence detected - reaction progress************'
+            return 1, dt
+        elif (np.amax(self.Domain.Y_species)>1.0) or (np.amax(self.Domain.Y_species)<0):
+            print '***********Divergence detected - species mass fraction************'
             return 1, dt
         else:
             return 0, dt
