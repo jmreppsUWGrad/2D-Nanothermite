@@ -149,6 +149,7 @@ BCs_changed=False
 print 'Solving:'
 while nt<settings['total_time_steps'] and t<settings['total_time']:
     # First point in calculating combustion propagation speed
+    T_0=domain.TempFromConserv()
     if st.find(Sources['Source_Kim'],'True')>=0 and BCs_changed:
 #        v_0=np.sum(domain.eta[:,int(len(domain.eta[0,:])/2)]*domain.dy)
         v_0=np.sum(domain.eta*solver.dy)/len(domain.eta[0,:])
@@ -174,14 +175,19 @@ while nt<settings['total_time_steps'] and t<settings['total_time']:
         solver.BCs['bc_north']=solver.BCs['bc_right']
         BCs_changed=True
         tign=t
+        save_data(domain, Sources, '{:f}'.format(t))
 #    if not BCs_changed:
 #        k,rho,Cv=domain.calcProp()
 #        T_theo=300+2*solver.BCs['bc_north'][1]/k[-1,0]\
 #            *np.sqrt(k[-1,0]/rho[-1,0]/Cv[-1,0]*t/np.pi)
-#        if T_theo-T[-1,0]<0:
+#        dT_theo=solver.BCs['bc_north'][1]/k[-1,0]\
+#            *np.sqrt(k[-1,0]/rho[-1,0]/Cv[-1,0]/np.pi/t)
+##        if (T_theo-T[-1,0])/T_theo<-0.3:
+#        if (dT_theo-((T[-1,0]-T_0[-1,0])/dt))/dT_theo<-1.0:
 #            solver.BCs['bc_north']=solver.BCs['bc_right']
 #            BCs_changed=True
 #            tign=t
+#            save_data(domain, Sources, '{:f}'.format(t))
     
     # Second point in calculating combustion propagation speed
     if st.find(Sources['Source_Kim'],'True')>=0 and BCs_changed:

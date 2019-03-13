@@ -20,8 +20,8 @@
 
 Length:0.001
 Width:0.006
-Nodes_x:201
-Nodes_y:1201
+Nodes_x:101
+Nodes_y:601
 k:65
 Cp:625
 rho:1523
@@ -44,7 +44,7 @@ Source_Kim:True
 Ea:70000
 A0:4890000
 #dH:vol,63000000000
-dH:rho,4000000
+dH:rho,4700000
 Ignition:eta,0.8
 #Ignition:Temp,1200
 
@@ -82,14 +82,14 @@ bias_size_y:1e-06
 
 Fo:0.2
 dt:None
-total_time_steps:60000
+total_time_steps:9000
 total_time:None
 Time_Scheme:Explicit
 
 Convergence:0.0001
 Max_iterations:100
 
-Number_Data_Output:5
+Number_Data_Output:3
 
 ######################################################
 #			Boundary conditions
