@@ -182,6 +182,6 @@ class TwoDimPlanar:
     
     # Calculate temperature from energy
     def TempFromConserv(self):
-        k,rho,Cv=self.calcProp()
+        k,rho,Cv,D=self.calcProp()
         return self.E/Cv/rho/self.CV_vol()
     
