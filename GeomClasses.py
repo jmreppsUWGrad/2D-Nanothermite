@@ -27,6 +27,7 @@ of using with 2D Compressible Navier-Stokes solver.
 """
 import numpy as np
 import string as st
+from MatClasses import Diff_Coef
 
 class TwoDimPlanar:
     def __init__(self, settings, solver):
@@ -44,7 +45,9 @@ class TwoDimPlanar:
         self.eta=np.zeros((self.Ny, self.Nx))
         self.rho=settings['rho']
         self.Cv=settings['Cp']
+        
         self.Y_species=np.zeros((self.Ny, self.Nx, 4)) # species array
+        self.Diff=Diff_Coef()
 #        self.P=np.zeros((self.Ny, self.Nx))
         if type(self.rho) is str:
             line=st.split(self.rho, ',')
@@ -175,8 +178,10 @@ class TwoDimPlanar:
             rho[:,:]=self.rho
         
         # Mass diffusion coefficient; Al, CuO, Al2O3, Cu
-        for i in range(len(self.Y_species[0,0,:])):
-            D[:,:,i]=0
+#        D[:,:,0]=self.Diff.Al_Al2O3(300*np.ones_like(self.E))
+        D[:,:,1]=0
+        D[:,:,2]=0
+        D[:,:,3]=0
         
         return k, rho, Cv, D
     
