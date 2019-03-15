@@ -1,6 +1,6 @@
 @echo OFF
 
-set fold=Tests\Conserv\AlMoO3\15
+set fold=Tests\Conserv\AlCuO\2
 
 python main.py Input_File_nt.txt %fold%
 python Post-processing.py %fold%
