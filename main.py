@@ -44,8 +44,8 @@ def save_data(Domain, Sources, time):
     np.save('T_'+time, T, False)
     if st.find(Sources['Source_Kim'],'True')>=0:
         np.save('eta_'+time, Domain.eta, False)
-#        for i in range(len(Domain.Y_species[0,0,:])):
-#            np.save('Y_'+str(i)+'_'+time, Domain.Y_species[:,:,i], False)
+        for i in range(len(Domain.Y_species[0,0,:])):
+            np.save('Y_'+str(i)+'_'+time, Domain.Y_species[:,:,i], False)
 
 print('######################################################')
 print('#             2D Heat Conduction Solver              #')
