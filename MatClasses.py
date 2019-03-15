@@ -9,7 +9,7 @@ Class for calculating temperature dependent properties
 """
 
 import numpy as np
-from CoolProp.CoolProp import PropsSI
+#from CoolProp.CoolProp import PropsSI
 
 # Class for calculating diffusion coefficients
 class Diff_Coef():
