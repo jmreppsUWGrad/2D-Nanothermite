@@ -280,6 +280,7 @@ class TwoDimPlanarSolve():
         if self.source_unif!='None':
             E_unif      = self.get_source.Source_Uniform(self.source_unif, self.Domain.CV_vol())
         if self.source_Kim=='True':
+            self.Domain.eta=self.Domain.Y_species[:,:,2]/0.25
             E_kim, deta =self.get_source.Source_Comb_Kim(rho, T_c, self.Domain.eta, self.Domain.CV_vol(), dt)
 #            E_kim, deta =self.get_source.Source_Comb_Umbrajkar(rho, T_c, self.Domain.eta, self.Domain.CV_vol(), dt)
             
@@ -358,10 +359,10 @@ class TwoDimPlanarSolve():
         or (np.amin(self.Domain.E)<=0):
             print '***********Divergence detected - energy************'
             return 1, dt
-        elif (np.amax(self.Domain.eta)>1.0) or (np.amax(self.Domain.eta)<0):
+        elif (np.amax(self.Domain.eta)>1.0) or (np.amin(self.Domain.eta)<-10**(-9)):
             print '***********Divergence detected - reaction progress************'
             return 1, dt
-        elif (np.amax(self.Domain.Y_species)>1.0) or (np.amax(self.Domain.Y_species)<0):
+        elif (np.amax(self.Domain.Y_species)>1.0) or (np.amin(self.Domain.Y_species)<-10**(-9)):
             print '***********Divergence detected - species mass fraction************'
             return 1, dt
         else:
