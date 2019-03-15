@@ -11,6 +11,7 @@ REM echo.
 REM echo. Make changes to desired file(s)
 REM pause
 REM echo.
+git status
 :Tracking
 set track=""
 set /p track=What file was changed?
