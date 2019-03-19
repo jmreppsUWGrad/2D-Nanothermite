@@ -56,6 +56,7 @@ try:
 except:
     sys.exit('Input file missing')
 
+titles=[]
 while A0<0 or Ea<0 or source=='False':
     line=input_file.readline()
     if st.find(line, 'Ea')==0:
@@ -64,6 +65,8 @@ while A0<0 or Ea<0 or source=='False':
         A0=float(st.split(line, ':')[1])
     elif st.find(line, 'Source_Kim')==0:
         source=st.split(line, ':')[1]
+    elif st.find(line, 'Species')==0:
+        titles=st.split(st.split(st.split(line, ':')[1], '\n')[0], ',')
 input_file.close()
 
 # Get times to process
@@ -86,7 +89,6 @@ for time in times:
     if st.find(source,'True')>=0:
         eta=np.load('eta_'+time+'.npy', False)
         Y_tot=np.zeros_like(Y)
-        titles=['$Al$','$CuO$','$Al_2O_3$','$Cu$']
     
     # Temperature contour
     fig=pyplot.figure(figsize=(6, 6))
@@ -145,15 +147,15 @@ for time in times:
         # Mass fraction contours
         for i in range(len(titles)):
             try:
-                Y_0=np.load('Y_'+str(i)+'_'+time+'.npy', False)
+                Y_0=np.load('Y_'+titles[i]+'_'+time+'.npy', False)
                 fig=pyplot.figure(figsize=(6, 6))
                 pyplot.contourf(X, Y, Y_0, alpha=0.5, cmap=cm.viridis)#, vmin=0.0, vmax=1.0)  
                 pyplot.colorbar()
                 pyplot.xlabel('$x$ (m)')
                 pyplot.ylabel('$y$ (m)')
             #    pyplot.clim(0.0, 1.0)
-                pyplot.title('Mass fraction; '+titles[i]+', t='+time);
-                fig.savefig('Y_'+str(i)+'_'+time+'.png',dpi=300)
+                pyplot.title('Mass fraction; $'+titles[i]+'$, t='+time);
+                fig.savefig('Y_'+titles[i]+'_'+time+'.png',dpi=300)
                 pyplot.close(fig)
                 Y_tot+=Y_0
             except:
