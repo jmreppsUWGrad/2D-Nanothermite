@@ -46,10 +46,11 @@ class TwoDimPlanar:
         self.E=np.zeros((self.Ny, self.Nx))
         self.eta=np.zeros((self.Ny, self.Nx))
 #        self.P=np.zeros((self.Ny, self.Nx))
+        
         # Species
-        self.species_keys=Species['keys']
         self.Y_species={}
         if bool(Species):
+            self.species_keys=Species['keys']
             for key in self.species_keys:
                 self.Y_species[key]=np.zeros((self.Ny, self.Nx))
         
@@ -190,6 +191,7 @@ class TwoDimPlanar:
         # Mass diffusion coefficient; Al, CuO, Al2O3, Cu
         if bool(D):
             for i in self.species_keys:
+#                D[i][:,;]=self.Diff.get_Diff(300,i)
                 D[i][:,:]=0
                 
         return k, rho, Cv, D

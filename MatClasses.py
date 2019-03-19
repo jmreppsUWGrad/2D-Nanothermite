@@ -30,6 +30,14 @@ class Diff_Coef():
     def Al_Al2O3(self,T):
         # Baijot 2017; experimental curve fitting
         return self.D0_Al_Al2O3*np.exp(-110000/8.314/T)
+    
+    # Main function to calculate diffusion coefficients
+    # Dependent on specie, points to correct function
+    def get_Diff(self,T,species):
+        if species=='Al':
+            return self.Al_Al2O3(T)
+        elif species=='Cu':
+            return self.O2_Cu(T)
 
 # Class for calculating phase change rates
 class Phase_Change():
@@ -74,7 +82,13 @@ class Phase_Change():
     def Cu(self, T):
         return 2
     
-    
+    # Main function to calculate evaporation rates
+    # Points to correct function based on specie
+    def get_evap(self,T,species):
+        if species=='Al':
+            return self.Al(T)
+        elif species=='Cu':
+            return self.Cu(T)
     
 class ArProp():
     def __init__(self):
