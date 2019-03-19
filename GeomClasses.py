@@ -30,7 +30,7 @@ import string as st
 from MatClasses import Diff_Coef
 
 class TwoDimPlanar:
-    def __init__(self, settings, solver):
+    def __init__(self, settings, Species, solver):
         
         self.L=settings['Length']
         self.W=settings['Width']
@@ -40,15 +40,21 @@ class TwoDimPlanar:
         self.y=np.zeros(self.Ny)
         self.dx=np.zeros(self.Nx) # NOTE: SIZE MADE TO MATCH REST OF ARRAYS (FOR NOW)
         self.dy=np.zeros(self.Ny) # NOTE: SIZE MADE TO MATCH REST OF ARRAYS (FOR NOW)
-        self.k=settings['k']
+        
+        # Variables for conservation equations
         self.E=np.zeros((self.Ny, self.Nx))
         self.eta=np.zeros((self.Ny, self.Nx))
+        # Species
+        self.species_keys=Species['keys']
+        self.Y_species={}
+        if bool(Species):
+            for key in self.species_keys:
+                self.Y_species[key]=np.zeros((self.Ny, self.Nx))
+        
+        # Thermal properties
+        self.k=settings['k']
         self.rho=settings['rho']
         self.Cv=settings['Cp']
-        
-        self.Y_species=np.zeros((self.Ny, self.Nx, 4)) # species array
-        self.Diff=Diff_Coef()
-#        self.P=np.zeros((self.Ny, self.Nx))
         if type(self.rho) is str:
             line=st.split(self.rho, ',')
             self.rho0=float(line[1])
@@ -61,6 +67,9 @@ class TwoDimPlanar:
             line=st.split(self.k, ',')
             self.k0=float(line[1])
             self.k1=float(line[2])
+        
+        self.Diff=Diff_Coef()
+#        self.P=np.zeros((self.Ny, self.Nx))
         
         # Biasing options       
         self.xbias=[settings['bias_type_x'], settings['bias_size_x']]
@@ -161,7 +170,7 @@ class TwoDimPlanar:
         k=np.zeros_like(self.eta)
         rho=np.zeros_like(self.eta)
         Cv=np.zeros_like(self.eta)
-        D=np.zeros_like(self.Y_species)
+        D=self.Y_species.copy()
         
         # Calculate properties based on eta or constant
         if type(self.k) is str:
@@ -179,10 +188,10 @@ class TwoDimPlanar:
         
         # Mass diffusion coefficient; Al, CuO, Al2O3, Cu
 #        D[:,:,0]=self.Diff.Al_Al2O3(300*np.ones_like(self.E))
-        D[:,:,1]=0
-        D[:,:,2]=0
-        D[:,:,3]=0
-        
+        if bool(D):
+            for i in self.species_keys:
+                D[i][:,:]=0
+                    
         return k, rho, Cv, D
     
     # Calculate temperature from energy

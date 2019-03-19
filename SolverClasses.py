@@ -254,6 +254,7 @@ class TwoDimPlanarSolve():
     
     # Main solver (1 time step)
     def Advance_Soln_Cond(self, nt, t):
+        max_Y,min_Y=0,1
         # Calculate properties
         k, rho, Cv, D=self.Domain.calcProp()
         
@@ -280,7 +281,7 @@ class TwoDimPlanarSolve():
         if self.source_unif!='None':
             E_unif      = self.get_source.Source_Uniform(self.source_unif, self.Domain.CV_vol())
         if self.source_Kim=='True':
-            self.Domain.eta=self.Domain.Y_species[:,:,2]/0.25
+#            self.Domain.eta=self.Domain.Y_species[:,:,2]/0.25
             E_kim, deta =self.get_source.Source_Comb_Kim(rho, T_c, self.Domain.eta, self.Domain.CV_vol(), dt)
 #            E_kim, deta =self.get_source.Source_Comb_Umbrajkar(rho, T_c, self.Domain.eta, self.Domain.CV_vol(), dt)
             
@@ -290,37 +291,41 @@ class TwoDimPlanarSolve():
         ###################################################################
         # Conservation of species
         ###################################################################
-        # Mole ratios
-        mole_ratio=np.zeros(len(self.Domain.Y_species[0,0,:]))
-        mole_ratio[0]=-2.0/5 # Al
-        mole_ratio[1]=-3.0/5 # CuO
-        mole_ratio[2]=1.0/4  # Al2O3
-        mole_ratio[3]=3.0/4  # Cu
-        
-        for i in range(len(self.Domain.Y_species[0,0,:])):
-            # Calculate flux coefficients
-            aW,aE,aS,aN=self.get_Coeff(self.dx,self.dy, dt, rho*D[:,:,i], 'Linear')
+        if bool(self.Domain.Y_species):
+            # Mole ratios
+            mole_ratio={}
+            mole_ratio[self.Domain.species_keys[0]]=-2.0/5 # Al
+            mole_ratio[self.Domain.species_keys[1]]=-3.0/5 # CuO
+            mole_ratio[self.Domain.species_keys[2]]=1.0/4  # Al2O3
+            mole_ratio[self.Domain.species_keys[3]]=3.0/4  # Cu
             
-            # Diffusion contribution (2nd order central schemes)
-            self.Domain.Y_species[:,1:,i]    = aW[:,1:]*Y_c[:,:-1,i]
-            self.Domain.Y_species[:,0,i]     = aE[:,0]*Y_c[:,1,i]
+            for i in self.Domain.species_keys:
+                # Calculate flux coefficients
+                aW,aE,aS,aN=self.get_Coeff(self.dx,self.dy, dt, rho*D[i], 'Linear')
+                
+                # Diffusion contribution (2nd order central schemes)
+                self.Domain.Y_species[i][:,1:]    = aW[:,1:]    * Y_c[i][:,:-1]
+                self.Domain.Y_species[i][:,0]     = aE[:,0]     * Y_c[i][:,1]
+                
+                self.Domain.Y_species[i][:,1:-1] += aE[:,1:-1]  * Y_c[i][:,2:]
+                self.Domain.Y_species[i][1:,:]   += aS[1:,:]    * Y_c[i][:-1,:]
+                self.Domain.Y_species[i][:-1,:]  += aN[:-1,:]   * Y_c[i][1:,:]
+                self.Domain.Y_species[i]         -= (aW+aE+aS+aN)*Y_c[i]
             
-            self.Domain.Y_species[:,1:-1,i] += aE[:,1:-1]*Y_c[:,2:,i]
-            self.Domain.Y_species[1:,:,i]   += aS[1:,:]*Y_c[:-1,:,i]
-            self.Domain.Y_species[:-1,:,i]  += aN[:-1,:]*Y_c[1:,:,i]
-            self.Domain.Y_species[:,:,i]    -= (aW+aE+aS+aN)*Y_c[:,:,i]
-        
-            # Species generated/destroyed during reaction
-            self.Domain.Y_species[:,:,i]+=mole_ratio[i]*deta
-            
-            # Species advected from Porous medium equations [TO BE CONTINUED]
-            
-            
-            # Apply data from previous time step
-            self.Domain.Y_species[:,:,i]*= dt
-            self.Domain.Y_species[:,:,i]+= Y_c[:,:,i]
-            # IMPLICITLY MAKING SPECIES FLUX 0 AT BOUNDARIES
-        
+                # Species generated/destroyed during reaction
+                self.Domain.Y_species[i]+=mole_ratio[i]*deta
+                
+                # Species advected from Porous medium equations [TO BE CONTINUED]
+                
+                
+                # Apply data from previous time step
+                self.Domain.Y_species[i]*= dt
+                self.Domain.Y_species[i]+= Y_c[i]
+#                print(self.Domain.Y_species[i])
+                # IMPLICITLY MAKING SPECIES FLUX 0 AT BOUNDARIES
+                max_Y=max(np.amax(self.Domain.Y_species[i]), max_Y)
+                min_Y=max(np.amin(self.Domain.Y_species[i]), min_Y)
+#        print(self.Domain.Y_species)
         ###################################################################
         # Conservation of Energy
         ###################################################################
@@ -362,7 +367,7 @@ class TwoDimPlanarSolve():
         elif (np.amax(self.Domain.eta)>1.0) or (np.amin(self.Domain.eta)<-10**(-9)):
             print '***********Divergence detected - reaction progress************'
             return 1, dt
-        elif (np.amax(self.Domain.Y_species)>1.0) or (np.amin(self.Domain.Y_species)<-10**(-9)):
+        elif bool(self.Domain.Y_species) and ((max_Y>1.0) or (min_Y<-10**(-9))):
             print '***********Divergence detected - species mass fraction************'
             return 1, dt
         else:

@@ -39,13 +39,14 @@ from GeomClasses import TwoDimPlanar as TwoDimPlanar
 import SolverClasses as Solvers
 import FileClasses
 
-def save_data(Domain, Sources, time):
+def save_data(Domain, Sources, Species, time):
     T=Domain.TempFromConserv()
     np.save('T_'+time, T, False)
     if st.find(Sources['Source_Kim'],'True')>=0:
         np.save('eta_'+time, Domain.eta, False)
-        for i in range(len(Domain.Y_species[0,0,:])):
-            np.save('Y_'+str(i)+'_'+time, Domain.Y_species[:,:,i], False)
+    if bool(Species):
+        for i in Species['keys']:
+            np.save('Y_'+i+'_'+time, Domain.Y_species[i], False)
 
 print('######################################################')
 print('#             2D Heat Conduction Solver              #')
@@ -60,6 +61,7 @@ time_begin=time.time()
 settings={}
 BCs={}
 Sources={}
+Species={}
 inputargs=sys.argv
 if len(inputargs)>2:
     input_file=inputargs[1]
@@ -76,7 +78,7 @@ else:
 ##########################################################################
 print 'Reading input file...'
 fin=FileClasses.FileIn(input_file, 0)
-fin.Read_Input(settings, Sources, BCs)
+fin.Read_Input(settings, Sources, Species, BCs)
 try:
     os.chdir(settings['Output_directory'])
 except:
@@ -90,7 +92,7 @@ print '################################'
 
 
 print 'Initializing geometry package...'
-domain=TwoDimPlanar(settings, 'Solid')
+domain=TwoDimPlanar(settings, Species, 'Solid')
 domain.mesh()
 print '################################'
 
@@ -106,8 +108,8 @@ print 'Initializing domain...'
 k,rho,Cv,D=domain.calcProp()
 domain.E[:,:]=rho*Cv*domain.CV_vol()*300
 del k,rho,Cv,D
-domain.Y_species[:,:,0]=2.0/5
-domain.Y_species[:,:,1]=3.0/5
+domain.Y_species['Al'][:,:]=2.0/5
+domain.Y_species['CuO'][:,:]=3.0/5
 print '################################'
 ##########################################################################
 # ------------------------Write Input File settings to output directory
@@ -122,11 +124,11 @@ input_file=FileClasses.FileOut('Input_file', isBinFile)
 input_file.header_cond('INPUT')
 
 # Write input file with settings
-input_file.input_writer_cond(settings, Sources, BCs)
+input_file.input_writer_cond(settings, Sources, Species, BCs)
 print '################################\n'
 
 print 'Saving data to numpy array files...'
-save_data(domain, Sources, '0.000000')
+save_data(domain, Sources, Species, '0.000000')
 np.save('X', domain.X, False)
 np.save('Y', domain.Y, False)
 
@@ -159,13 +161,13 @@ while nt<settings['total_time_steps'] and t<settings['total_time']:
     if err==1:
         print '#################### Solver aborted #######################'
         print 'Saving data to numpy array files...'
-        save_data(domain, Sources, '{:f}'.format(t))
+        save_data(domain, Sources, Species, '{:f}'.format(t))
         break
     
     # Output data to numpy files
     if output_data_nt!=0 and nt%output_data_nt==0:
         print 'Saving data to numpy array files...'
-        save_data(domain, Sources, '{:f}'.format(t))
+        save_data(domain, Sources, Species, '{:f}'.format(t))
         
     # Change boundary conditions
     T=domain.TempFromConserv()
@@ -175,7 +177,7 @@ while nt<settings['total_time_steps'] and t<settings['total_time']:
         solver.BCs['bc_north']=solver.BCs['bc_right']
         BCs_changed=True
         tign=t
-        save_data(domain, Sources, '{:f}'.format(t))
+        save_data(domain, Sources, Species, '{:f}'.format(t))
 #    if not BCs_changed:
 #        k,rho,Cv=domain.calcProp()
 #        T_theo=300+2*solver.BCs['bc_north'][1]/k[-1,0]\
