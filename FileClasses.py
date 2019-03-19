@@ -19,12 +19,18 @@ keys_Settings=['Length','Width','Nodes_x','Nodes_y','k','Cp','rho',\
                'bias_type_x','bias_size_x','bias_type_y','bias_size_y']
                
 keys_Sources=['Source_Uniform','Source_Kim','Ea','A0','dH', 'Ignition']
+
+#keys_Species=['keys']
+
 keys_Time_adv=['Fo','dt','total_time_steps', 'total_time','Time_Scheme',\
                'Convergence','Max_iterations','Number_Data_Output']
+
 keys_BCs=     ['bc_left','bc_left_rad',\
               'bc_right','bc_right_rad',\
               'bc_south','bc_south_rad',\
               'bc_north','bc_north_rad']
+
+newline_check='\n' # This should be \n for Windows, \r for Ubuntu
 
 import string as st
 
@@ -52,7 +58,7 @@ class FileOut():
         self.Write_single_line('############### '+title+' FILE #########################')
         self.Write_single_line('##########'+self.name+'##################\n')
     
-    def input_writer_cond(self, settings, Sources, BCs):
+    def input_writer_cond(self, settings, Sources, Species, BCs):
         self.Write_single_line('Settings:')
         keys=['Length','Width','Nodes_x','Nodes_y','k','Cp','rho']
         for i in keys:
@@ -74,6 +80,13 @@ class FileOut():
             self.fout.write(i)
             self.fout.write(':')
             self.Write_single_line(str(Sources[i]))
+            
+#        if bool(Species):
+#            self.Write_single_line('\nSpecies info:')
+#            for i in keys_Sources:
+#                self.fout.write(i)
+#                self.fout.write(':')
+#                self.Write_single_line(str(Sources[i]))
 
         self.Write_single_line('\nTime advancement:')
         for i in keys_Time_adv:
@@ -133,7 +146,7 @@ class FileIn():
             read_type='r'
         self.fin=open(filename, read_type)
         
-    def Read_Input(self, settings, Sources, BCs):
+    def Read_Input(self, settings, Sources, Species, BCs):
         for line in self.fin:
             if st.find(line, ':')>0 and st.find(line, '#')!=0:
                 line=st.split(line, ':')
@@ -142,7 +155,7 @@ class FileIn():
                     if line[0]=='Nodes_x' or line[0]=='Nodes_y':
                         settings[line[0]]=int(line[1])
                     elif st.find(line[1], 'None')>=0 or st.find(line[1], 'eta')>=0:
-                        settings[line[0]]=st.split(line[1], '\n')[0]
+                        settings[line[0]]=st.split(line[1], newline_check)[0]
                     else:
                         settings[line[0]]=float(line[1])
                 # Source term info
@@ -150,18 +163,22 @@ class FileIn():
                     if st.find(line[1], 'None')>=0 or st.find(line[1], 'True')>=0\
                         or st.find(line[1], 'eta')>=0 or st.find(line[1], 'Temp')>=0\
                         or st.find(line[1], 'rho')>=0 or st.find(line[1], 'vol')>=0:
-                        Sources[line[0]]=st.split(line[1], '\n')[0]
+                        Sources[line[0]]=st.split(line[1], newline_check)[0]
                     else:
                         Sources[line[0]]=float(line[1])
+                # Species info
+                elif line[0]=='Species':
+                    Species['keys']=st.split(st.split(line[1], newline_check)[0], ',')
+                    
                 # Time advancement details
                 elif line[0] in keys_Time_adv:
                     if line[0]=='Time_Scheme' or st.find(line[1], 'None')>=0:
-                        settings[line[0]]=st.split(line[1], '\n')[0]
+                        settings[line[0]]=st.split(line[1], newline_check)[0]
                     elif line[0]=='total_time_steps' or line[0]=='Max_iterations'\
                         or line[0]=='Number_Data_Output':
                         settings[line[0]]=int(line[1])
                     elif line[0]=='Output_directory':
-                        settings[line[0]]=line[1]+':'+st.split(line[2], '\n')[0]
+                        settings[line[0]]=line[1]+':'+st.split(line[2], newline_check)[0]
                     else:
                         settings[line[0]]=float(line[1])
                 # Boundary conditions
@@ -175,7 +192,7 @@ class FileIn():
                             BCs[line[0]]=[float(BC_info[0])]
                             BCs[line[0]]+=[float(BC_info[1])]
                         except:
-                            BCs[line[0]]=st.split(BC_info[0], '\n')[0]
+                            BCs[line[0]]=st.split(BC_info[0], newline_check)[0]
                         del BC_info[0]
                     # All other BCs
                     i=0
