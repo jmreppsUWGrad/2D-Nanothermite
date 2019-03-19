@@ -108,8 +108,9 @@ print 'Initializing domain...'
 k,rho,Cv,D=domain.calcProp()
 domain.E[:,:]=rho*Cv*domain.CV_vol()*300
 del k,rho,Cv,D
-domain.Y_species['Al'][:,:]=2.0/5
-domain.Y_species['CuO'][:,:]=3.0/5
+if bool(domain.Y_species):
+    domain.Y_species['Al'][:,:]=2.0/5
+    domain.Y_species['CuO'][:,:]=3.0/5
 print '################################'
 ##########################################################################
 # ------------------------Write Input File settings to output directory
