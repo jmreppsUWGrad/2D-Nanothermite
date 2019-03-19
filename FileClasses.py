@@ -75,19 +75,22 @@ class FileOut():
             self.Write_single_line(str(settings[i]))
 #            self.fout.write('\n')
         
+        if bool(Species):
+            self.Write_single_line('\nSpecies info:')
+            self.fout.write('Species:')
+            for i in Species['keys']:
+                self.fout.write(i)
+                if i==Species['keys'][-1]:
+                    self.fout.write('\n')
+                else:
+                    self.fout.write(',')
+
         self.Write_single_line('\nSource Terms:')
         for i in keys_Sources:
             self.fout.write(i)
             self.fout.write(':')
             self.Write_single_line(str(Sources[i]))
             
-#        if bool(Species):
-#            self.Write_single_line('\nSpecies info:')
-#            for i in keys_Sources:
-#                self.fout.write(i)
-#                self.fout.write(':')
-#                self.Write_single_line(str(Sources[i]))
-
         self.Write_single_line('\nTime advancement:')
         for i in keys_Time_adv:
             self.fout.write(i)
