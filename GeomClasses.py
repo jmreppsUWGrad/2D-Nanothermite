@@ -27,6 +27,7 @@ of using with 2D Compressible Navier-Stokes solver.
 """
 import numpy as np
 import string as st
+import copy
 from MatClasses import Diff_Coef
 
 class TwoDimPlanar:
@@ -44,6 +45,7 @@ class TwoDimPlanar:
         # Variables for conservation equations
         self.E=np.zeros((self.Ny, self.Nx))
         self.eta=np.zeros((self.Ny, self.Nx))
+#        self.P=np.zeros((self.Ny, self.Nx))
         # Species
         self.species_keys=Species['keys']
         self.Y_species={}
@@ -69,7 +71,6 @@ class TwoDimPlanar:
             self.k1=float(line[2])
         
         self.Diff=Diff_Coef()
-#        self.P=np.zeros((self.Ny, self.Nx))
         
         # Biasing options       
         self.xbias=[settings['bias_type_x'], settings['bias_size_x']]
@@ -170,7 +171,7 @@ class TwoDimPlanar:
         k=np.zeros_like(self.eta)
         rho=np.zeros_like(self.eta)
         Cv=np.zeros_like(self.eta)
-        D=self.Y_species.copy()
+        D=copy.deepcopy(self.Y_species)
         
         # Calculate properties based on eta or constant
         if type(self.k) is str:
@@ -187,11 +188,10 @@ class TwoDimPlanar:
             rho[:,:]=self.rho
         
         # Mass diffusion coefficient; Al, CuO, Al2O3, Cu
-#        D[:,:,0]=self.Diff.Al_Al2O3(300*np.ones_like(self.E))
         if bool(D):
             for i in self.species_keys:
                 D[i][:,:]=0
-                    
+                
         return k, rho, Cv, D
     
     # Calculate temperature from energy

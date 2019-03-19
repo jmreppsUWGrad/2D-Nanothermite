@@ -22,6 +22,7 @@ Features/assumptions:
 """
 
 import numpy as np
+import copy
 #import CoolProp.CoolProp as CP
 #import temporal_schemes
 import Source_Comb
@@ -270,8 +271,8 @@ class TwoDimPlanarSolve():
         
         # Copy needed variables for conservation equations
         T_c=self.Domain.TempFromConserv()
-        Y_c=self.Domain.Y_species.copy()
-        E_0=self.Domain.E.copy()
+        Y_c=copy.deepcopy(self.Domain.Y_species)
+        E_0=copy.deepcopy(self.Domain.E)
         
         ###################################################################
         # Calculate source and Porous medium terms
