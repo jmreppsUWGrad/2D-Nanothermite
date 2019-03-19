@@ -64,7 +64,7 @@ Ignition:eta,0.8
 #	Species: Indicate species chemical formula separated by commas
 ######################################################
 
-Species:Al,Al2O3,CuO,Cu
+Species:Al,CuO,Al_2O_3,Cu
 #Species_IC:
 #Species_rho:
 
@@ -95,14 +95,14 @@ bias_size_y:1e-06
 
 Fo:0.2
 dt:None
-total_time_steps:2
+total_time_steps:5000
 total_time:None
 Time_Scheme:Explicit
 
 Convergence:0.0001
 Max_iterations:100
 
-Number_Data_Output:2
+Number_Data_Output:5
 
 ######################################################
 #			Boundary conditions
