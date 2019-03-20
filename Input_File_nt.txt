@@ -18,7 +18,7 @@
 #	k,Cp,rho: either a value, or in form: eta,[value when eta=0],[value when eta=1]
 ######################################################
 
-Domain:Axisymmetric
+Domain:Planar
 Length:0.001
 Width:0.006
 Nodes_x:101
