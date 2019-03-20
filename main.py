@@ -35,7 +35,7 @@ import os
 import sys
 import time
 
-from GeomClasses import TwoDimPlanar as TwoDimPlanar
+import GeomClasses as Geom
 import SolverClasses as Solvers
 import FileClasses
 
@@ -92,7 +92,11 @@ print '################################'
 
 
 print 'Initializing geometry package...'
-domain=TwoDimPlanar(settings, Species, 'Solid')
+if settings['Domain']=='Planar':
+    domain=Geom.TwoDimPlanar(settings, Species, 'Solid')
+elif settings['Domain']=='Axisymmetric':
+    domain=Geom.AxisymDomain(settings, Species, 'Solid')
+
 domain.mesh()
 print '################################'
 
@@ -101,7 +105,10 @@ print '################################'
 ##########################################################################
 
 print 'Initializing solver package...'
-solver=Solvers.TwoDimPlanarSolve(domain, settings, Sources, BCs, 'Solid')
+if settings['Domain']=='Planar':
+    solver=Solvers.TwoDimPlanarSolve(domain, settings, Sources, BCs, 'Solid')
+elif settings['Domain']=='Axisymmetric':
+    solver=Solvers.AxisymmetricSolve(domain, settings, Sources, BCs, 'Solid')
 print '################################'
 
 print 'Initializing domain...'
