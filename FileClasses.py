@@ -15,7 +15,7 @@ This file contains classes for reading and writing files in proper format:
 
 # Dictionaries containing expected input file data; organized by type
 
-keys_Settings=['Length','Width','Nodes_x','Nodes_y','k','Cp','rho',\
+keys_Settings=['Domain','Length','Width','Nodes_x','Nodes_y','k','Cp','rho',\
                'bias_type_x','bias_size_x','bias_type_y','bias_size_y']
                
 keys_Sources=['Source_Uniform','Source_Kim','Ea','A0','dH', 'Ignition']
@@ -157,7 +157,8 @@ class FileIn():
                 if line[0] in keys_Settings:
                     if line[0]=='Nodes_x' or line[0]=='Nodes_y':
                         settings[line[0]]=int(line[1])
-                    elif st.find(line[1], 'None')>=0 or st.find(line[1], 'eta')>=0:
+                    elif st.find(line[1], 'None')>=0 or st.find(line[1], 'eta')>=0\
+                        or line[0]=='Domain':
                         settings[line[0]]=st.split(line[1], newline_check)[0]
                     else:
                         settings[line[0]]=float(line[1])
