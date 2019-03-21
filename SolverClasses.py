@@ -415,8 +415,6 @@ class AxisymmetricSolve():
         aS=np.zeros_like(dx)
         aN=np.zeros_like(dx)
         
-        (self.Domain.X[1:-1,1:-1]-dx[1:-1,:-2]/2)
-        
         # Left/right face factors
         aW[1:-1,1:-1] =0.5*self.interpolate(k[1:-1,1:-1], k[1:-1,:-2], inter_type)\
                     *(self.Domain.X[1:-1,1:-1]-dx[1:-1,:-2]/2)\
@@ -479,30 +477,10 @@ class AxisymmetricSolve():
     
     # Bondary condition handler
     def Apply_BCs_Cond(self, E, T_prev, dt, rho, Cv):
-        # Left face
-        for i in range(len(self.BCs['bc_left'])/3):
-            st=self.BCs['bc_left'][2+3*i][0]
-            en=self.BCs['bc_left'][2+3*i][1]
-            if self.BCs['bc_left'][3*i]=='T':
-                E[st:en,0]=self.BCs['bc_left'][1+3*i]*rho[st:en,0]*Cv[st:en,0]*self.Domain.CV_vol()[st:en,0]
-                if len(self.BCs['bc_left'])/3-i==1:
-                    E[-1,0]=self.BCs['bc_left'][-2]*rho[-1,0]*Cv[-1,0]*self.Domain.CV_vol()[-1,0]
+        # Left face (zero flux implied unless prescribed temperature)
+        if self.BCs['bc_left'][0]=='T':
+            E[:,0]=self.BCs['bc_left'][1]*rho[:,0]*Cv[:,0]*self.Domain.CV_vol()[:,0]
             
-            else:
-                if self.BCs['bc_left'][3*i]=='F':
-                    q=self.BCs['bc_left'][1+3*i]
-                    Bi=0
-                    
-                else:
-                    q=self.BCs['bc_left'][1+3*i][0]*self.BCs['bc_left'][1+3*i][1] # h*Tinf
-                    Bi=-self.BCs['bc_left'][1+3*i][0]*T_prev[st:en,0] # h*Tij
-                
-                E[st:en,0]+=(Bi+q)*self.dy[st:en,0]*dt
-                if len(self.BCs['bc_left'])/3-i==1:
-                    if self.BCs['bc_left'][3*i]=='C':
-                        Bi=-self.BCs['bc_left'][1+3*i][0]*T_prev[-1,0] # h*Tij
-                    E[-1,0]+=(Bi+q)*self.dy[-1,0]*dt
-        
         # Right face
         for i in range(len(self.BCs['bc_right'])/3):
             st=self.BCs['bc_right'][2+3*i][0]
@@ -521,11 +499,11 @@ class AxisymmetricSolve():
                     q=self.BCs['bc_right'][1+3*i][0]*self.BCs['bc_right'][1+3*i][1] # h*Tinf
                     Bi=-self.BCs['bc_right'][1+3*i][0]*T_prev[st:en,-1] # h*Tij
                 
-                E[st:en,-1]+=(Bi+q)*self.dy[st:en,-1]*dt
+                E[st:en,-1]+=(Bi+q)*(self.Domain.X[st:en,-1]*self.dy[st:en,-1])*dt
                 if len(self.BCs['bc_right'])/3-i==1:
                     if self.BCs['bc_right'][3*i]=='C':
                         Bi=-self.BCs['bc_right'][1+3*i][0]*T_prev[-1,-1] # h*Tij
-                    E[-1,-1]+=(Bi+q)*self.dy[-1,-1]*dt
+                    E[-1,-1]+=(Bi+q)*(self.Domain.X[-1,-1]*self.dy[-1,-1])*dt
         
         # South face
         for i in range(len(self.BCs['bc_south'])/3):
@@ -545,11 +523,11 @@ class AxisymmetricSolve():
                     q=self.BCs['bc_south'][1+3*i][0]*self.BCs['bc_south'][1+3*i][1] # h*Tinf
                     Bi=-self.BCs['bc_south'][1+3*i][0]*T_prev[0,st:en] # h*Tij
                 
-                E[0,st:en]+=(Bi+q)*self.dx[0,st:en]*dt
+                E[0,st:en]+=(Bi+q)*(self.Domain.X[0,st:en]*self.dx[0,st:en])*dt
                 if len(self.BCs['bc_south'])/3-i==1:
                     if self.BCs['bc_south'][3*i]=='C':
                         Bi=-self.BCs['bc_south'][1+3*i][0]*T_prev[0,-1] # h*Tij
-                    E[0,-1]+=(Bi+q)*self.dx[0,-1]*dt
+                    E[0,-1]+=(Bi+q)*(self.Domain.X[0,-1]*self.dx[0,-1])*dt
                     
         # North face
         for i in range(len(self.BCs['bc_north'])/3):
@@ -569,27 +547,23 @@ class AxisymmetricSolve():
                     q=self.BCs['bc_north'][1+3*i][0]*self.BCs['bc_north'][1+3*i][1] # h*Tinf
                     Bi=-self.BCs['bc_north'][1+3*i][0]*T_prev[-1,st:en] # h*Tij
                 
-                E[-1,st:en]+=(Bi+q)*self.dx[-1,st:en]*dt
+                E[-1,st:en]+=(Bi+q)*(self.Domain.X[-1,st:en]*self.dx[-1,st:en])*dt
                 if len(self.BCs['bc_north'])/3-i==1:
                     if self.BCs['bc_north'][3*i]=='C':
                         Bi=-self.BCs['bc_north'][1+3*i][0]*T_prev[-1,-1] # h*Tij
-                    E[-1,-1]+=(Bi+q)*self.dx[-1,-1]*dt
+                    E[-1,-1]+=(Bi+q)*(self.Domain.X[-1,-1]*self.dx[-1,-1])*dt
         
         # Apply radiation BCs
-        if self.BCs['bc_left_rad']!='None':
-            E[:,0]+=self.dy[:,0]*dt*\
-                self.BCs['bc_left_rad'][0]*5.67*10**(-8)*\
-                (self.BCs['bc_left_rad'][1]**4-T_prev[:,0]**4)
         if self.BCs['bc_right_rad']!='None':
-            E[:,-1]+=self.dy[:,-1]*dt*\
+            E[:,-1]+=self.Domain.X[:,-1]*self.dy[:,-1]*dt*\
                 self.BCs['bc_right_rad'][0]*5.67*10**(-8)*\
                 (self.BCs['bc_right_rad'][1]**4-T_prev[:,-1]**4)
         if self.BCs['bc_south_rad']!='None':
-            E[0,:]+=self.dx[0,:]*dt*\
+            E[0,:]+=self.Domain.X[0,:]*self.dx[0,:]*dt*\
                 self.BCs['bc_south_rad'][0]*5.67*10**(-8)*\
                 (self.BCs['bc_south_rad'][1]**4-T_prev[0,:]**4)
         if self.BCs['bc_north_rad']!='None':
-            E[-1,:]+=self.dx[-1,:]*dt*\
+            E[-1,:]+=self.Domain.X[-1,:]*self.dx[-1,:]*dt*\
                 self.BCs['bc_north_rad'][0]*5.67*10**(-8)*\
                 (self.BCs['bc_north_rad'][1]**4-T_prev[-1,:]**4)
     
