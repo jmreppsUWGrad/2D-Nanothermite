@@ -134,15 +134,15 @@ class TwoDimPlanarSolve():
         return aW,aE,aS,aN
     
     # Bondary condition handler
-    def Apply_BCs_Cond(self, E, T_prev, dt, rho, Cv):
+    def Apply_BCs_Cond(self, E, T_prev, dt, rho, Cv, vol):
         # Left face
         for i in range(len(self.BCs['bc_left'])/3):
             st=self.BCs['bc_left'][2+3*i][0]
             en=self.BCs['bc_left'][2+3*i][1]
             if self.BCs['bc_left'][3*i]=='T':
-                E[st:en,0]=self.BCs['bc_left'][1+3*i]*rho[st:en,0]*Cv[st:en,0]*self.Domain.CV_vol()[st:en,0]
+                E[st:en,0]=self.BCs['bc_left'][1+3*i]*rho[st:en,0]*Cv[st:en,0]*vol[st:en,0]
                 if len(self.BCs['bc_left'])/3-i==1:
-                    E[-1,0]=self.BCs['bc_left'][-2]*rho[-1,0]*Cv[-1,0]*self.Domain.CV_vol()[-1,0]
+                    E[-1,0]=self.BCs['bc_left'][-2]*rho[-1,0]*Cv[-1,0]*vol[-1,0]
             
             else:
                 if self.BCs['bc_left'][3*i]=='F':
@@ -164,9 +164,9 @@ class TwoDimPlanarSolve():
             st=self.BCs['bc_right'][2+3*i][0]
             en=self.BCs['bc_right'][2+3*i][1]
             if self.BCs['bc_right'][3*i]=='T':
-                E[st:en,-1]=self.BCs['bc_right'][1+3*i]*rho[st:en,-1]*Cv[st:en,-1]*self.Domain.CV_vol()[st:en,-1]
+                E[st:en,-1]=self.BCs['bc_right'][1+3*i]*rho[st:en,-1]*Cv[st:en,-1]*vol[st:en,-1]
                 if len(self.BCs['bc_right'])/3-i==1:
-                    E[-1,-1]=self.BCs['bc_right'][-2]*rho[-1,-1]*Cv[-1,-1]*self.Domain.CV_vol()[-1,-1]
+                    E[-1,-1]=self.BCs['bc_right'][-2]*rho[-1,-1]*Cv[-1,-1]*vol[-1,-1]
             
             else:
                 if self.BCs['bc_right'][3*i]=='F':
@@ -188,9 +188,9 @@ class TwoDimPlanarSolve():
             st=self.BCs['bc_south'][2+3*i][0]
             en=self.BCs['bc_south'][2+3*i][1]
             if self.BCs['bc_south'][3*i]=='T':
-                E[0,st:en]=self.BCs['bc_south'][1+3*i]*rho[0,st:en]*Cv[0,st:en]*self.Domain.CV_vol()[0,st:en]
+                E[0,st:en]=self.BCs['bc_south'][1+3*i]*rho[0,st:en]*Cv[0,st:en]*vol[0,st:en]
                 if len(self.BCs['bc_south'])/3-i==1:
-                    E[0,-1]=self.BCs['bc_south'][-2]*rho[0,-1]*Cv[0,-1]*self.Domain.CV_vol()[0,-1]
+                    E[0,-1]=self.BCs['bc_south'][-2]*rho[0,-1]*Cv[0,-1]*vol[0,-1]
             
             else:
                 if self.BCs['bc_south'][3*i]=='F':
@@ -212,9 +212,9 @@ class TwoDimPlanarSolve():
             st=self.BCs['bc_north'][2+3*i][0]
             en=self.BCs['bc_north'][2+3*i][1]
             if self.BCs['bc_north'][3*i]=='T':
-                E[-1,st:en]=self.BCs['bc_north'][1+3*i]*rho[-1,st:en]*Cv[-1,st:en]*self.Domain.CV_vol()[-1,st:en]
+                E[-1,st:en]=self.BCs['bc_north'][1+3*i]*rho[-1,st:en]*Cv[-1,st:en]*vol[-1,st:en]
                 if len(self.BCs['bc_north'])/3-i==1:
-                    E[-1,-1]=self.BCs['bc_north'][-2]*rho[-1,-1]*Cv[-1,-1]*self.Domain.CV_vol()[-1,-1]
+                    E[-1,-1]=self.BCs['bc_north'][-2]*rho[-1,-1]*Cv[-1,-1]*vol[-1,-1]
             
             else:
                 if self.BCs['bc_north'][3*i]=='F':
@@ -250,7 +250,7 @@ class TwoDimPlanarSolve():
                 (self.BCs['bc_north_rad'][1]**4-T_prev[-1,:]**4)
     
     # Main solver (1 time step)
-    def Advance_Soln_Cond(self, nt, t):
+    def Advance_Soln_Cond(self, nt, t, vol):
         max_Y,min_Y=0,1
         # Calculate properties
         k, rho, Cv, D=self.Domain.calcProp()
@@ -276,10 +276,10 @@ class TwoDimPlanarSolve():
         # Source terms
         E_unif,E_kim=0,0
         if self.source_unif!='None':
-            E_unif      = self.get_source.Source_Uniform(self.source_unif, self.Domain.CV_vol())
+            E_unif      = self.get_source.Source_Uniform(self.source_unif, vol)
         if self.source_Kim=='True':
 #            self.Domain.eta=self.Domain.Y_species[:,:,2]/0.25
-            E_kim, deta =self.get_source.Source_Comb_Kim(rho, T_c, self.Domain.eta, self.Domain.CV_vol(), dt)
+            E_kim, deta =self.get_source.Source_Comb_Kim(rho, T_c, self.Domain.eta, vol, dt)
 #            E_kim, deta =self.get_source.Source_Comb_Umbrajkar(rho, T_c, self.Domain.eta, self.Domain.CV_vol(), dt)
             
         # Porous medium equations [TO BE CONTINUED]
@@ -351,7 +351,7 @@ class TwoDimPlanarSolve():
         # Apply energy from previous time step and boundary conditions
         self.Domain.E*= dt
         self.Domain.E+= E_0
-        self.Apply_BCs_Cond(self.Domain.E, T_c, dt, rho, Cv)
+        self.Apply_BCs_Cond(self.Domain.E, T_c, dt, rho, Cv, vol)
         
         ###################################################################
         # Divergence/Convergence checks
@@ -476,19 +476,19 @@ class AxisymmetricSolve():
         return aW,aE,aS,aN
     
     # Bondary condition handler
-    def Apply_BCs_Cond(self, E, T_prev, dt, rho, Cv):
+    def Apply_BCs_Cond(self, E, T_prev, dt, rho, Cv, vol):
         # Left face (zero flux implied unless prescribed temperature)
         if self.BCs['bc_left'][0]=='T':
-            E[:,0]=self.BCs['bc_left'][1]*rho[:,0]*Cv[:,0]*self.Domain.CV_vol()[:,0]
+            E[:,0]=self.BCs['bc_left'][1]*rho[:,0]*Cv[:,0]*vol[:,0]
             
         # Right face
         for i in range(len(self.BCs['bc_right'])/3):
             st=self.BCs['bc_right'][2+3*i][0]
             en=self.BCs['bc_right'][2+3*i][1]
             if self.BCs['bc_right'][3*i]=='T':
-                E[st:en,-1]=self.BCs['bc_right'][1+3*i]*rho[st:en,-1]*Cv[st:en,-1]*self.Domain.CV_vol()[st:en,-1]
+                E[st:en,-1]=self.BCs['bc_right'][1+3*i]*rho[st:en,-1]*Cv[st:en,-1]*vol[st:en,-1]
                 if len(self.BCs['bc_right'])/3-i==1:
-                    E[-1,-1]=self.BCs['bc_right'][-2]*rho[-1,-1]*Cv[-1,-1]*self.Domain.CV_vol()[-1,-1]
+                    E[-1,-1]=self.BCs['bc_right'][-2]*rho[-1,-1]*Cv[-1,-1]*vol[-1,-1]
             
             else:
                 if self.BCs['bc_right'][3*i]=='F':
@@ -510,9 +510,9 @@ class AxisymmetricSolve():
             st=self.BCs['bc_south'][2+3*i][0]
             en=self.BCs['bc_south'][2+3*i][1]
             if self.BCs['bc_south'][3*i]=='T':
-                E[0,st:en]=self.BCs['bc_south'][1+3*i]*rho[0,st:en]*Cv[0,st:en]*self.Domain.CV_vol()[0,st:en]
+                E[0,st:en]=self.BCs['bc_south'][1+3*i]*rho[0,st:en]*Cv[0,st:en]*vol[0,st:en]
                 if len(self.BCs['bc_south'])/3-i==1:
-                    E[0,-1]=self.BCs['bc_south'][-2]*rho[0,-1]*Cv[0,-1]*self.Domain.CV_vol()[0,-1]
+                    E[0,-1]=self.BCs['bc_south'][-2]*rho[0,-1]*Cv[0,-1]*vol[0,-1]
             
             else:
                 if self.BCs['bc_south'][3*i]=='F':
@@ -534,9 +534,9 @@ class AxisymmetricSolve():
             st=self.BCs['bc_north'][2+3*i][0]
             en=self.BCs['bc_north'][2+3*i][1]
             if self.BCs['bc_north'][3*i]=='T':
-                E[-1,st:en]=self.BCs['bc_north'][1+3*i]*rho[-1,st:en]*Cv[-1,st:en]*self.Domain.CV_vol()[-1,st:en]
+                E[-1,st:en]=self.BCs['bc_north'][1+3*i]*rho[-1,st:en]*Cv[-1,st:en]*vol[-1,st:en]
                 if len(self.BCs['bc_north'])/3-i==1:
-                    E[-1,-1]=self.BCs['bc_north'][-2]*rho[-1,-1]*Cv[-1,-1]*self.Domain.CV_vol()[-1,-1]
+                    E[-1,-1]=self.BCs['bc_north'][-2]*rho[-1,-1]*Cv[-1,-1]*vol[-1,-1]
             
             else:
                 if self.BCs['bc_north'][3*i]=='F':
@@ -568,7 +568,7 @@ class AxisymmetricSolve():
                 (self.BCs['bc_north_rad'][1]**4-T_prev[-1,:]**4)
     
     # Main solver (1 time step)
-    def Advance_Soln_Cond(self, nt, t):
+    def Advance_Soln_Cond(self, nt, t, vol):
         max_Y,min_Y=0,1
         # Calculate properties
         k, rho, Cv, D=self.Domain.calcProp()
@@ -594,10 +594,10 @@ class AxisymmetricSolve():
         # Source terms
         E_unif,E_kim=0,0
         if self.source_unif!='None':
-            E_unif      = self.get_source.Source_Uniform(self.source_unif, self.Domain.CV_vol())
+            E_unif      = self.get_source.Source_Uniform(self.source_unif, vol)
         if self.source_Kim=='True':
 #            self.Domain.eta=self.Domain.Y_species[:,:,2]/0.25
-            E_kim, deta =self.get_source.Source_Comb_Kim(rho, T_c, self.Domain.eta, self.Domain.CV_vol(), dt)
+            E_kim, deta =self.get_source.Source_Comb_Kim(rho, T_c, self.Domain.eta, vol, dt)
 #            E_kim, deta =self.get_source.Source_Comb_Umbrajkar(rho, T_c, self.Domain.eta, self.Domain.CV_vol(), dt)
             
         # Porous medium equations [TO BE CONTINUED]
@@ -669,7 +669,7 @@ class AxisymmetricSolve():
         # Apply energy from previous time step and boundary conditions
         self.Domain.E*= dt
         self.Domain.E+= E_0
-        self.Apply_BCs_Cond(self.Domain.E, T_c, dt, rho, Cv)
+        self.Apply_BCs_Cond(self.Domain.E, T_c, dt, rho, Cv, vol)
         
         ###################################################################
         # Divergence/Convergence checks

@@ -113,7 +113,8 @@ print '################################'
 
 print 'Initializing domain...'
 k,rho,Cv,D=domain.calcProp()
-domain.E[:,:]=rho*Cv*domain.CV_vol()*300
+vol=domain.CV_vol()
+domain.E[:,:]=rho*Cv*vol*300
 del k,rho,Cv,D
 if bool(domain.Y_species):
     domain.Y_species['Al'][:,:]=2.0/5
@@ -165,7 +166,7 @@ while nt<settings['total_time_steps'] and t<settings['total_time']:
     if st.find(Sources['Source_Kim'],'True')>=0 and BCs_changed:
 #        v_0=np.sum(domain.eta[:,int(len(domain.eta[0,:])/2)]*domain.dy)
         v_0=np.sum(domain.eta*solver.dy)/len(domain.eta[0,:])
-    err,dt=solver.Advance_Soln_Cond(nt, t)
+    err,dt=solver.Advance_Soln_Cond(nt, t, vol)
     t+=dt
     nt+=1
     if err==1:
