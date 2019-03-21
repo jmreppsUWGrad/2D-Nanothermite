@@ -576,8 +576,8 @@ class AxisymmetricSolve():
         if self.dt=='None':
             dt=self.getdt(k, rho, Cv)
         else:
-            dt=min(self.dt,self.getdt(k, rho, Cv))
-            
+#            dt=min(self.dt,self.getdt(k, rho, Cv))
+            dt=self.dt
         if (np.isnan(dt)) or (dt<=0):
             print '*********Diverging time step***********'
             return 1, dt

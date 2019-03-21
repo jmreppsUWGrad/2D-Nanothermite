@@ -60,7 +60,7 @@ class FileOut():
     
     def input_writer_cond(self, settings, Sources, Species, BCs):
         self.Write_single_line('Settings:')
-        keys=['Length','Width','Nodes_x','Nodes_y','k','Cp','rho']
+        keys=['Domain','Length','Width','Nodes_x','Nodes_y','k','Cp','rho']
         for i in keys:
             self.fout.write(i)
             self.fout.write(':')
@@ -87,9 +87,12 @@ class FileOut():
 
         self.Write_single_line('\nSource Terms:')
         for i in keys_Sources:
-            self.fout.write(i)
-            self.fout.write(':')
-            self.Write_single_line(str(Sources[i]))
+            try:
+                self.fout.write(i)
+                self.fout.write(':')
+                self.Write_single_line(str(Sources[i]))
+            except:
+                continue
             
         self.Write_single_line('\nTime advancement:')
         for i in keys_Time_adv:

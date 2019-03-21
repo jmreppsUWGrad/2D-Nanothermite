@@ -17,11 +17,12 @@
 #	Properties are in standard units J, kg, K, W, m
 ######################################################
 
+Domain:Axisymmetric
 Length:1.0
 Width:1.0
 Nodes_x:61
 Nodes_y:61
-k:10
+k:70
 Cp:800
 rho:8000
 
@@ -35,7 +36,8 @@ Source_Uniform:None
 Source_Kim:None
 Ea:48000
 A0:4890000
-dH:63000000000
+dH:rho,63000000000
+Ignition:eta,0.8
 
 ######################################################
 #			Meshing details
@@ -57,8 +59,8 @@ bias_size_y:1e-06
 ######################################################
 
 Fo:0.2
-dt:None
-total_time_steps:10
+dt:1
+total_time_steps:100
 total_time:None
 Time_Scheme:Explicit
 
@@ -83,9 +85,9 @@ Number_Data_Output:5
 
 bc_left:F, 1000, 0, -1
 bc_left_rad:None
-bc_right:F, 1000, 0, -1
+bc_right:C, 10, 300, 0, -1
 bc_right_rad:None
-bc_south:C, 10, 300, 0, -1
+bc_south:F, 0, 0, -1
 bc_south_rad:None
-bc_north:C, 10, 300, 0, -1
+bc_north:F, 1000, 0, -1
 bc_north_rad:None

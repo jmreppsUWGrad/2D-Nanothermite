@@ -151,8 +151,10 @@ v_0,v_1,v,N=0,0,0,0 # combustion wave speed variables initialization
 output_data_t,t_inc,output_data_nt=0,1,0
 if settings['total_time_steps']=='None':
     output_data_t=settings['total_time']/settings['Number_Data_Output']
+    settings['total_time_steps']=settings['total_time']*10**9
 elif settings['total_time']=='None':
     output_data_nt=int(settings['total_time_steps']/settings['Number_Data_Output'])
+    settings['total_time']=settings['total_time_steps']*10**9
 
 # Ignition conditions
 Sources['Ignition']=st.split(Sources['Ignition'], ',')
