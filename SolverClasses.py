@@ -88,7 +88,7 @@ class TwoDimPlanarSolve():
             *(dy[-1,1:-1])/(dx[-1,:-2])
         aE[-1,1:-1]   =0.5*self.interpolate(k[-1,1:-1],k[-1,2:], inter_type)\
             *(dy[-1,1:-1])/(dx[-1,1:-1])
-        # At Left/right boundaries
+        # At east/west boundaries
         aE[0,0]       =0.5*self.interpolate(k[0,0],k[0,1], inter_type)\
             *(dy[0,0])/dx[0,0]
         aE[1:-1,0]    =0.5*self.interpolate(k[1:-1,0],k[1:-1,1], inter_type)\
@@ -102,18 +102,13 @@ class TwoDimPlanarSolve():
         aW[-1,-1]     =0.5*self.interpolate(k[-1,-1],k[-1,-2], inter_type)\
             *(dy[-1,-1])/dx[-1,-1]
         
-        # South/north faces
+        # Top/bottom faces
         aS[1:-1,1:-1]=0.5*self.interpolate(k[1:-1,1:-1],k[:-2,1:-1], inter_type)\
             *(dx[1:-1,1:-1]+dx[1:-1,:-2])/dy[:-2,1:-1]
         aN[1:-1,1:-1]=0.5*self.interpolate(k[1:-1,1:-1],k[2:,1:-1], inter_type)\
             *(dx[1:-1,1:-1]+dx[1:-1,:-2])/dy[1:-1,1:-1]
         
-        # Heat conduction in y direction (Central differences)
-        aS[1:-1,1:-1] =0.5*self.interpolate(k[1:-1,1:-1],k[:-2,1:-1], inter_type)\
-            *(dx[1:-1,1:-1]+dx[1:-1,:-2])/(dy[:-2,1:-1])
-        aN[1:-1,1:-1] =0.5*self.interpolate(k[1:-1,1:-1],k[2:,1:-1], inter_type)\
-            *(dx[1:-1,1:-1]+dx[1:-1,:-2])/(dy[1:-1,1:-1])
-        # Area account for left/right boundary nodes
+        # Area account for east/west boundary nodes
         aS[1:-1,0]    =0.5*self.interpolate(k[1:-1,0],k[:-2,0], inter_type)\
             *(dx[1:-1,0])/(dy[:-2,0])
         aN[1:-1,0]    =0.5*self.interpolate(k[1:-1,0],k[2:,0], inter_type)\
@@ -420,69 +415,65 @@ class AxisymmetricSolve():
         aS=np.zeros_like(dx)
         aN=np.zeros_like(dx)
         
-        self.Domain.X
+        (self.Domain.X[1:-1,1:-1]-dx[1:-1,:-2]/2)
         
         # Left/right face factors
         aW[1:-1,1:-1] =0.5*self.interpolate(k[1:-1,1:-1], k[1:-1,:-2], inter_type)\
-                    *self.Domain.X[1:-1,1:-1]*(dy[1:-1,1:-1]+dy[:-2,1:-1])/(dx[1:-1,:-2])
+                    *(self.Domain.X[1:-1,1:-1]-dx[1:-1,:-2]/2)\
+                    *(dy[1:-1,1:-1]+dy[:-2,1:-1])/(dx[1:-1,:-2])
         aE[1:-1,1:-1] =0.5*self.interpolate(k[1:-1,1:-1],k[1:-1,2:], inter_type)\
-                    *(self.Domain.X[1:-1,1:-1]+self.dx[1:-1,1:-1])*(dy[1:-1,1:-1]+dy[:-2,1:-1])/(dx[1:-1,1:-1])
+                    *(self.Domain.X[1:-1,1:-1]+dx[1:-1,1:-1]/2)*(dy[1:-1,1:-1]+dy[:-2,1:-1])/(dx[1:-1,1:-1])
         # At north/south bondaries
         aW[0,1:-1]    =0.5*self.interpolate(k[0,1:-1],k[0,:-2], inter_type)\
-            *self.Domain.X[0,1:-1]*(dy[0,1:-1])/(dx[0,:-2])
+            *(self.Domain.X[0,1:-1]-dx[0,:-2]/2)*(dy[0,1:-1])/(dx[0,:-2])
         aE[0,1:-1]    =0.5*self.interpolate(k[0,1:-1],k[0,2:], inter_type)\
-            *(self.Domain.X[0,1:-1]+self.dx[0,1:-1])*(dy[0,1:-1])/(dx[0,1:-1])
+            *(self.Domain.X[0,1:-1]+dx[0,1:-1]/2)*(dy[0,1:-1])/(dx[0,1:-1])
         aW[-1,1:-1]   =0.5*self.interpolate(k[-1,1:-1],k[-1,:-2], inter_type)\
-            *self.Domain.X[-1,1:-1]*(dy[-1,1:-1])/(dx[-1,:-2])
+            *(self.Domain.X[-1,1:-1]-dx[-1,:-2]/2)*(dy[-1,1:-1])/(dx[-1,:-2])
         aE[-1,1:-1]   =0.5*self.interpolate(k[-1,1:-1],k[-1,2:], inter_type)\
-            *(self.Domain.X[-1,1:-1]+self.dx[-1,1:-1])*(dy[-1,1:-1])/(dx[-1,1:-1])
-        # At Left/right boundaries
+            *(self.Domain.X[-1,1:-1]+dx[-1,1:-1]/2)*(dy[-1,1:-1])/(dx[-1,1:-1])
+        # At west/east boundaries
         aE[0,0]       =0.5*self.interpolate(k[0,0],k[0,1], inter_type)\
-            *(self.Domain.X[0,0]+self.dx[0,0])*(dy[0,0])/dx[0,0]
+            *(self.Domain.X[0,0]+dx[0,0]/2)*(dy[0,0])/dx[0,0]
         aE[1:-1,0]    =0.5*self.interpolate(k[1:-1,0],k[1:-1,1], inter_type)\
-            *(self.Domain.X[1:-1,0]+self.dx[1:-1,0])*(dy[1:-1,0]+dy[:-2,0])/dx[1:-1,0]
+            *(self.Domain.X[1:-1,0]+dx[1:-1,0]/2)*(dy[1:-1,0]+dy[:-2,0])/dx[1:-1,0]
         aE[-1,0]      =0.5*self.interpolate(k[-1,0],k[-1,1], inter_type)\
-            *(dy[-1,0])/dx[-1,0]
+            *(self.Domain.X[-1,0]+dx[-1,0]/2)*(dy[-1,0])/dx[-1,0]
         aW[0,-1]      =0.5*self.interpolate(k[0,-1],k[0,-2], inter_type)\
-            *self.Domain.X[0,-1]*(dy[0,-1])/dx[0,-1]
+            *(self.Domain.X[0,-1]-dx[0,-1]/2)*(dy[0,-1])/dx[0,-1]
         aW[1:-1,-1]   =0.5*self.interpolate(k[1:-1,-1],k[1:-1,-2], inter_type)\
-            *self.Domain.X[1:-1,-1]*(dy[1:-1,-1]+dy[:-2,-1])/dx[1:-1,-1]
+            *(self.Domain.X[1:-1,-1]-dx[1:-1,-1]/2)*(dy[1:-1,-1]+dy[:-2,-1])/dx[1:-1,-1]
         aW[-1,-1]     =0.5*self.interpolate(k[-1,-1],k[-1,-2], inter_type)\
-            *self.Domain.X[-1,-1]*(dy[-1,-1])/dx[-1,-1]
+            *(self.Domain.X[-1,-1]-dx[-1,-1]/2)*(dy[-1,-1])/dx[-1,-1]
         
-        # South/north faces
+        # Top/bottom faces
         aS[1:-1,1:-1]=0.5*self.interpolate(k[1:-1,1:-1],k[:-2,1:-1], inter_type)\
-            *(dx[1:-1,1:-1]+dx[1:-1,:-2])/dy[:-2,1:-1]
+            *(self.Domain.X[1:-1,1:-1]-dx[1:-1,:-2]/2)*(dx[1:-1,1:-1]+dx[1:-1,:-2])/dy[:-2,1:-1]
         aN[1:-1,1:-1]=0.5*self.interpolate(k[1:-1,1:-1],k[2:,1:-1], inter_type)\
-            *(dx[1:-1,1:-1]+dx[1:-1,:-2])/dy[1:-1,1:-1]
+            *(self.Domain.X[1:-1,1:-1]-dx[1:-1,:-2]/2)*(dx[1:-1,1:-1]+dx[1:-1,:-2])/dy[1:-1,1:-1]
         
-        # Heat conduction in y direction (Central differences)
-        aS[1:-1,1:-1] =0.5*self.interpolate(k[1:-1,1:-1],k[:-2,1:-1], inter_type)\
-            *(dx[1:-1,1:-1]+dx[1:-1,:-2])/(dy[:-2,1:-1])
-        aN[1:-1,1:-1] =0.5*self.interpolate(k[1:-1,1:-1],k[2:,1:-1], inter_type)\
-            *(dx[1:-1,1:-1]+dx[1:-1,:-2])/(dy[1:-1,1:-1])
-        # Area account for left/right boundary nodes
+        # Area account for east/west boundary nodes
         aS[1:-1,0]    =0.5*self.interpolate(k[1:-1,0],k[:-2,0], inter_type)\
-            *(dx[1:-1,0])/(dy[:-2,0])
+            *(self.Domain.X[1:-1,0])*(dx[1:-1,0])/(dy[:-2,0])
         aN[1:-1,0]    =0.5*self.interpolate(k[1:-1,0],k[2:,0], inter_type)\
-            *(dx[1:-1,0])/(dy[1:-1,0])
+            *(self.Domain.X[1:-1,0])*(dx[1:-1,0])/(dy[1:-1,0])
         aS[1:-1,-1]   =0.5*self.interpolate(k[1:-1,-1],k[:-2,-1], inter_type)\
-            *(dx[1:-1,-1])/(dy[:-2,-1])
+            *(self.Domain.X[1:-1,-1]-dx[1:-1,-1]/2)*(dx[1:-1,-1])/(dy[:-2,-1])
         aN[1:-1,-1]   =0.5*self.interpolate(k[1:-1,-1],k[2:,-1], inter_type)\
-            *(dx[1:-1,-1])/(dy[1:-1,-1])
+            *(self.Domain.X[1:-1,-1]-dx[1:-1,-1]/2)*(dx[1:-1,-1])/(dy[1:-1,-1])
         # Forward/backward difference for north/south boundaries
         aN[0,0]       =0.5*self.interpolate(k[0,0],k[1,0], inter_type)\
-            *dx[0,0]/dy[0,0]
+            *(self.Domain.X[0,0])*dx[0,0]/dy[0,0]
         aN[0,1:-1]    =0.5*self.interpolate(k[0,1:-1],k[1,1:-1], inter_type)\
-            *(dx[0,1:-1]+dx[0,:-2])/dy[0,1:-1]
+            *(self.Domain.X[0,1:-1]-dx[0,:-2]/2)*(dx[0,1:-1]+dx[0,:-2])/dy[0,1:-1]
         aN[0,-1]      =0.5*self.interpolate(k[0,-1],k[1,-1], inter_type)\
-            *dx[0,-1]/dy[0,-1]
+            *(self.Domain.X[0,-1]-dx[0,-1]/2)*dx[0,-1]/dy[0,-1]
         aS[-1,0]      =0.5*self.interpolate(k[-1,0],k[-2,0], inter_type)\
-            *dx[-1,0]/dy[-1,0]
+            *(self.Domain.X[-1,0])*dx[-1,0]/dy[-1,0]
         aS[-1,1:-1]   =0.5*self.interpolate(k[-1,1:-1],k[-2,1:-1], inter_type)\
-            *(dx[0,1:-1]+dx[0,:-2])/dy[-1,1:-1]
+            *(self.Domain.X[-1,1:-1]-dx[-1,:-2]/2)*(dx[0,1:-1]+dx[0,:-2])/dy[-1,1:-1]
         aS[-1,-1]     =0.5*self.interpolate(k[-1,-1],k[-2,-1], inter_type)\
-            *dx[-1,-1]/dy[-1,-1]
+            *(self.Domain.X[-1,-1]-dx[-1,-1]/2)*dx[-1,-1]/dy[-1,-1]
         
         return aW,aE,aS,aN
     
