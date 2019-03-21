@@ -144,14 +144,16 @@ np.save('Y', domain.Y, False)
 # -------------------------------------Solve
 ##########################################################################
 t,nt,tign=0,0,0 # time, number steps and ignition time initializations
-v_0,v_1,v,N=0,0,0,0 #combustion wave speed variables initialization
-output_data_t,output_data_nt=0,0
+v_0,v_1,v,N=0,0,0,0 # combustion wave speed variables initialization
+
+# Setup intervals to save data
+output_data_t,t_inc,output_data_nt=0,1,0
 if settings['total_time_steps']=='None':
-    settings['total_time_steps']=settings['total_time']*10**9
     output_data_t=settings['total_time']/settings['Number_Data_Output']
 elif settings['total_time']=='None':
-    settings['total_time']=settings['total_time_steps']*10**9
     output_data_nt=int(settings['total_time_steps']/settings['Number_Data_Output'])
+
+# Ignition conditions
 Sources['Ignition']=st.split(Sources['Ignition'], ',')
 Sources['Ignition'][1]=float(Sources['Ignition'][1])
 BCs_changed=False
@@ -173,9 +175,11 @@ while nt<settings['total_time_steps'] and t<settings['total_time']:
         break
     
     # Output data to numpy files
-    if output_data_nt!=0 and nt%output_data_nt==0:
+    if (output_data_nt!=0 and nt%output_data_nt==0) or \
+        (output_data_t!=0 and (t>=output_data_t*t_inc and t-dt<output_data_t*t_inc)):
         print 'Saving data to numpy array files...'
         save_data(domain, Sources, Species, '{:f}'.format(t))
+        t_inc+=1
         
     # Change boundary conditions
     T=domain.TempFromConserv()
@@ -208,6 +212,7 @@ while nt<settings['total_time_steps'] and t<settings['total_time']:
             N+=1
         
 time_end=time.time()
+input_file.Write_single_line('Final time step size: %f ms'%(dt*1000))
 print 'Ignition time: %f ms'%(tign*1000)
 input_file.Write_single_line('Ignition time: %f ms'%(tign*1000))
 print 'Solver time per 1000 time steps: %f min'%((time_end-time_begin)/60.0*1000/nt)
