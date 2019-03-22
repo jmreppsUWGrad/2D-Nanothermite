@@ -391,14 +391,14 @@ class AxisymmetricSolve():
 #        self.Porous_Eqns=PorousClass(0,0,0)
         
     # Time step check with dx, dy, Fo number
-    def getdt(self, k, rho, Cv):
+    def getdt(self, k, rho, Cv, vol):
         # Stability check for Fourrier number
-        if self.time_scheme=='Explicit':
-            self.Fo=min(self.Fo, 1.0)
-        elif self.Fo=='None':
-            self.Fo=1.0
+#        if self.time_scheme=='Explicit':
+#            self.Fo=min(self.Fo, 0.85)
+#        elif self.Fo=='None':
+#            self.Fo=1.0
         
-        dt=self.Fo*rho*Cv/k*self.Domain.CV_vol()
+        dt=self.Fo*rho*Cv/k*vol
         return np.amin(dt)
     
     # Interpolation function
@@ -574,10 +574,10 @@ class AxisymmetricSolve():
         k, rho, Cv, D=self.Domain.calcProp()
         
         if self.dt=='None':
-            dt=self.getdt(k, rho, Cv)
+            dt=self.getdt(k, rho, Cv, vol)
         else:
-#            dt=min(self.dt,self.getdt(k, rho, Cv))
-            dt=self.dt
+            dt=min(self.dt,self.getdt(k, rho, Cv, vol))
+#            dt=self.dt
         if (np.isnan(dt)) or (dt<=0):
             print '*********Diverging time step***********'
             return 1, dt
