@@ -88,6 +88,7 @@ bias_size_y:1e-06
 ######################################################
 #			Time advancement details
 #	'Fo' (in (0, 1.0)) OR 'dt' must be specified; if both are, then smallest will be used; Fo stability check to 1.0
+#	'Fo' in (0,1.0) for planar, (0, 50.0) for axisymmetric (experimentally determined for this code)
 #	'total_time_steps' OR 'total_time' must be specified; if both, then 'total_time_steps' will be used
 #	Time schemes: Explicit
 #	'Convergence' and 'Max_iterations' are for implicit solver
