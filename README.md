@@ -3,7 +3,9 @@
 This repository contains the Python code to solve the 2D Heat conduction equations.
 
 # Current state:
--solve 2D heat conduction with no source terms (Explicit)
+-solve 2D planar heat conduction with no source terms (Explicit)
+
+-solve 2D axisymmetric heat conduction with no source terms (Explicit)
 
 -Combustion source term from Kim (Explicit)
 
