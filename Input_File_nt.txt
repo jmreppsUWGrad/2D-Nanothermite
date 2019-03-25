@@ -92,7 +92,8 @@ bias_size_y:1e-06
 #	'total_time_steps' OR 'total_time' must be specified; if both, then 'total_time_steps' will be used
 #	Time schemes: Explicit
 #	'Convergence' and 'Max_iterations' are for implicit solver
-#	[IN PROGRESS] Number_Data_Output: Number of T variable files to be output over the time/number of steps specified
+#	Number_Data_Output: Number of T variable files to be output over the time/number of steps specified
+#	'Restart': None OR a number (any number will signify restart)
 ######################################################
 
 Fo:0.2
@@ -102,6 +103,7 @@ total_time_steps:100
 total_time:None
 #total_time:0.002
 Time_Scheme:Explicit
+Restart:None
 
 Convergence:0.0001
 Max_iterations:100

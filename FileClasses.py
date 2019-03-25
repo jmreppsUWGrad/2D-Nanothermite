@@ -22,8 +22,8 @@ keys_Sources=['Source_Uniform','Source_Kim','Ea','A0','dH', 'Ignition']
 
 #keys_Species=['keys']
 
-keys_Time_adv=['Fo','dt','total_time_steps', 'total_time','Time_Scheme',\
-               'Convergence','Max_iterations','Number_Data_Output']
+keys_Time_adv=['Fo','dt','total_time_steps', 'total_time','Restart',\
+               'Time_Scheme','Convergence','Max_iterations','Number_Data_Output']
 
 keys_BCs=     ['bc_left','bc_left_rad',\
               'bc_right','bc_right_rad',\

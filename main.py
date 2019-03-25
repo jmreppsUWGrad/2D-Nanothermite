@@ -112,13 +112,33 @@ elif settings['Domain']=='Axisymmetric':
 print '################################'
 
 print 'Initializing domain...'
+time_max='0.000000'
+T=300*np.ones_like(domain.E)
+# Restart from previous data
+if type(settings['Restart']) is float:
+    times=os.listdir('.')
+    i=len(times)
+    if i<2:
+        sys.exit('Cannot find a file to restart a simulation with')
+    j=0
+    while i>j:
+        if st.find(times[j],'T')==0 and st.find(times[j],'.npy')>0:
+            times[j]=st.split(st.split(times[j],'_')[1],'.npy')[0]
+            if float(times[j])>float(time_max):
+                time_max=times[j]
+            j+=1
+        else:
+            del times[j]
+            i-=1
+    T=np.load('T_'+time_max+'.npy')
 k,rho,Cv,D=domain.calcProp()
 vol=domain.CV_vol()
-domain.E[:,:]=rho*Cv*vol*300
+domain.E[:,:]=rho*Cv*vol*T
 del k,rho,Cv,D
 if bool(domain.Y_species):
     domain.Y_species['Al'][:,:]=2.0/5
     domain.Y_species['CuO'][:,:]=3.0/5
+print 'Start time: '+time_max
 print '################################'
 ##########################################################################
 # ------------------------Write Input File settings to output directory
@@ -144,14 +164,15 @@ np.save('Y', domain.Y, False)
 ##########################################################################
 # -------------------------------------Solve
 ##########################################################################
-t,nt,tign=0,0,0 # time, number steps and ignition time initializations
+t,nt,tign=float(time_max),0,0 # time, number steps and ignition time initializations
 v_0,v_1,v,N=0,0,0,0 # combustion wave speed variables initialization
 
 # Setup intervals to save data
-output_data_t,t_inc,output_data_nt=0,1,0
+output_data_t,output_data_nt=0,0
 if settings['total_time_steps']=='None':
     output_data_t=settings['total_time']/settings['Number_Data_Output']
     settings['total_time_steps']=settings['total_time']*10**9
+    t_inc=int(t/output_data_t)+1
 elif settings['total_time']=='None':
     output_data_nt=int(settings['total_time_steps']/settings['Number_Data_Output'])
     settings['total_time']=settings['total_time_steps']*10**9
