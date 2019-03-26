@@ -176,6 +176,7 @@ if settings['total_time_steps']=='None':
 elif settings['total_time']=='None':
     output_data_nt=int(settings['total_time_steps']/settings['Number_Data_Output'])
     settings['total_time']=settings['total_time_steps']*10**9
+    t_inc=0
 
 # Ignition conditions
 Sources['Ignition']=st.split(Sources['Ignition'], ',')
