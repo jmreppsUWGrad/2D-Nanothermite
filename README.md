@@ -11,6 +11,8 @@ This repository contains the Python code to solve the 2D Heat conduction equatio
 
 -can be run from command prompt
 
+-can restart a simulation using Temperature data from previous run
+
 -post-processing script outputs Temperature, reaction progress and reaction rate contours
 
 # Run code from cmd:
