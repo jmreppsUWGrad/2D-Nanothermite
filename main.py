@@ -131,12 +131,12 @@ if type(settings['Restart']) is float:
             del times[j]
             i-=1
     T=np.load('T_'+time_max+'.npy')
+    if st.find(Sources['Source_Kim'],'True')>=0:
+        domain.eta=np.load('eta_'+time_max+'.npy')
 
 k,rho,Cv,D=domain.calcProp()
 vol=domain.CV_vol()
 domain.E[:,:]=rho*Cv*vol*T
-if st.find(Sources['Source_Kim'],'True')>=0:
-    domain.eta=np.load('eta_'+time_max+'.npy')
 del k,rho,Cv,D,T
 if bool(domain.Y_species):
     domain.Y_species['Al'][:,:]=2.0/5
