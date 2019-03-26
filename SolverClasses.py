@@ -360,13 +360,13 @@ class TwoDimPlanarSolve():
         or (np.amax(self.Domain.E)>100*np.amax(E_0))\
         or (np.amin(self.Domain.E)<=0):
             print '***********Divergence detected - energy************'
-            return 1, dt
+            return 2, dt
         elif (np.amax(self.Domain.eta)>1.0) or (np.amin(self.Domain.eta)<-10**(-9)):
             print '***********Divergence detected - reaction progress************'
-            return 1, dt
+            return 3, dt
         elif bool(self.Domain.Y_species) and ((max_Y>1.0) or (min_Y<-10**(-9))):
             print '***********Divergence detected - species mass fraction************'
-            return 1, dt
+            return 4, dt
         else:
             return 0, dt
         
@@ -678,12 +678,12 @@ class AxisymmetricSolve():
         or (np.amax(self.Domain.E)>100*np.amax(E_0))\
         or (np.amin(self.Domain.E)<=0):
             print '***********Divergence detected - energy************'
-            return 1, dt
+            return 2, dt
         elif (np.amax(self.Domain.eta)>1.0) or (np.amin(self.Domain.eta)<-10**(-9)):
             print '***********Divergence detected - reaction progress************'
-            return 1, dt
+            return 3, dt
         elif bool(self.Domain.Y_species) and ((max_Y>1.0) or (min_Y<-10**(-9))):
             print '***********Divergence detected - species mass fraction************'
-            return 1, dt
+            return 4, dt
         else:
             return 0, dt

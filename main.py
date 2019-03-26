@@ -193,10 +193,14 @@ while nt<settings['total_time_steps'] and t<settings['total_time']:
     err,dt=solver.Advance_Soln_Cond(nt, t, vol)
     t+=dt
     nt+=1
-    if err==1:
+    if err>0:
         print '#################### Solver aborted #######################'
         print 'Saving data to numpy array files...'
         save_data(domain, Sources, Species, '{:f}'.format(t))
+        input_file.Write_single_line('#################### Solver aborted #######################')
+        input_file.Write_single_line('Time step %i, Time elapsed=%f, error code=%i;'%(nt,dt, t+dt, err))
+        input_file.Write_single_line('Error codes: 1-time step, 2-Energy, 3-reaction progress')
+        input_file.Write_single_line('4-Species balance\n')
         break
     
     # Output data to numpy files
