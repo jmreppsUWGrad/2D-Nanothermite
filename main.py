@@ -131,14 +131,16 @@ if type(settings['Restart']) is float:
             del times[j]
             i-=1
     T=np.load('T_'+time_max+'.npy')
+
 k,rho,Cv,D=domain.calcProp()
 vol=domain.CV_vol()
 domain.E[:,:]=rho*Cv*vol*T
-del k,rho,Cv,D
+if st.find(Sources['Source_Kim'],'True')>=0:
+    domain.eta=np.load('eta_'+time_max+'.npy')
+del k,rho,Cv,D,T
 if bool(domain.Y_species):
     domain.Y_species['Al'][:,:]=2.0/5
     domain.Y_species['CuO'][:,:]=3.0/5
-print 'Start time: '+time_max
 print '################################'
 ##########################################################################
 # ------------------------Write Input File settings to output directory
@@ -157,7 +159,7 @@ input_file.input_writer_cond(settings, Sources, Species, BCs)
 print '################################\n'
 
 print 'Saving data to numpy array files...'
-save_data(domain, Sources, Species, '0.000000')
+save_data(domain, Sources, Species, time_max)
 np.save('X', domain.X, False)
 np.save('Y', domain.Y, False)
 
@@ -198,7 +200,7 @@ while nt<settings['total_time_steps'] and t<settings['total_time']:
         print 'Saving data to numpy array files...'
         save_data(domain, Sources, Species, '{:f}'.format(t))
         input_file.Write_single_line('#################### Solver aborted #######################')
-        input_file.Write_single_line('Time step %i, Time elapsed=%f, error code=%i;'%(nt,dt, t+dt, err))
+        input_file.Write_single_line('Time step %i, Time elapsed=%f, error code=%i;'%(nt,dt, t, err))
         input_file.Write_single_line('Error codes: 1-time step, 2-Energy, 3-reaction progress')
         input_file.Write_single_line('4-Species balance\n')
         break
