@@ -8,6 +8,7 @@
 ##########Input_file##################
 
 Settings:
+Domain:Planar
 Length:0.001
 Width:0.006
 Nodes_x:101
@@ -27,14 +28,15 @@ Source_Uniform:None
 Source_Kim:True
 Ea:48000.0
 A0:4890000.0
-dH:rho,4700000
-Ignition:Temp,1200
+dH:rho,4070000
+Ignition:eta,0.8
 
 Time advancement:
 Fo:0.2
 dt:None
 total_time_steps:20000
 total_time:None
+Restart:None
 Time_Scheme:Explicit
 Convergence:0.0001
 Max_iterations:100
@@ -59,6 +61,7 @@ bc_north:F,200000000.0,0,-81,C,30.0,300.0,20,-1
 #bc_north_rad:None
 bc_north_rad:None
 
-Ignition time: 0.435605 ms
-Solver time per 1000 time steps: 0.262594 min
-Average wave speed: 21.206339 m/s
+Final time step size: 0.000031 ms
+Ignition time: 0.477646 ms
+Solver time per 1000 time steps: 0.190307 min
+Average wave speed: 19.268376 m/s
