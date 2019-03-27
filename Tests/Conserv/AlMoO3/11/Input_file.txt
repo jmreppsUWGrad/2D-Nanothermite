@@ -8,6 +8,7 @@
 ##########Input_file##################
 
 Settings:
+Domain:Planar
 Length:0.001
 Width:0.006
 Nodes_x:101
@@ -33,12 +34,13 @@ Ignition:eta,0.8
 Time advancement:
 Fo:0.2
 dt:None
-total_time_steps:8000
+total_time_steps:500
 total_time:None
+Restart:220
 Time_Scheme:Explicit
 Convergence:0.0001
 Max_iterations:100
-Number_Data_Output:8
+Number_Data_Output:10
 Output_directory:Tests\Conserv\AlMoO3\11
 
 Boundary conditions:
@@ -54,11 +56,12 @@ bc_right_rad:None
 bc_south:F,0.0,0,-1
 #bc_south_rad:None
 bc_south_rad:None
-#bc_north:['F', 200000000.0, (0, -81), 'C', (30.0, 300.0), (20, -1)]
-bc_north:F,200000000.0,0,-81,C,30.0,300.0,20,-1
+#bc_north:['C', (30.0, 300.0), (0, -1)]
+bc_north:C,30.0,300.0,0,-1
 #bc_north_rad:None
 bc_north_rad:None
 
-Ignition time: 0.154497 ms
-Solver time per 1000 time steps: 0.228344 min
-Average wave speed: 13.222053 m/s
+Final time step size: 0.000073 ms
+Ignition time: 0.220073 ms
+Solver time per 1000 time steps: 0.214900 min
+Average wave speed: 34.173074 m/s
