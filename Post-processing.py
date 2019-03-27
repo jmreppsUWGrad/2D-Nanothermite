@@ -42,6 +42,14 @@ print('######################################################\n')
 inputargs=sys.argv
 if len(inputargs)>1:
     dir_files=inputargs[1]
+    OneD_graphs=int(inputargs[2])
+else:
+    print 'Usage is: python Post-processing.py [Output directory] [1D graphs]\n'
+    print 'where\n'
+    print '[Output directory] is the directory where the data is located'
+    print '[1D graphs] indicates whether 1D graphs should be output (1 or 0); default is 0'
+    print '***********************************'
+    sys.exit('Post-processing halted')
 
 try:
     os.chdir(dir_files)
@@ -102,13 +110,14 @@ for time in times:
     pyplot.close(fig)
     
     # 1D temperature profile at centreline
-    fig=pyplot.figure(figsize=(6, 6))
-    pyplot.plot(Y[:,1], T[:,int(len(T[0,:])/2)])
-    pyplot.xlabel('$y$ (m)')
-    pyplot.ylabel('T (K)')
-    pyplot.title('Centreline Temperature distribution t='+time)
-    fig.savefig('T_1D_'+time+'.png',dpi=300)
-    pyplot.close(fig)
+    if OneD_graphs==1:
+        fig=pyplot.figure(figsize=(6, 6))
+        pyplot.plot(Y[:,1], T[:,int(len(T[0,:])/2)])
+        pyplot.xlabel('$y$ (m)')
+        pyplot.ylabel('T (K)')
+        pyplot.title('Centreline Temperature distribution t='+time)
+        fig.savefig('T_1D_'+time+'.png',dpi=300)
+        pyplot.close(fig)
     
     if st.find(source,'True')>=0:
         # Progress contour
@@ -135,14 +144,15 @@ for time in times:
         pyplot.close(fig)
         
         # 1D Reaction rate profile at centreline
-        fig=pyplot.figure(figsize=(6, 6))
-        pyplot.plot(Y[:,1], phi[:,int(len(T[0,:])/2)])
-        pyplot.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
-        pyplot.xlabel('$y$ (m)')
-        pyplot.ylabel('$d\eta/dt$ ($s^{-1}$)')
-        pyplot.title('Centreline Reaction rate t='+time)
-        fig.savefig('Phi_1D_'+time+'.png',dpi=300)
-        pyplot.close(fig)
+        if OneD_graphs==1:
+            fig=pyplot.figure(figsize=(6, 6))
+            pyplot.plot(Y[:,1], phi[:,int(len(T[0,:])/2)])
+            pyplot.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+            pyplot.xlabel('$y$ (m)')
+            pyplot.ylabel('$d\eta/dt$ ($s^{-1}$)')
+            pyplot.title('Centreline Reaction rate t='+time)
+            fig.savefig('Phi_1D_'+time+'.png',dpi=300)
+            pyplot.close(fig)
     
         # Mass fraction contours
         for i in range(len(titles)):
@@ -165,33 +175,34 @@ for time in times:
     if st.find(source,'True')>=0:
         print '     Mass balance residual: %8f'%(1-np.amin(Y_tot))
 
-print 'Creating 1D plots'
-fig=pyplot.figure(figsize=(6, 6))
-for time in times:
-    T=np.load('T_'+time+'.npy', False)
-    # 1D temperature profile at centreline
-    pyplot.plot(Y[:,1], T[:,int(len(T[0,:])/2)], label='t='+time)
-pyplot.xlabel('$y$ (m)')
-pyplot.ylabel('T (K)')
-pyplot.legend()
-pyplot.title('Centreline Temperature Evolution')
-fig.savefig('T_1D.png',dpi=300)
-pyplot.close(fig)
-    
-if st.find(source,'True')>=0:
+if OneD_graphs==1:
+    print 'Creating 1D plots'
     fig=pyplot.figure(figsize=(6, 6))
     for time in times:
-        eta=np.load('eta_'+time+'.npy', False)
         T=np.load('T_'+time+'.npy', False)
-        phi=A0*(1-eta)*np.exp(-Ea/8.314/T)
-        # 1D Reaction rate profile at centreline
-        pyplot.plot(Y[:,1], phi[:,int(len(T[0,:])/2)], label='t='+time)
-    pyplot.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+        # 1D temperature profile at centreline
+        pyplot.plot(Y[:,1], T[:,int(len(T[0,:])/2)], label='t='+time)
     pyplot.xlabel('$y$ (m)')
-    pyplot.ylabel('$d\eta/dt$ ($s^{-1}$)')
+    pyplot.ylabel('T (K)')
     pyplot.legend()
-    pyplot.title('Centreline Reaction rate Evolution')
-    fig.savefig('Phi_1D.png',dpi=300)
+    pyplot.title('Centreline Temperature Evolution')
+    fig.savefig('T_1D.png',dpi=300)
     pyplot.close(fig)
+    
+    if st.find(source,'True')>=0:
+        fig=pyplot.figure(figsize=(6, 6))
+        for time in times:
+            eta=np.load('eta_'+time+'.npy', False)
+            T=np.load('T_'+time+'.npy', False)
+            phi=A0*(1-eta)*np.exp(-Ea/8.314/T)
+            # 1D Reaction rate profile at centreline
+            pyplot.plot(Y[:,1], phi[:,int(len(T[0,:])/2)], label='t='+time)
+        pyplot.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+        pyplot.xlabel('$y$ (m)')
+        pyplot.ylabel('$d\eta/dt$ ($s^{-1}$)')
+        pyplot.legend()
+        pyplot.title('Centreline Reaction rate Evolution')
+        fig.savefig('Phi_1D.png',dpi=300)
+        pyplot.close(fig)
 
 print '\nPost-processing complete'

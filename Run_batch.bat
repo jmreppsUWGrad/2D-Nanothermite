@@ -1,13 +1,14 @@
 @echo OFF
 
-set fold2=Tests\Conserv\AlMoO3\20
-python main.py Input_file20.txt %fold2%
-python Post-processing.py %fold2%
+set fold1=Tests\Axisymmetric\AlMoO3\2
+set fold2=Tests\Axisymmetric\AlMoO3\8
+set fold3=Tests\Axisymmetric\AlMoO3\9
 
-set fold1=Tests\Conserv\AlMoO3\19
-python main.py Input_file19.txt %fold1%
-python Post-processing.py %fold1%
+python main.py Input_file2.txt %fold1%
+python Post-processing.py %fold1% 1
 
-REM set fold3=Tests\Conserv\AlMoO3\20
-REM python main.py Input_file20.txt %fold3%
-REM python Post-processing.py %fold3%
+python main.py Input_file8.txt %fold2%
+python Post-processing.py %fold2% 1
+
+python main.py Input_file9.txt %fold3%
+python Post-processing.py %fold3% 1

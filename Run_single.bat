@@ -1,9 +1,9 @@
 @echo OFF
 
-set fold=Tests\Conserv\AlMoO3\2
+set fold=Tests\Axisymmetric\AlMoO3\18
 
-python main.py Input_File_nt.txt %fold%
-python Post-processing.py %fold%
+python main.py Input_File18.txt %fold%
+python Post-processing.py %fold% 0
 
 cd C:\Users\mepps\Documents\Research\2D_Conduction
 
