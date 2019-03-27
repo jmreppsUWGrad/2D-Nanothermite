@@ -18,7 +18,7 @@
 #	k,Cp,rho: either a value, or in form: eta,[value when eta=0],[value when eta=1]
 ######################################################
 
-Domain:Planar
+Domain:Axisymmetric
 Length:0.001
 Width:0.006
 Nodes_x:101
@@ -93,13 +93,13 @@ bias_size_y:1e-06
 #	Time schemes: Explicit
 #	'Convergence' and 'Max_iterations' are for implicit solver
 #	Number_Data_Output: Number of T variable files to be output over the time/number of steps specified
-#	'Restart': None OR a number (any number will signify restart)
+#	'Restart': None OR a number sequence in T data file name (will restart at this time)
 ######################################################
 
 Fo:0.2
 #dt:0.00000008
 dt:None
-total_time_steps:20000
+total_time_steps:2
 total_time:None
 #total_time:0.002
 Time_Scheme:Explicit
@@ -108,7 +108,7 @@ Restart:None
 Convergence:0.0001
 Max_iterations:100
 
-Number_Data_Output:5
+Number_Data_Output:1
 
 ######################################################
 #			Boundary conditions

@@ -58,20 +58,20 @@ bias_size_y:1e-06
 #	Time schemes: Explicit
 #	'Convergence' and 'Max_iterations' are for implicit solver
 #	Number_Data_Output: Number of T variable files to be output over the time/number of steps specified assuming no restart
-#	'Restart': None OR a number (any number will signify restart)
+#	'Restart': None OR a number sequence in T data file name  (will restart at this time)
 ######################################################
 
 Fo:50.0
 dt:None
-total_time_steps:800
+total_time_steps:40
 total_time:None
 Time_Scheme:Explicit
-Restart:1
+Restart:206349
 
 Convergence:0.0001
 Max_iterations:100
 
-Number_Data_Output:4
+Number_Data_Output:5
 
 ######################################################
 #			Boundary conditions

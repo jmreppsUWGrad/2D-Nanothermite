@@ -115,18 +115,20 @@ print 'Initializing domain...'
 time_max='0.000000'
 T=300*np.ones_like(domain.E)
 # Restart from previous data
-if type(settings['Restart']) is float:
+if type(settings['Restart']) is int:
     times=os.listdir('.')
     i=len(times)
     if i<2:
         sys.exit('Cannot find a file to restart a simulation with')
     j=0
     while i>j:
-        if st.find(times[j],'T')==0 and st.find(times[j],'.npy')>0:
+        if st.find(times[j],'T')==0 and st.find(times[j],'.npy')>0 \
+            and st.find(times[j],str(settings['Restart']))>=0:
             times[j]=st.split(st.split(times[j],'_')[1],'.npy')[0]
-            if float(times[j])>float(time_max):
-                time_max=times[j]
+#            if st.find(times[j],str(settings['Restart']))>=0:
+            time_max=times[j]
             j+=1
+            break
         else:
             del times[j]
             i-=1
