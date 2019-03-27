@@ -202,7 +202,7 @@ while nt<settings['total_time_steps'] and t<settings['total_time']:
         print 'Saving data to numpy array files...'
         save_data(domain, Sources, Species, '{:f}'.format(t))
         input_file.Write_single_line('#################### Solver aborted #######################')
-        input_file.Write_single_line('Time step %i, Time elapsed=%f, error code=%i;'%(nt,dt, t, err))
+        input_file.Write_single_line('Time step %i, Time elapsed=%f, error code=%i;'%(nt,t,err))
         input_file.Write_single_line('Error codes: 1-time step, 2-Energy, 3-reaction progress')
         input_file.Write_single_line('4-Species balance\n')
         break
