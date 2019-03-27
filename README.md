@@ -3,9 +3,9 @@
 This repository contains the Python code to solve the 2D Heat conduction equations.
 
 # Current state:
--solve 2D planar heat conduction with no source terms (Explicit)
+-solve 2D Planar heat conduction with uniform heat generation (Explicit)
 
--solve 2D axisymmetric heat conduction with no source terms (Explicit)
+-solve Axisymmetric heat conduction with uniform heat generation (Explicit)
 
 -Combustion source term from Kim (Explicit)
 
@@ -27,8 +27,9 @@ where:
 [Output directory]-directory to save data files to; based on current directory; will create if non-existent
 
 # Post-processing data:
-python Post-processing.py [Output directory]
+python Post-processing.py [Output directory] [1D graphs]
 
 where:
 
 [Output directory]-directory where data files are stored
+[1D graphs] indicates whether 1D graphs should be output (1 or 0); default is 0
