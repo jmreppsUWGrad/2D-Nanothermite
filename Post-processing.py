@@ -40,7 +40,7 @@ print('#          Part of Masters Thesis at UW 2018-2020    #')
 print('######################################################\n')
 
 inputargs=sys.argv
-if len(inputargs)>1:
+if len(inputargs)>2:
     dir_files=inputargs[1]
     OneD_graphs=int(inputargs[2])
 else:
@@ -104,20 +104,20 @@ for time in times:
     pyplot.colorbar()
     pyplot.xlabel('$x$ (m)')
     pyplot.ylabel('$y$ (m)')
-#    pyplot.clim(270, 2000)
+#    pyplot.clim(270, 10000)
     pyplot.title('Temperature distribution t='+time);
     fig.savefig('T_'+time+'.png',dpi=300)
     pyplot.close(fig)
     
     # 1D temperature profile at centreline
-    if OneD_graphs==1:
-        fig=pyplot.figure(figsize=(6, 6))
-        pyplot.plot(Y[:,1], T[:,int(len(T[0,:])/2)])
-        pyplot.xlabel('$y$ (m)')
-        pyplot.ylabel('T (K)')
-        pyplot.title('Centreline Temperature distribution t='+time)
-        fig.savefig('T_1D_'+time+'.png',dpi=300)
-        pyplot.close(fig)
+    # if OneD_graphs==1:
+        # fig=pyplot.figure(figsize=(6, 6))
+        # pyplot.plot(Y[:,1], T[:,int(len(T[0,:])/2)])
+        # pyplot.xlabel('$y$ (m)')
+        # pyplot.ylabel('T (K)')
+        # pyplot.title('Centreline Temperature distribution t='+time)
+        # fig.savefig('T_1D_'+time+'.png',dpi=300)
+        # pyplot.close(fig)
     
     if st.find(source,'True')>=0:
         # Progress contour
