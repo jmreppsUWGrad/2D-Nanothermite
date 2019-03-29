@@ -1,9 +1,11 @@
 4,5-DUMMY FOLDERS; NOT MONITORED BY GIT
 
-Conserv-Folder contains test cases when conservative formulation of conduction is used
+Conserv-Folder contains test cases when conservative formulation of conduction is used (Planar)
 
 ConstPropForm-contains all first test cases when constant properties formulation was used; 
-	also when changing properties based on eta was implemented WITHOUT changing the conduction formulation
+	also when changing properties based on eta was implemented WITHOUT changing the conduction formulation (Planar)
 	Folders: A0, ChangingProp, dH, Eign, Flux, Mesh, Non-nt, NoSource, Tign
+
+Axisymmetric-Folder containing cases for axisymmetric runs (still conservative formulation)
 
 All_Data.xlsx-spreadsheet containing all data collected from every test run
