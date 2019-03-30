@@ -104,7 +104,7 @@ for time in times:
     pyplot.colorbar()
     pyplot.xlabel('$x$ (m)')
     pyplot.ylabel('$y$ (m)')
-#    pyplot.clim(270, 10000)
+    pyplot.clim(300, 10000)
     pyplot.title('Temperature distribution t='+time);
     fig.savefig('T_'+time+'.png',dpi=300)
     pyplot.close(fig)
