@@ -61,12 +61,12 @@ bias_size_y:1e-06
 #	'Restart': None OR a number sequence in T data file name  (will restart at this time)
 ######################################################
 
-Fo:50.0
-dt:None
-total_time_steps:40
+Fo:None
+dt:1.0
+total_time_steps:4000
 total_time:None
 Time_Scheme:Explicit
-Restart:206349
+Restart:None
 
 Convergence:0.0001
 Max_iterations:100

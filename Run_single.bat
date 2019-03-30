@@ -1,8 +1,10 @@
 @echo OFF
 
-set fold=Tests\Axisymmetric\AlMoO3\18
+set fold=Tests\Conserv\AlMoO3\16\NoClipping
+REM set fold=Tests\Axisymmetric\AlMoO3\2
 
-python main.py Input_File18.txt %fold%
+REM python main.py Input_file16.txt %fold%
+python main.py Input_file_stats.txt %fold%
 python Post-processing.py %fold% 0
 
 cd C:\Users\mepps\Documents\Research\2D_Conduction
