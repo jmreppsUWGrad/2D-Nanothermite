@@ -62,7 +62,10 @@ source='False'
 try:
     input_file=open('Input_file.txt')
 except:
-    sys.exit('Input file missing')
+    try:
+        input_file=open('Input_file_stats.txt')
+    except:
+        sys.exit('Input file missing')
 
 titles=[]
 while A0<0 or Ea<0 or source=='False':
