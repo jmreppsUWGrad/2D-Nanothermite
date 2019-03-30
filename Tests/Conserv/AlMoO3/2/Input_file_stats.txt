@@ -34,13 +34,13 @@ Ignition:eta,0.8
 Time advancement:
 Fo:0.2
 dt:None
-total_time_steps:None
-total_time:0.00055
-Restart:513
+total_time_steps:20000
+total_time:None
+Restart:None
 Time_Scheme:Explicit
 Convergence:0.0001
 Max_iterations:100
-Number_Data_Output:90
+Number_Data_Output:5
 Output_directory:Tests\Conserv\AlMoO3\2
 
 Boundary conditions:
@@ -56,14 +56,12 @@ bc_right_rad:None
 bc_south:F,0.0,0,-1
 #bc_south_rad:None
 bc_south_rad:None
-#bc_north:['C', (30.0, 300.0), (0, -1)]
-bc_north:C,30.0,300.0,0,-1
+#bc_north:['F', 200000000.0, (0, -81), 'C', (30.0, 300.0), (20, -1)]
+bc_north:F,200000000.0,0,-81,C,30.0,300.0,20,-1
 #bc_north_rad:None
 bc_north_rad:None
 
-##bc_north_new:['C', (30.0, 300.0), (0, -1)]
-
 Final time step size: 0.000031 ms
-Ignition time: 0.513031 ms
-Solver time per 1000 time steps: 0.194037 min
-Average wave speed: 36.259963 m/s
+Ignition time: 0.477646 ms
+Solver time per 1000 time steps: 0.190307 min
+Average wave speed: 19.268376 m/s
