@@ -44,7 +44,7 @@ if len(inputargs)>2:
     dir_files=inputargs[1]
     OneD_graphs=int(inputargs[2])
 else:
-    print 'Usage is: python Post-processing.py [Output directory] [1D graphs]\n'
+    print 'Usage is: python Post.py [Output directory] [1D graphs]\n'
     print 'where\n'
     print '[Output directory] is the directory where the data is located'
     print '[1D graphs] indicates whether 1D graphs should be output (1 or 0); default is 0'
