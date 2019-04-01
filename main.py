@@ -220,6 +220,9 @@ while nt<settings['total_time_steps'] and t<settings['total_time']:
         or (Sources['Ignition'][0]=='Temp' and np.amax(T)>=Sources['Ignition'][1]))\
         and not BCs_changed:
         solver.BCs['bc_north']=solver.BCs['bc_right']
+        input_file.fout.write('##bc_north_new:')
+        input_file.Write_single_line(str(solver.BCs['bc_north']))
+        input_file.fout.write('\n')
         BCs_changed=True
         tign=t
         save_data(domain, Sources, Species, '{:f}'.format(t))
