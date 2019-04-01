@@ -27,7 +27,7 @@ where:
 [Output directory]-directory to save data files to; based on current directory; will create if non-existent
 
 # Post-processing data:
-python Post-processing.py [Output directory] [1D graphs]
+python Post.py [Output directory] [1D graphs]
 
 where:
 
