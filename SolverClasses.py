@@ -254,6 +254,7 @@ class TwoDimPlanarSolve():
         max_Y,min_Y=0,1
         # Calculate properties
         k, rho, Cv, D=self.Domain.calcProp()
+        Ax,Ay=self.Domain.CV_area()
         
         if self.dt=='None':
             dt=self.getdt(k, rho, Cv)
@@ -269,6 +270,8 @@ class TwoDimPlanarSolve():
         T_c=self.Domain.TempFromConserv()
         Y_c=copy.deepcopy(self.Domain.Y_species)
         E_0=copy.deepcopy(self.Domain.E)
+        u_c=copy.deepcopy(self.Domain.rhou)/(rho*vol)
+        v_c=copy.deepcopy(self.Domain.rhov)/(rho*vol)
         
         ###################################################################
         # Calculate source and Porous medium terms
@@ -282,8 +285,30 @@ class TwoDimPlanarSolve():
             E_kim, deta =self.get_source.Source_Comb_Kim(rho, T_c, self.Domain.eta, vol, dt)
 #            E_kim, deta =self.get_source.Source_Comb_Umbrajkar(rho, T_c, self.Domain.eta, self.Domain.CV_vol(), dt)
             
+        ###################################################################
+        # Conservation of Mass
+        ###################################################################
+        # Ingoing fluxes
+        self.Domain.m[:,1:]+=Ax[:,1:]*dt\
+            *rho*0.5*(u_c[:,1:]+u_c[:,:-1])
+        self.Domain.m[1:,:]+=Ay[1:,:]*dt\
+            *rho*0.5*(v_c[1:,:]+v_c[:-1,:])
+        
+        # Outgoing fluxes
+        self.Domain.m[:,:-1]-=Ax[:,:-1]*dt\
+            *rho*0.5*(u_c[:,1:]+u_c[:,:-1])
+        self.Domain.m[:-1,:]-=Ay[:-1,:]*dt\
+            *rho*0.5*(v_c[1:,:]+v_c[:-1,:])
+        
+        # Source terms
+        self.Domain.m+=deta*rho*vol*10**(-4)*dt
+        
+        ###################################################################
+        # Conservation of Momentum
+        ###################################################################
         # Porous medium equations [TO BE CONTINUED]
 #        self.Porous_Eqns
+        
         
         ###################################################################
         # Conservation of species
@@ -572,6 +597,7 @@ class AxisymmetricSolve():
         max_Y,min_Y=0,1
         # Calculate properties
         k, rho, Cv, D=self.Domain.calcProp()
+        Ax,Ay=self.Domain.CV_area()
         
         if self.dt=='None':
             dt=self.getdt(k, rho, Cv, vol)

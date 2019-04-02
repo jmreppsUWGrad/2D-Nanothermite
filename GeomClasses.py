@@ -44,8 +44,11 @@ class TwoDimPlanar():
         
         # Variables for conservation equations
         self.E=np.zeros((self.Ny, self.Nx))
-        self.eta=np.zeros((self.Ny, self.Nx))
-#        self.P=np.zeros((self.Ny, self.Nx))
+        self.eta=np.zeros_like(self.E)
+        self.P=np.zeros_like(self.E)
+        self.m=np.zeros_like(self.E) # mass of gas
+        self.rhou=np.zeros_like(self.E)
+        self.rhov=np.zeros_like(self.E)
         
         # Species
         self.Y_species={}
@@ -154,7 +157,7 @@ class TwoDimPlanar():
     
     # Calculate and return volume of each node
     def CV_vol(self):
-        v=np.zeros_like(self.eta)
+        v=np.zeros_like(self.E)
         dx,dy=np.meshgrid(self.dx, self.dy)
         v[1:-1,1:-1]=0.25*(dx[1:-1,1:-1]+dx[1:-1,:-2])*(dy[1:-1,1:-1]+dy[:-2,1:-1])
         v[0,0]      =0.25*(dx[0,0])*(dy[0,0])
@@ -167,6 +170,34 @@ class TwoDimPlanar():
         v[-1,-1]    =0.25*(dx[-1,-1])*(dy[-1,-1])
         return v
     
+    # Calculate and return area of faces at each node
+    def CV_area(self):
+        Ax=np.zeros_like(self.E)
+        Ay=np.zeros_like(self.E)
+        dx,dy=np.meshgrid(self.dx, self.dy)
+        # Left/right face areas
+        Ax[1:-1,1:-1]=0.5*(dy[1:-1,1:-1]+dy[:-2,1:-1])
+        Ax[0,1:-1]   =0.5*(dy[0,1:-1])
+        Ax[-1,1:-1]  =0.5*(dy[-1,1:-1])
+        Ax[1:-1,-1]  =0.5*(dy[1:-1,-1]+dy[:-2,-1])
+        Ax[1:-1,0]   =0.5*(dy[1:-1,0]+dy[:-2,0])
+        Ax[0,0]      =0.5*(dy[0,0])
+        Ax[-1,0]     =0.5*(dy[-1,0])
+        Ax[0,-1]     =0.5*(dy[0,-1])
+        Ax[-1,-1]    =0.5*(dy[-1,-1])
+        # North/south face areas
+        Ay[1:-1,1:-1]=0.5*(dx[1:-1,1:-1]+dx[1:-1,:-2])
+        Ay[1:-1,0]   =0.5*(dx[1:-1,0])
+        Ay[1:-1,-1]  =0.5*(dx[1:-1,-1])
+        Ay[0,1:-1]   =0.5*(dx[0,1:-1]+dx[0,:-2])
+        Ay[-1,1:-1]  =0.5*(dx[0,1:-1]+dx[0,:-2])
+        Ay[0,0]      =0.5*(dx[0,0])
+        Ay[0,-1]     =0.5*(dx[0,-1])
+        Ay[-1,0]     =0.5*(dx[-1,0])
+        Ay[-1,-1]    =0.5*(dx[-1,-1])
+        
+        return Ax, Ay
+        
     # Calculate temperature dependent properties
     def calcProp(self):
         k=np.zeros_like(self.eta)
@@ -216,8 +247,11 @@ class AxisymDomain():
         
         # Variables for conservation equations
         self.E=np.zeros((self.Ny, self.Nx))
-        self.eta=np.zeros((self.Ny, self.Nx))
-#        self.P=np.zeros((self.Ny, self.Nx))
+        self.eta=np.zeros_like(self.E)
+        self.P=np.zeros_like(self.E)
+        self.m=np.zeros_like(self.E) # mass of gas
+        self.rhou=np.zeros_like(self.E)
+        self.rhov=np.zeros_like(self.E)
         
         # Species
         self.Y_species={}
@@ -342,6 +376,37 @@ class AxisymDomain():
         v[1:-1,0]   =0.25*(dx[1:-1,0]/2)**2*(dy[1:-1,0]+dy[:-2,0])
         v[-1,0]     =0.25*(dx[-1,0]/2)**2*(dy[-1,0])
         return v
+    
+    # Calculate and return area of faces at each node
+    def CV_area(self):
+        Ax=np.zeros_like(self.E)
+        Ay=np.zeros_like(self.E)
+        dx,dy=np.meshgrid(self.dx, self.dy)
+        X,Y=np.meshgrid(self.x, self.y)
+        # Left/right face areas
+        Ax[1:-1,1:-1]=0.5*(self.Domain.X[1:-1,1:-1]-dx[1:-1,:-2]/2)\
+				*(dy[1:-1,1:-1]+dy[:-2,1:-1])
+        Ax[0,1:-1]   =0.5*(self.Domain.X[0,1:-1]-dx[0,:-2]/2)*(dy[0,1:-1])
+        Ax[-1,1:-1]  =0.5*(self.Domain.X[-1,1:-1]-dx[-1,:-2]/2)*(dy[-1,1:-1])
+        Ax[1:-1,-1]  =0.5*(self.Domain.X[1:-1,-1]-dx[1:-1,-1]/2)*(dy[1:-1,-1]+dy[:-2,-1])
+        Ax[1:-1,0]   =0.5*(self.Domain.X[1:-1,0]+dx[1:-1,0]/2)*(dy[1:-1,0]+dy[:-2,0])
+        Ax[0,0]      =0.5*(self.Domain.X[0,0]+dx[0,0]/2)*(dy[0,0])
+        Ax[-1,0]     =0.5*(self.Domain.X[-1,0]+dx[-1,0]/2)*(dy[-1,0])
+        Ax[0,-1]     =0.5*(self.Domain.X[0,-1]-dx[0,-1]/2)*(dy[0,-1])
+        Ax[-1,-1]    =0.5*(self.Domain.X[-1,-1]-dx[-1,-1]/2)*(dy[-1,-1])
+        # North/south face areas
+        Ay[1:-1,1:-1]=0.5*(self.Domain.X[1:-1,1:-1]-dx[1:-1,:-2]/2)\
+                *(dx[1:-1,1:-1]+dx[1:-1,:-2])
+        Ay[1:-1,0]   =0.5*(self.Domain.X[1:-1,0])*(dx[1:-1,0])
+        Ay[1:-1,-1]  =0.5*(self.Domain.X[1:-1,-1]-dx[1:-1,-1]/2)*(dx[1:-1,-1])
+        Ay[0,1:-1]   =0.5*(self.Domain.X[0,1:-1]-dx[0,:-2]/2)*(dx[0,1:-1]+dx[0,:-2])
+        Ay[-1,1:-1]  =0.5*(self.Domain.X[-1,1:-1]-dx[-1,:-2]/2)*(dx[0,1:-1]+dx[0,:-2])
+        Ay[0,0]      =0.5*(self.Domain.X[0,0])*(dx[0,0])
+        Ay[0,-1]     =0.5*(self.Domain.X[0,-1]-dx[0,-1]/2)*(dx[0,-1])
+        Ay[-1,0]     =0.5*(self.Domain.X[-1,0])*(dx[-1,0])
+        Ay[-1,-1]    =0.5*(self.Domain.X[-1,-1]-dx[-1,-1]/2)*(dx[-1,-1])
+        
+        return Ax, Ay
     
     # Calculate temperature dependent properties
     def calcProp(self):
