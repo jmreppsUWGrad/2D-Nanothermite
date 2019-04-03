@@ -20,7 +20,7 @@ keys_Settings=['Domain','Length','Width','Nodes_x','Nodes_y','k','Cp','rho',\
                
 keys_Sources=['Source_Uniform','Source_Kim','Ea','A0','dH', 'Ignition']
 
-#keys_Species=['keys']
+keys_Species=['Species','Species_rho','Species_IC']
 
 keys_Time_adv=['Fo','dt','total_time_steps', 'total_time','Restart',\
                'Time_Scheme','Convergence','Max_iterations','Number_Data_Output']
@@ -77,14 +77,16 @@ class FileOut():
         
         if bool(Species):
             self.Write_single_line('\nSpecies info:')
-            self.fout.write('Species:')
-            for i in Species['keys']:
+            for i in keys_Species:
                 self.fout.write(i)
-                if i==Species['keys'][-1]:
-                    self.fout.write('\n')
-                else:
-                    self.fout.write(',')
-
+                self.fout.write(':')
+                for j in range(len(Species[i])):
+                    self.fout.write(str(Species[i][j]))
+                    if j==len(Species[i])-1:
+                        self.fout.write('\n')
+                    else:
+                        self.fout.write(',')
+            
         self.Write_single_line('\nSource Terms:')
         for i in keys_Sources:
             try:
@@ -174,9 +176,15 @@ class FileIn():
                     else:
                         Sources[line[0]]=float(line[1])
                 # Species info
-                elif line[0]=='Species':
-                    Species['keys']=st.split(st.split(line[1], newline_check)[0], ',')
-                    
+                elif line[0] in keys_Species:
+                    if line[0]=='Species':
+                        Species[line[0]]=st.split(st.split(line[1], newline_check)[0], ',')
+                        Species['keys']=Species[line[0]]
+                    else:
+                        Species[line[0]]=st.split(st.split(line[1], newline_check)[0], ',')
+                        for i in range(len(Species[line[0]])):
+                            Species[line[0]][i]=float(Species[line[0]][i])
+                            
                 # Time advancement details
                 elif line[0] in keys_Time_adv:
                     if line[0]=='Time_Scheme' or st.find(line[1], 'None')>=0:

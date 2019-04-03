@@ -18,14 +18,14 @@
 #	k,Cp,rho: either a value, or in form: eta,[value when eta=0],[value when eta=1]
 ######################################################
 
-Domain:Axisymmetric
+Domain:Planar
 Length:0.001
 Width:0.006
 Nodes_x:101
 Nodes_y:601
-k:156
-Cp:625
-rho:1523
+k:65
+Cp:600
+rho:3065
 #k:65
 #Cp:625
 #rho:1523
@@ -66,8 +66,9 @@ Ignition:eta,0.8
 ######################################################
 
 #Species:Al,CuO,Al_2O_3,Cu
-#Species_IC:
-#Species_rho:
+Species:g,s
+Species_IC:0,100
+Species_rho:1.1,3065
 
 ######################################################
 #			Meshing details
@@ -123,7 +124,7 @@ Number_Data_Output:1
 # [IN PROGRESS] Radiation options: None or [emissivity, surrounding_Temp]
 ######################################################
 
-bc_left:F, 0, 0, -1
+bc_left:C, 30, 300, 0, -1
 bc_left_rad:None
 bc_right:C, 30, 300, 0, -1
 bc_right_rad:None
@@ -131,6 +132,6 @@ bc_right_rad:None
 bc_south:F, 0, 0, -1
 bc_south_rad:None
 #bc_north:T, 800, 0, -1
-bc_north:F, 200000000, 0, -81,C, 30, 300, 20, -1
+bc_north:C, 30, 300, 0, -61,F, 400000000, 40, -41,C, 30, 300, 60, -1
 bc_north_rad:None
 # numpy.linspace(400, 900, settings['Nodes_x'])

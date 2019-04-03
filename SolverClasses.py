@@ -255,6 +255,8 @@ class TwoDimPlanarSolve():
         # Calculate properties
         k, rho, Cv, D=self.Domain.calcProp()
         Ax,Ay=self.Domain.CV_area()
+        mu=10**(-5)
+        perm=10**(-11)
         
         if self.dt=='None':
             dt=self.getdt(k, rho, Cv)
@@ -268,10 +270,10 @@ class TwoDimPlanarSolve():
         
         # Copy needed variables for conservation equations
         T_c=self.Domain.TempFromConserv()
-        Y_c=copy.deepcopy(self.Domain.Y_species)
+#        m_c=copy.deepcopy(self.Domain.m_species)
         E_0=copy.deepcopy(self.Domain.E)
-        u_c=copy.deepcopy(self.Domain.rhou)/(rho*vol)
-        v_c=copy.deepcopy(self.Domain.rhov)/(rho*vol)
+#        u_c=copy.deepcopy(self.Domain.rhou)/(rho*vol)
+#        v_c=copy.deepcopy(self.Domain.rhov)/(rho*vol)
         
         ###################################################################
         # Calculate source and Porous medium terms
@@ -281,73 +283,103 @@ class TwoDimPlanarSolve():
         if self.source_unif!='None':
             E_unif      = self.get_source.Source_Uniform(self.source_unif, vol)
         if self.source_Kim=='True':
-#            self.Domain.eta=self.Domain.Y_species[:,:,2]/0.25
+#            self.Domain.eta=self.Domain.m_species[:,:,2]/0.25
             E_kim, deta =self.get_source.Source_Comb_Kim(rho, T_c, self.Domain.eta, vol, dt)
 #            E_kim, deta =self.get_source.Source_Comb_Umbrajkar(rho, T_c, self.Domain.eta, self.Domain.CV_vol(), dt)
-            
+        
+        # Adjust pressure
+        self.Domain.P[:,:]=101325+self.Domain.m_species['g']/102*1000*8.314*T_c
+        
         ###################################################################
         # Conservation of Mass
         ###################################################################
+        rhog=1.1
+        # Use Darcy's law to directly calculate the velocities at the faces
         # Ingoing fluxes
-        self.Domain.m[:,1:]+=Ax[:,1:]*dt\
-            *rho*0.5*(u_c[:,1:]+u_c[:,:-1])
-        self.Domain.m[1:,:]+=Ay[1:,:]*dt\
-            *rho*0.5*(v_c[1:,:]+v_c[:-1,:])
+        self.Domain.m_species[self.Domain.species_keys[0]][:,1:]+=Ax[:,1:]*dt\
+            *rhog*(-perm/mu*Ax[:,1:]/vol[:,1:]/rhog*\
+              (self.Domain.P[:,1:]-self.Domain.P[:,:-1]))
+        self.Domain.m_species[self.Domain.species_keys[0]][1:,:]+=Ay[1:,:]*dt\
+            *rhog*(-perm/mu*Ay[1:,:]/vol[1:,:]/rhog*\
+              (self.Domain.P[1:,:]-self.Domain.P[:-1,:]))
         
         # Outgoing fluxes
-        self.Domain.m[:,:-1]-=Ax[:,:-1]*dt\
-            *rho*0.5*(u_c[:,1:]+u_c[:,:-1])
-        self.Domain.m[:-1,:]-=Ay[:-1,:]*dt\
-            *rho*0.5*(v_c[1:,:]+v_c[:-1,:])
+        self.Domain.m_species[self.Domain.species_keys[0]][:,:-1]-=Ax[:,:-1]*dt\
+            *rhog*(-perm/mu*Ax[:,1:]/vol[:,:-1]/rhog*\
+              (self.Domain.P[:,1:]-self.Domain.P[:,:-1]))
+        self.Domain.m_species[self.Domain.species_keys[0]][:-1,:]-=Ay[:-1,:]*dt\
+            *rhog*(-perm/mu*Ay[:-1,:]/vol[:-1,:]/rhog*\
+              (self.Domain.P[1:,:]-self.Domain.P[:-1,:]))
         
         # Source terms
-        self.Domain.m+=deta*rho*vol*10**(-4)*dt
+        self.Domain.m_species[self.Domain.species_keys[0]]+=deta*rhog*vol*dt#*10**(-3)
+        
+        self.Domain.m_species[self.Domain.species_keys[1]]-=deta*rho*vol*dt#*10**(-3)
         
         ###################################################################
-        # Conservation of Momentum
+        # Conservation of Momentum (x direction; gas)
         ###################################################################
-        # Porous medium equations [TO BE CONTINUED]
-#        self.Porous_Eqns
+        # Fluxes
+#        self.Domain.rhou[:,1:]+=Ax[:,1:]*dt\
+#            *0.5*(rhou_c[:,1:]+rhou_c[:,:-1])*0.5*(u_c[:,1:]+u_c[:,:-1])
+#        self.Domain.rhou[1:,:]+=Ay[1:,:]*dt\
+#            *0.5*(rhou_c[1:,:]+rhou_c[:-1,:])*0.5*(v_c[1:,:]+v_c[:-1,:])
+#        self.Domain.rhou[:,:-1]-=Ax[:,:-1]*dt\
+#            *0.5*(rhou_c[:,1:]+rhou_c[:,:-1])*0.5*(u_c[:,1:]+u_c[:,:-1])
+#        self.Domain.rhou[:-1,:]-=Ay[:-1,:]*dt\
+#            *0.5*(rhou_c[1:,:]+rhou_c[:-1,:])*0.5*(v_c[1:,:]+v_c[:-1,:])
+        
+        # Pressure
+#        self.Domain.rhou[:,1:]+=Ax[:,1:]*dt\
+#            *0.5*(self.Domain.P[:,1:]+self.Domain.P[:,:-1])
+#        self.Domain.rhou[1:,:]+=Ay[1:,:]*dt\
+#            *0.5*(self.Domain.P[1:,:]+self.Domain.P[:-1,:])
+#        self.Domain.rhou[:,:-1]-=Ax[:,:-1]*dt\
+#            *0.5*(self.Domain.P[:,1:]+self.Domain.P[:,:-1])
+#        self.Domain.rhou[:-1,:]-=Ay[:-1,:]*dt\
+#            *0.5*(self.Domain.P[1:,:]+self.Domain.P[:-1,:])
+        
+        # Porous medium losses
         
         
         ###################################################################
         # Conservation of species
         ###################################################################
-        if bool(self.Domain.Y_species):
-            # Mole ratios
-            mole_ratio={}
-            mole_ratio[self.Domain.species_keys[0]]=-2.0/5 # Al
-            mole_ratio[self.Domain.species_keys[1]]=-3.0/5 # CuO
-            mole_ratio[self.Domain.species_keys[2]]=1.0/4  # Al2O3
-            mole_ratio[self.Domain.species_keys[3]]=3.0/4  # Cu
-            
-            for i in self.Domain.species_keys:
-                # Calculate flux coefficients
-                aW,aE,aS,aN=self.get_Coeff(self.dx,self.dy, dt, rho*D[i], 'Linear')
-                
-                # Diffusion contribution (2nd order central schemes)
-                self.Domain.Y_species[i][:,1:]    = aW[:,1:]    * Y_c[i][:,:-1]
-                self.Domain.Y_species[i][:,0]     = aE[:,0]     * Y_c[i][:,1]
-                
-                self.Domain.Y_species[i][:,1:-1] += aE[:,1:-1]  * Y_c[i][:,2:]
-                self.Domain.Y_species[i][1:,:]   += aS[1:,:]    * Y_c[i][:-1,:]
-                self.Domain.Y_species[i][:-1,:]  += aN[:-1,:]   * Y_c[i][1:,:]
-                self.Domain.Y_species[i]         -= (aW+aE+aS+aN)*Y_c[i]
-            
-                # Species generated/destroyed during reaction
-                self.Domain.Y_species[i]+=mole_ratio[i]*deta
-                
-                # Species advected from Porous medium equations [TO BE CONTINUED]
-                
-                
-                # Apply data from previous time step
-                self.Domain.Y_species[i]*= dt
-                self.Domain.Y_species[i]+= Y_c[i]
-#                print(self.Domain.Y_species[i])
-                # IMPLICITLY MAKING SPECIES FLUX 0 AT BOUNDARIES
-                max_Y=max(np.amax(self.Domain.Y_species[i]), max_Y)
-                min_Y=max(np.amin(self.Domain.Y_species[i]), min_Y)
-#        print(self.Domain.Y_species)
+#        if bool(self.Domain.m_species):
+#            # Mole ratios
+#            mole_ratio={}
+#            mole_ratio[self.Domain.species_keys[0]]=-2.0/5 # Al
+#            mole_ratio[self.Domain.species_keys[1]]=-3.0/5 # CuO
+#            mole_ratio[self.Domain.species_keys[2]]=1.0/4  # Al2O3
+#            mole_ratio[self.Domain.species_keys[3]]=3.0/4  # Cu
+#            
+#            for i in self.Domain.species_keys:
+#                # Calculate flux coefficients
+#                aW,aE,aS,aN=self.get_Coeff(self.dx,self.dy, dt, rho*D[i], 'Linear')
+#                
+#                # Diffusion contribution (2nd order central schemes)
+#                self.Domain.m_species[i][:,1:]    = aW[:,1:]    * m_c[i][:,:-1]
+#                self.Domain.m_species[i][:,0]     = aE[:,0]     * m_c[i][:,1]
+#                
+#                self.Domain.m_species[i][:,1:-1] += aE[:,1:-1]  * m_c[i][:,2:]
+#                self.Domain.m_species[i][1:,:]   += aS[1:,:]    * m_c[i][:-1,:]
+#                self.Domain.m_species[i][:-1,:]  += aN[:-1,:]   * m_c[i][1:,:]
+#                self.Domain.m_species[i]         -= (aW+aE+aS+aN)*m_c[i]
+#            
+#                # Species generated/destroyed during reaction
+#                self.Domain.m_species[i]+=mole_ratio[i]*deta
+#                
+#                # Species advected from Porous medium equations [TO BE CONTINUED]
+#                
+#                
+#                # Apply data from previous time step
+#                self.Domain.m_species[i]*= dt
+#                self.Domain.m_species[i]+= m_c[i]
+##                print(self.Domain.m_species[i])
+#                # IMPLICITLY MAKING SPECIES FLUX 0 AT BOUNDARIES
+#                max_Y=max(np.amax(self.Domain.m_species[i]), max_Y)
+#                min_Y=max(np.amin(self.Domain.m_species[i]), min_Y)
+#        print(self.Domain.m_species)
         ###################################################################
         # Conservation of Energy
         ###################################################################
@@ -389,7 +421,7 @@ class TwoDimPlanarSolve():
         elif (np.amax(self.Domain.eta)>1.0) or (np.amin(self.Domain.eta)<-10**(-9)):
             print '***********Divergence detected - reaction progress************'
             return 3, dt
-        elif bool(self.Domain.Y_species) and ((max_Y>1.0) or (min_Y<-10**(-9))):
+        elif bool(self.Domain.m_species) and ((max_Y>1.0) or (min_Y<-10**(-9))):
             print '***********Divergence detected - species mass fraction************'
             return 4, dt
         else:
@@ -598,6 +630,8 @@ class AxisymmetricSolve():
         # Calculate properties
         k, rho, Cv, D=self.Domain.calcProp()
         Ax,Ay=self.Domain.CV_area()
+        mu=10**(-5)
+        perm=10**(-5)
         
         if self.dt=='None':
             dt=self.getdt(k, rho, Cv, vol)
@@ -611,12 +645,12 @@ class AxisymmetricSolve():
         
         # Copy needed variables for conservation equations
         T_c=self.Domain.TempFromConserv()
-        Y_c=copy.deepcopy(self.Domain.Y_species)
+        m_c=copy.deepcopy(self.Domain.m_species)
         E_0=copy.deepcopy(self.Domain.E)
-        rhou_c=copy.deepcopy(self.Domain.rhou)
-        rhov_c=copy.deepcopy(self.Domain.rhov)
-        u_c=copy.deepcopy(self.Domain.rhou)/(rho*vol)
-        v_c=copy.deepcopy(self.Domain.rhov)/(rho*vol)
+#        rhou_c=copy.deepcopy(self.Domain.rhou)
+#        rhov_c=copy.deepcopy(self.Domain.rhov)
+#        u_c=copy.deepcopy(self.Domain.rhou)/(rho*vol)
+#        v_c=copy.deepcopy(self.Domain.rhov)/(rho*vol)
         
         ###################################################################
         # Calculate source and Porous medium terms
@@ -626,47 +660,62 @@ class AxisymmetricSolve():
         if self.source_unif!='None':
             E_unif      = self.get_source.Source_Uniform(self.source_unif, vol)
         if self.source_Kim=='True':
-#            self.Domain.eta=self.Domain.Y_species[:,:,2]/0.25
+#            self.Domain.eta=self.Domain.m_species[:,:,2]/0.25
             E_kim, deta =self.get_source.Source_Comb_Kim(rho, T_c, self.Domain.eta, vol, dt)
 #            E_kim, deta =self.get_source.Source_Comb_Umbrajkar(rho, T_c, self.Domain.eta, self.Domain.CV_vol(), dt)
             
         ###################################################################
-        # Conservation of Mass
+        # Conservation of Mass (gas)
         ###################################################################
+        # Use Darcy's law to directly calculate the velocities at the faces
         # Ingoing fluxes
         self.Domain.m[:,1:]+=Ax[:,1:]*dt\
-            *rho*0.5*(u_c[:,1:]+u_c[:,:-1])
+            *rho*(-perm/mu*Ax[:,1:]/vol[:,1:]/rho*\
+              (self.Domain.P[:,1:]-self.Domain.P[:,:-1]))
         self.Domain.m[1:,:]+=Ay[1:,:]*dt\
-            *rho*0.5*(v_c[1:,:]+v_c[:-1,:])
+            *rho*(-perm/mu*Ay[1:,:]/vol[1:,:]/rho*\
+              (self.Domain.P[1:,:]-self.Domain.P[:-1,:]))
         
         # Outgoing fluxes
         self.Domain.m[:,:-1]-=Ax[:,:-1]*dt\
-            *rho*0.5*(u_c[:,1:]+u_c[:,:-1])
+            *rho*(-perm/mu*Ax[:,1:]/vol[:,:-1]/rho*\
+              (self.Domain.P[:,1:]-self.Domain.P[:,:-1]))
         self.Domain.m[:-1,:]-=Ay[:-1,:]*dt\
-            *rho*0.5*(v_c[1:,:]+v_c[:-1,:])
+            *rho*(-perm/mu*Ay[:-1,:]/vol[:-1,:]/rho*\
+              (self.Domain.P[1:,:]-self.Domain.P[:-1,:]))
         
         # Source terms
-        self.Domain.m+=deta*rho*vol*10**(-4)*dt
+        self.Domain.m+=deta*rho*vol*dt
         
         ###################################################################
-        # Conservation of Momentum (x direction)
+        # Conservation of Momentum (x direction; gas)
         ###################################################################
         # Fluxes
-        self.Domain.rhou[:,1:]+=Ax[:,1:]*dt\
-            *0.5*(rhou_c[:,1:]+rhou_c[:,:-1])*0.5*(u_c[:,1:]+u_c[:,:-1])
-        self.Domain.rhou[1:,:]+=Ay[1:,:]*dt\
-            *0.5*(rhou_c[1:,:]+rhou_c[:-1,:])*0.5*(v_c[1:,:]+v_c[:-1,:])
-        self.Domain.rhou[:,:-1]-=Ax[:,:-1]*dt\
-            *0.5*(rhou_c[:,1:]+rhou_c[:,:-1])*0.5*(u_c[:,1:]+u_c[:,:-1])
-        self.Domain.rhou[:-1,:]-=Ay[:-1,:]*dt\
-            *0.5*(rhou_c[1:,:]+rhou_c[:-1,:])*0.5*(v_c[1:,:]+v_c[:-1,:])
+#        self.Domain.rhou[:,1:]+=Ax[:,1:]*dt\
+#            *0.5*(rhou_c[:,1:]+rhou_c[:,:-1])*0.5*(u_c[:,1:]+u_c[:,:-1])
+#        self.Domain.rhou[1:,:]+=Ay[1:,:]*dt\
+#            *0.5*(rhou_c[1:,:]+rhou_c[:-1,:])*0.5*(v_c[1:,:]+v_c[:-1,:])
+#        self.Domain.rhou[:,:-1]-=Ax[:,:-1]*dt\
+#            *0.5*(rhou_c[:,1:]+rhou_c[:,:-1])*0.5*(u_c[:,1:]+u_c[:,:-1])
+#        self.Domain.rhou[:-1,:]-=Ay[:-1,:]*dt\
+#            *0.5*(rhou_c[1:,:]+rhou_c[:-1,:])*0.5*(v_c[1:,:]+v_c[:-1,:])
         
         # Pressure
+#        self.Domain.rhou[:,1:]+=Ax[:,1:]*dt\
+#            *0.5*(self.Domain.P[:,1:]+self.Domain.P[:,:-1])
+#        self.Domain.rhou[1:,:]+=Ay[1:,:]*dt\
+#            *0.5*(self.Domain.P[1:,:]+self.Domain.P[:-1,:])
+#        self.Domain.rhou[:,:-1]-=Ax[:,:-1]*dt\
+#            *0.5*(self.Domain.P[:,1:]+self.Domain.P[:,:-1])
+#        self.Domain.rhou[:-1,:]-=Ay[:-1,:]*dt\
+#            *0.5*(self.Domain.P[1:,:]+self.Domain.P[:-1,:])
+        
+        # Porous medium losses
         
         ###################################################################
         # Conservation of species
         ###################################################################
-        if bool(self.Domain.Y_species):
+        if bool(self.Domain.m_species):
             # Mole ratios
             mole_ratio={}
             mole_ratio[self.Domain.species_keys[0]]=-2.0/5 # Al
@@ -679,28 +728,28 @@ class AxisymmetricSolve():
                 aW,aE,aS,aN=self.get_Coeff(self.dx,self.dy, dt, rho*D[i], 'Linear')
                 
                 # Diffusion contribution (2nd order central schemes)
-                self.Domain.Y_species[i][:,1:]    = aW[:,1:]    * Y_c[i][:,:-1]
-                self.Domain.Y_species[i][:,0]     = aE[:,0]     * Y_c[i][:,1]
+                self.Domain.m_species[i][:,1:]    = aW[:,1:]    * m_c[i][:,:-1]
+                self.Domain.m_species[i][:,0]     = aE[:,0]     * m_c[i][:,1]
                 
-                self.Domain.Y_species[i][:,1:-1] += aE[:,1:-1]  * Y_c[i][:,2:]
-                self.Domain.Y_species[i][1:,:]   += aS[1:,:]    * Y_c[i][:-1,:]
-                self.Domain.Y_species[i][:-1,:]  += aN[:-1,:]   * Y_c[i][1:,:]
-                self.Domain.Y_species[i]         -= (aW+aE+aS+aN)*Y_c[i]
+                self.Domain.m_species[i][:,1:-1] += aE[:,1:-1]  * m_c[i][:,2:]
+                self.Domain.m_species[i][1:,:]   += aS[1:,:]    * m_c[i][:-1,:]
+                self.Domain.m_species[i][:-1,:]  += aN[:-1,:]   * m_c[i][1:,:]
+                self.Domain.m_species[i]         -= (aW+aE+aS+aN)*m_c[i]
             
                 # Species generated/destroyed during reaction
-                self.Domain.Y_species[i]+=mole_ratio[i]*deta
+                self.Domain.m_species[i]+=mole_ratio[i]*deta
                 
                 # Species advected from Porous medium equations [TO BE CONTINUED]
                 
                 
                 # Apply data from previous time step
-                self.Domain.Y_species[i]*= dt
-                self.Domain.Y_species[i]+= Y_c[i]
-#                print(self.Domain.Y_species[i])
+                self.Domain.m_species[i]*= dt
+                self.Domain.m_species[i]+= m_c[i]
+#                print(self.Domain.m_species[i])
                 # IMPLICITLY MAKING SPECIES FLUX 0 AT BOUNDARIES
-                max_Y=max(np.amax(self.Domain.Y_species[i]), max_Y)
-                min_Y=max(np.amin(self.Domain.Y_species[i]), min_Y)
-#        print(self.Domain.Y_species)
+                max_Y=max(np.amax(self.Domain.m_species[i]), max_Y)
+                min_Y=max(np.amin(self.Domain.m_species[i]), min_Y)
+#        print(self.Domain.m_species)
         ###################################################################
         # Conservation of Energy
         ###################################################################
@@ -742,7 +791,7 @@ class AxisymmetricSolve():
         elif (np.amax(self.Domain.eta)>1.0) or (np.amin(self.Domain.eta)<-10**(-9)):
             print '***********Divergence detected - reaction progress************'
             return 3, dt
-        elif bool(self.Domain.Y_species) and ((max_Y>1.0) or (min_Y<-10**(-9))):
+        elif bool(self.Domain.m_species) and ((max_Y>1.0) or (min_Y<-10**(-9))):
             print '***********Divergence detected - species mass fraction************'
             return 4, dt
         else:

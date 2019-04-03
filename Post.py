@@ -107,10 +107,37 @@ for time in times:
     pyplot.colorbar()
     pyplot.xlabel('$x$ (m)')
     pyplot.ylabel('$y$ (m)')
-    pyplot.clim(300, 10000)
+#    pyplot.clim(300, 10000)
     pyplot.title('Temperature distribution t='+time);
     fig.savefig('T_'+time+'.png',dpi=300)
     pyplot.close(fig)
+    
+    try:
+        m=np.load('m_'+time+'.npy', False)
+        fig=pyplot.figure(figsize=(6, 6))
+        pyplot.contourf(X, Y, m, alpha=0.5, cmap=cm.viridis)#, vmin=270, vmax=2000)  
+        pyplot.colorbar()
+        pyplot.xlabel('$x$ (m)')
+        pyplot.ylabel('$y$ (m)')
+    #    pyplot.clim(300, 10000)
+        pyplot.title('Mass t='+time);
+        fig.savefig('m_'+time+'.png',dpi=300)
+        pyplot.close(fig)
+    except:
+        continue
+    try:
+        P=np.load('P_'+time+'.npy', False)
+        fig=pyplot.figure(figsize=(6, 6))
+        pyplot.contourf(X, Y, P, alpha=0.5, cmap=cm.viridis)#, vmin=270, vmax=2000)  
+        pyplot.colorbar()
+        pyplot.xlabel('$x$ (m)')
+        pyplot.ylabel('$y$ (m)')
+    #    pyplot.clim(300, 10000)
+        pyplot.title('Pressure t='+time);
+        fig.savefig('P_'+time+'.png',dpi=300)
+        pyplot.close(fig)
+    except:
+        continue
     
     # 1D temperature profile at centreline
     # if OneD_graphs==1:
@@ -160,15 +187,15 @@ for time in times:
         # Mass fraction contours
         for i in range(len(titles)):
             try:
-                Y_0=np.load('Y_'+titles[i]+'_'+time+'.npy', False)
+                Y_0=np.load('m_'+titles[i]+'_'+time+'.npy', False)
                 fig=pyplot.figure(figsize=(6, 6))
                 pyplot.contourf(X, Y, Y_0, alpha=0.5, cmap=cm.viridis)#, vmin=0.0, vmax=1.0)  
                 pyplot.colorbar()
                 pyplot.xlabel('$x$ (m)')
                 pyplot.ylabel('$y$ (m)')
             #    pyplot.clim(0.0, 1.0)
-                pyplot.title('Mass fraction; $'+titles[i]+'$, t='+time);
-                fig.savefig('Y_'+titles[i]+'_'+time+'.png',dpi=300)
+                pyplot.title('Mass; $'+titles[i]+'$, t='+time);
+                fig.savefig('m_'+titles[i]+'_'+time+'.png',dpi=300)
                 pyplot.close(fig)
                 Y_tot+=Y_0
             except:

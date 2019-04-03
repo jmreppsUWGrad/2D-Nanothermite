@@ -43,19 +43,16 @@ class TwoDimPlanar():
         self.dy=np.zeros(self.Ny) # NOTE: SIZE MADE TO MATCH REST OF ARRAYS (FOR NOW)
         
         # Variables for conservation equations
-        self.E=np.zeros((self.Ny, self.Nx))
-        self.eta=np.zeros_like(self.E)
-        self.P=np.zeros_like(self.E)
-        self.m=np.zeros_like(self.E) # mass of gas
-        self.rhou=np.zeros_like(self.E)
-        self.rhov=np.zeros_like(self.E)
+        self.E=np.zeros((self.Ny, self.Nx)) # Lumped energy
+        self.eta=np.zeros_like(self.E) # extent of reaction
+        self.P=np.zeros_like(self.E) # pressure
         
         # Species
-        self.Y_species={}
+        self.m_species={}
         if bool(Species):
             self.species_keys=Species['keys']
             for key in self.species_keys:
-                self.Y_species[key]=np.zeros((self.Ny, self.Nx))
+                self.m_species[key]=np.zeros_like(self.E)
         
         # Thermal properties
         self.k=settings['k']
@@ -203,7 +200,7 @@ class TwoDimPlanar():
         k=np.zeros_like(self.eta)
         rho=np.zeros_like(self.eta)
         Cv=np.zeros_like(self.eta)
-        D=copy.deepcopy(self.Y_species)
+        D=copy.deepcopy(self.m_species)
         
         # Calculate properties based on eta or constant
         if type(self.k) is str:
@@ -250,15 +247,15 @@ class AxisymDomain():
         self.eta=np.zeros_like(self.E)
         self.P=np.zeros_like(self.E)
         self.m=np.zeros_like(self.E) # mass of gas
-        self.rhou=np.zeros_like(self.E)
-        self.rhov=np.zeros_like(self.E)
+#        self.rhou=np.zeros_like(self.E)
+#        self.rhov=np.zeros_like(self.E)
         
         # Species
-        self.Y_species={}
+        self.m_species={}
         if bool(Species):
             self.species_keys=Species['keys']
             for key in self.species_keys:
-                self.Y_species[key]=np.zeros((self.Ny, self.Nx))
+                self.m_species[key]=np.zeros((self.Ny, self.Nx))
         
         # Thermal properties
         self.k=settings['k']
@@ -413,7 +410,7 @@ class AxisymDomain():
         k=np.zeros_like(self.eta)
         rho=np.zeros_like(self.eta)
         Cv=np.zeros_like(self.eta)
-        D=copy.deepcopy(self.Y_species)
+        D=copy.deepcopy(self.m_species)
         
         # Calculate properties based on eta or constant
         if type(self.k) is str:

@@ -41,12 +41,14 @@ import FileClasses
 
 def save_data(Domain, Sources, Species, time):
     T=Domain.TempFromConserv()
+    P=Domain.P
     np.save('T_'+time, T, False)
+    np.save('P_'+time, P, False)
     if st.find(Sources['Source_Kim'],'True')>=0:
         np.save('eta_'+time, Domain.eta, False)
     if bool(Species):
         for i in Species['keys']:
-            np.save('Y_'+i+'_'+time, Domain.Y_species[i], False)
+            np.save('m_'+i+'_'+time, Domain.m_species[i], False)
 
 print('######################################################')
 print('#             2D Heat Conduction Solver              #')
@@ -140,9 +142,9 @@ k,rho,Cv,D=domain.calcProp()
 vol=domain.CV_vol()
 domain.E[:,:]=rho*Cv*vol*T
 del k,rho,Cv,D,T
-if bool(domain.Y_species):
-    domain.Y_species['Al'][:,:]=2.0/5
-    domain.Y_species['CuO'][:,:]=3.0/5
+if bool(domain.m_species):
+    for i in range(len(Species['Species'])):
+        domain.m_species[Species['Species'][i]][:,:]=Species['Species_IC'][i]
 print '################################'
 ##########################################################################
 # ------------------------Write Input File settings to output directory
