@@ -49,10 +49,14 @@ class TwoDimPlanar():
         
         # Species
         self.m_species={}
+        self.rho_species={}
         if bool(Species):
             self.species_keys=Species['keys']
+            i=0
             for key in self.species_keys:
                 self.m_species[key]=np.zeros_like(self.E)
+                self.rho_species[key]=np.ones_like(self.E)*Species['Specie_rho'][i]
+                i+=1
         
         # Thermal properties
         self.k=settings['k']

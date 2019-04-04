@@ -20,7 +20,7 @@ keys_Settings=['Domain','Length','Width','Nodes_x','Nodes_y','k','Cp','rho',\
                
 keys_Sources=['Source_Uniform','Source_Kim','Ea','A0','dH', 'Ignition']
 
-keys_Species=['Species','Species_rho','Species_IC']
+keys_Species=['Species','Specie_rho','Specie_IC']
 
 keys_Time_adv=['Fo','dt','total_time_steps', 'total_time','Restart',\
                'Time_Scheme','Convergence','Max_iterations','Number_Data_Output']
@@ -162,7 +162,7 @@ class FileIn():
                 if line[0] in keys_Settings:
                     if line[0]=='Nodes_x' or line[0]=='Nodes_y':
                         settings[line[0]]=int(line[1])
-                    elif st.find(line[1], 'None')>=0 or st.find(line[1], 'eta')>=0\
+                    elif st.find(line[1], 'None')>=0 or st.find(line[1], ',')>=0\
                         or line[0]=='Domain':
                         settings[line[0]]=st.split(line[1], newline_check)[0]
                     else:

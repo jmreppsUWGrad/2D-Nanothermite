@@ -67,8 +67,8 @@ Ignition:eta,0.8
 
 #Species:Al,CuO,Al_2O_3,Cu
 Species:g,s
-Species_IC:0,100
-Species_rho:1.1,3065
+Specie_IC:0,100
+Specie_rho:1.1,3065
 
 ######################################################
 #			Meshing details
@@ -100,7 +100,7 @@ bias_size_y:1e-06
 Fo:0.2
 #dt:0.00000008
 dt:None
-total_time_steps:2
+total_time_steps:1000
 total_time:None
 #total_time:0.002
 Time_Scheme:Explicit
@@ -109,7 +109,7 @@ Restart:None
 Convergence:0.0001
 Max_iterations:100
 
-Number_Data_Output:1
+Number_Data_Output:10
 
 ######################################################
 #			Boundary conditions

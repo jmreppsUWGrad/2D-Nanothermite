@@ -113,19 +113,6 @@ for time in times:
     pyplot.close(fig)
     
     try:
-        m=np.load('m_'+time+'.npy', False)
-        fig=pyplot.figure(figsize=(6, 6))
-        pyplot.contourf(X, Y, m, alpha=0.5, cmap=cm.viridis)#, vmin=270, vmax=2000)  
-        pyplot.colorbar()
-        pyplot.xlabel('$x$ (m)')
-        pyplot.ylabel('$y$ (m)')
-    #    pyplot.clim(300, 10000)
-        pyplot.title('Mass t='+time);
-        fig.savefig('m_'+time+'.png',dpi=300)
-        pyplot.close(fig)
-    except:
-        continue
-    try:
         P=np.load('P_'+time+'.npy', False)
         fig=pyplot.figure(figsize=(6, 6))
         pyplot.contourf(X, Y, P, alpha=0.5, cmap=cm.viridis)#, vmin=270, vmax=2000)  
@@ -203,7 +190,7 @@ for time in times:
         
     print 'Processed '+time
     if st.find(source,'True')>=0:
-        print '     Mass balance residual: %8f'%(1-np.amin(Y_tot))
+        print '     Mass balance residual: %8f'%(np.amin(Y_tot))
 
 if OneD_graphs==1:
     print 'Creating 1D plots'

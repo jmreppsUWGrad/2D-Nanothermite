@@ -144,7 +144,7 @@ domain.E[:,:]=rho*Cv*vol*T
 del k,rho,Cv,D,T
 if bool(domain.m_species):
     for i in range(len(Species['Species'])):
-        domain.m_species[Species['Species'][i]][:,:]=Species['Species_IC'][i]
+        domain.m_species[Species['Species'][i]][:,:]=Species['Specie_IC'][i]
 print '################################'
 ##########################################################################
 # ------------------------Write Input File settings to output directory

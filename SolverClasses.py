@@ -254,6 +254,7 @@ class TwoDimPlanarSolve():
         max_Y,min_Y=0,1
         # Calculate properties
         k, rho, Cv, D=self.Domain.calcProp()
+        rho_spec=self.Domain.rho_species
         Ax,Ay=self.Domain.CV_area()
         mu=10**(-5)
         perm=10**(-11)
@@ -293,28 +294,38 @@ class TwoDimPlanarSolve():
         ###################################################################
         # Conservation of Mass
         ###################################################################
-        rhog=1.1
         # Use Darcy's law to directly calculate the velocities at the faces
         # Ingoing fluxes
         self.Domain.m_species[self.Domain.species_keys[0]][:,1:]+=Ax[:,1:]*dt\
-            *rhog*(-perm/mu*Ax[:,1:]/vol[:,1:]/rhog*\
+            *rho_spec[self.Domain.species_keys[0]][:,1:]*\
+            (-perm/mu*Ax[:,1:]/vol[:,1:]/rho_spec[self.Domain.species_keys[0]][:,1:]*\
               (self.Domain.P[:,1:]-self.Domain.P[:,:-1]))
         self.Domain.m_species[self.Domain.species_keys[0]][1:,:]+=Ay[1:,:]*dt\
-            *rhog*(-perm/mu*Ay[1:,:]/vol[1:,:]/rhog*\
+            *rho_spec[self.Domain.species_keys[0]][1:,:]*\
+            (-perm/mu*Ay[1:,:]/vol[1:,:]/rho_spec[self.Domain.species_keys[0]][1:,:]*\
               (self.Domain.P[1:,:]-self.Domain.P[:-1,:]))
         
         # Outgoing fluxes
         self.Domain.m_species[self.Domain.species_keys[0]][:,:-1]-=Ax[:,:-1]*dt\
-            *rhog*(-perm/mu*Ax[:,1:]/vol[:,:-1]/rhog*\
+            *rho_spec[self.Domain.species_keys[0]][:,:-1]*\
+            (-perm/mu*Ax[:,1:]/vol[:,:-1]/rho_spec[self.Domain.species_keys[0]][:,:-1]*\
               (self.Domain.P[:,1:]-self.Domain.P[:,:-1]))
         self.Domain.m_species[self.Domain.species_keys[0]][:-1,:]-=Ay[:-1,:]*dt\
-            *rhog*(-perm/mu*Ay[:-1,:]/vol[:-1,:]/rhog*\
+            *rho_spec[self.Domain.species_keys[0]][:-1,:]*\
+            (-perm/mu*Ay[:-1,:]/vol[:-1,:]/rho_spec[self.Domain.species_keys[0]][:-1,:]*\
               (self.Domain.P[1:,:]-self.Domain.P[:-1,:]))
         
         # Source terms
-        self.Domain.m_species[self.Domain.species_keys[0]]+=deta*rhog*vol*dt#*10**(-3)
+        self.Domain.m_species[self.Domain.species_keys[0]]+=deta*\
+            self.Domain.rho_species[self.Domain.species_keys[0]]*vol*dt#*10**(-3)
         
-        self.Domain.m_species[self.Domain.species_keys[1]]-=deta*rho*vol*dt#*10**(-3)
+        self.Domain.m_species[self.Domain.species_keys[1]]-=deta*\
+            self.Domain.rho_species[self.Domain.species_keys[1]]*vol*dt#*10**(-3)
+        
+        max_Y=max(np.amax(self.Domain.m_species[self.Domain.species_keys[0]]),\
+                  np.amax(self.Domain.m_species[self.Domain.species_keys[1]]))
+        min_Y=min(np.amin(self.Domain.m_species[self.Domain.species_keys[0]]),\
+                  np.amin(self.Domain.m_species[self.Domain.species_keys[1]]))
         
         ###################################################################
         # Conservation of Momentum (x direction; gas)
@@ -378,7 +389,7 @@ class TwoDimPlanarSolve():
 ##                print(self.Domain.m_species[i])
 #                # IMPLICITLY MAKING SPECIES FLUX 0 AT BOUNDARIES
 #                max_Y=max(np.amax(self.Domain.m_species[i]), max_Y)
-#                min_Y=max(np.amin(self.Domain.m_species[i]), min_Y)
+#                min_Y=min(np.amin(self.Domain.m_species[i]), min_Y)
 #        print(self.Domain.m_species)
         ###################################################################
         # Conservation of Energy
@@ -421,7 +432,7 @@ class TwoDimPlanarSolve():
         elif (np.amax(self.Domain.eta)>1.0) or (np.amin(self.Domain.eta)<-10**(-9)):
             print '***********Divergence detected - reaction progress************'
             return 3, dt
-        elif bool(self.Domain.m_species) and ((max_Y>1.0) or (min_Y<-10**(-9))):
+        elif bool(self.Domain.m_species) and ((min_Y<-10**(-9))):
             print '***********Divergence detected - species mass fraction************'
             return 4, dt
         else:
@@ -748,7 +759,7 @@ class AxisymmetricSolve():
 #                print(self.Domain.m_species[i])
                 # IMPLICITLY MAKING SPECIES FLUX 0 AT BOUNDARIES
                 max_Y=max(np.amax(self.Domain.m_species[i]), max_Y)
-                min_Y=max(np.amin(self.Domain.m_species[i]), min_Y)
+                min_Y=min(np.amin(self.Domain.m_species[i]), min_Y)
 #        print(self.Domain.m_species)
         ###################################################################
         # Conservation of Energy
