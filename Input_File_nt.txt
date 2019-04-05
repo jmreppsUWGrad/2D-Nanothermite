@@ -67,7 +67,7 @@ Ignition:eta,0.8
 
 #Species:Al,CuO,Al_2O_3,Cu
 Species:g,s
-Specie_IC:0,100
+Specie_IC:0,0.000000306
 Specie_rho:1.1,3065
 
 ######################################################
@@ -98,7 +98,7 @@ bias_size_y:1e-06
 ######################################################
 
 Fo:0.2
-#dt:0.00000008
+#dt:0.00000001
 dt:None
 total_time_steps:1000
 total_time:None
@@ -124,14 +124,14 @@ Number_Data_Output:10
 # [IN PROGRESS] Radiation options: None or [emissivity, surrounding_Temp]
 ######################################################
 
-bc_left:C, 30, 300, 0, -1
+bc_left_E:C, 30, 300, 0, -1
 bc_left_rad:None
-bc_right:C, 30, 300, 0, -1
+bc_right_E:C, 30, 300, 0, -1
 bc_right_rad:None
 # numpy.linspace(400, 900, settings['Nodes_y'])
-bc_south:F, 0, 0, -1
+bc_south_E:F, 0, 0, -1
 bc_south_rad:None
 #bc_north:T, 800, 0, -1
-bc_north:C, 30, 300, 0, -61,F, 400000000, 40, -41,C, 30, 300, 60, -1
+bc_north_E:C, 30, 300, 0, -61,F, 400000000, 40, -41,C, 30, 300, 60, -1
 bc_north_rad:None
 # numpy.linspace(400, 900, settings['Nodes_x'])
