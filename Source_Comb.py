@@ -47,7 +47,7 @@ class Source_terms():
         eta+=dt*detadt
         
         # Clipping to 0
-        eta[eta<10**(-10)]=0
+#        eta[eta<10**(-10)]=0
         
         if st.find(self.dH[0], 'vol')>=0:
             return vol*self.dH[1]*detadt, detadt
