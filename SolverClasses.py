@@ -271,7 +271,7 @@ class TwoDimPlanarSolve():
         
         # Copy needed variables for conservation equations
         T_c=self.Domain.TempFromConserv()
-#        m_c=copy.deepcopy(self.Domain.m_species)
+        m_c=copy.deepcopy(self.Domain.m_species)
         E_0=copy.deepcopy(self.Domain.E)
 #        u_c=copy.deepcopy(self.Domain.rhou)/(rho*vol)
 #        v_c=copy.deepcopy(self.Domain.rhov)/(rho*vol)
@@ -289,8 +289,9 @@ class TwoDimPlanarSolve():
 #            E_kim, deta =self.get_source.Source_Comb_Umbrajkar(rho, T_c, self.Domain.eta, self.Domain.CV_vol(), dt)
         
         # Adjust pressure
-        self.Domain.P[:,:]=101325+self.Domain.m_species['g']/102*1000*8.314*T_c
-        
+        print '     Gas mass: %f, %f'%(np.amax(self.Domain.m_species['g']),np.amin(self.Domain.m_species['g']))
+        self.Domain.P[:,:]=self.Domain.m_species['g']/102*1000*8.314*T_c/(0.6*vol)
+        print '     Pressure: %f, %f'%(np.amax(self.Domain.P),np.amin(self.Domain.P))
         ###################################################################
         # Conservation of Mass
         ###################################################################
@@ -298,30 +299,27 @@ class TwoDimPlanarSolve():
         # Ingoing fluxes
         self.Domain.m_species[self.Domain.species_keys[0]][:,1:]+=Ax[:,1:]*dt\
             *rho_spec[self.Domain.species_keys[0]][:,1:]*\
-            (-perm/mu*Ax[:,1:]/vol[:,1:]/rho_spec[self.Domain.species_keys[0]][:,1:]*\
-              (self.Domain.P[:,1:]-self.Domain.P[:,:-1]))
+            (-perm/mu*(self.Domain.P[:,1:]-self.Domain.P[:,:-1])/self.dx[:,:-1])
         self.Domain.m_species[self.Domain.species_keys[0]][1:,:]+=Ay[1:,:]*dt\
             *rho_spec[self.Domain.species_keys[0]][1:,:]*\
-            (-perm/mu*Ay[1:,:]/vol[1:,:]/rho_spec[self.Domain.species_keys[0]][1:,:]*\
-              (self.Domain.P[1:,:]-self.Domain.P[:-1,:]))
+            (-perm/mu*(self.Domain.P[1:,:]-self.Domain.P[:-1,:])/self.dy[:-1,:])
         
         # Outgoing fluxes
         self.Domain.m_species[self.Domain.species_keys[0]][:,:-1]-=Ax[:,:-1]*dt\
             *rho_spec[self.Domain.species_keys[0]][:,:-1]*\
-            (-perm/mu*Ax[:,1:]/vol[:,:-1]/rho_spec[self.Domain.species_keys[0]][:,:-1]*\
-              (self.Domain.P[:,1:]-self.Domain.P[:,:-1]))
+            (-perm/mu*(self.Domain.P[:,1:]-self.Domain.P[:,:-1])/self.dx[:,:-1])
         self.Domain.m_species[self.Domain.species_keys[0]][:-1,:]-=Ay[:-1,:]*dt\
             *rho_spec[self.Domain.species_keys[0]][:-1,:]*\
-            (-perm/mu*Ay[:-1,:]/vol[:-1,:]/rho_spec[self.Domain.species_keys[0]][:-1,:]*\
-              (self.Domain.P[1:,:]-self.Domain.P[:-1,:]))
+            (-perm/mu*(self.Domain.P[1:,:]-self.Domain.P[:-1,:])/self.dy[:-1,:])
         
         # Source terms
-        self.Domain.m_species[self.Domain.species_keys[0]]+=deta*\
-            self.Domain.rho_species[self.Domain.species_keys[0]]*vol*dt#*10**(-3)
+        dm=deta*dt*\
+            (m_c[self.Domain.species_keys[0]]+m_c[self.Domain.species_keys[1]])
+        print '     Mass generated: %f, %f'%(np.amax(dm),np.amin(dm))
         
-        self.Domain.m_species[self.Domain.species_keys[1]]-=deta*\
-            self.Domain.rho_species[self.Domain.species_keys[1]]*vol*dt#*10**(-3)
-        
+        self.Domain.m_species[self.Domain.species_keys[0]]+=dm
+        self.Domain.m_species[self.Domain.species_keys[1]]-=dm
+                
         max_Y=max(np.amax(self.Domain.m_species[self.Domain.species_keys[0]]),\
                   np.amax(self.Domain.m_species[self.Domain.species_keys[1]]))
         min_Y=min(np.amin(self.Domain.m_species[self.Domain.species_keys[0]]),\
@@ -432,7 +430,7 @@ class TwoDimPlanarSolve():
         elif (np.amax(self.Domain.eta)>1.0) or (np.amin(self.Domain.eta)<-10**(-9)):
             print '***********Divergence detected - reaction progress************'
             return 3, dt
-        elif bool(self.Domain.m_species) and ((min_Y<-10**(-9))):
+        elif bool(self.Domain.m_species) and ((max_Y>10**(5))):
             print '***********Divergence detected - species mass fraction************'
             return 4, dt
         else:

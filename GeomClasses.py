@@ -225,6 +225,11 @@ class TwoDimPlanar():
             for i in self.species_keys:
 #                D[i][:,;]=self.Diff.get_Diff(300,i)
                 D[i][:,:]=0
+        
+        # Species densities
+#        for i in range(len(self.species_keys)):
+#            self.rho_species[self.species_keys[i]]=\
+#                self.m_species[self.species_keys[i]]/self.CV_vol()
                 
         return k, rho, Cv, D
     
