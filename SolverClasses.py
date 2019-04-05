@@ -27,7 +27,7 @@ import copy
 #import CoolProp.CoolProp as CP
 #import temporal_schemes
 import Source_Comb
-#import PorousClass
+import BCClasses
 
 # 2D solver (Cartesian coordinates)
 class TwoDimPlanarSolve():
@@ -35,7 +35,6 @@ class TwoDimPlanarSolve():
         self.Domain=geom_obj # Geometry object
         self.time_scheme=settings['Time_Scheme']
         self.dx,self.dy=np.meshgrid(geom_obj.dx,geom_obj.dy)
-        self.BCs=BCs
         self.Fo=settings['Fo']
         self.dt=settings['dt']
         self.conv=settings['Convergence']
@@ -46,8 +45,8 @@ class TwoDimPlanarSolve():
         self.source_unif=Sources['Source_Uniform']
         self.source_Kim=Sources['Source_Kim']
         
-        # Porous medium solver
-#        self.Porous_Eqns=PorousClass(0,0,0)
+        # BC class
+        self.BCs=BCClasses.BCs(BCs, self.dx, self.dy)
         
     # Time step check with dx, dy, Fo number
     def getdt(self, k, rho, Cv):
@@ -133,122 +132,6 @@ class TwoDimPlanarSolve():
         
         return aW,aE,aS,aN
     
-    # Bondary condition handler
-    def Apply_BCs_Cond(self, E, T_prev, dt, rho, Cv, vol):
-        # Left face
-        for i in range(len(self.BCs['bc_left'])/3):
-            st=self.BCs['bc_left'][2+3*i][0]
-            en=self.BCs['bc_left'][2+3*i][1]
-            if self.BCs['bc_left'][3*i]=='T':
-                E[st:en,0]=self.BCs['bc_left'][1+3*i]*rho[st:en,0]*Cv[st:en,0]*vol[st:en,0]
-                if len(self.BCs['bc_left'])/3-i==1:
-                    E[-1,0]=self.BCs['bc_left'][-2]*rho[-1,0]*Cv[-1,0]*vol[-1,0]
-            
-            else:
-                if self.BCs['bc_left'][3*i]=='F':
-                    q=self.BCs['bc_left'][1+3*i]
-                    Bi=0
-                    
-                else:
-                    q=self.BCs['bc_left'][1+3*i][0]*self.BCs['bc_left'][1+3*i][1] # h*Tinf
-                    Bi=-self.BCs['bc_left'][1+3*i][0]*T_prev[st:en,0] # h*Tij
-                
-                E[st:en,0]+=(Bi+q)*self.dy[st:en,0]*dt
-                if len(self.BCs['bc_left'])/3-i==1:
-                    if self.BCs['bc_left'][3*i]=='C':
-                        Bi=-self.BCs['bc_left'][1+3*i][0]*T_prev[-1,0] # h*Tij
-                    E[-1,0]+=(Bi+q)*self.dy[-1,0]*dt
-        
-        # Right face
-        for i in range(len(self.BCs['bc_right'])/3):
-            st=self.BCs['bc_right'][2+3*i][0]
-            en=self.BCs['bc_right'][2+3*i][1]
-            if self.BCs['bc_right'][3*i]=='T':
-                E[st:en,-1]=self.BCs['bc_right'][1+3*i]*rho[st:en,-1]*Cv[st:en,-1]*vol[st:en,-1]
-                if len(self.BCs['bc_right'])/3-i==1:
-                    E[-1,-1]=self.BCs['bc_right'][-2]*rho[-1,-1]*Cv[-1,-1]*vol[-1,-1]
-            
-            else:
-                if self.BCs['bc_right'][3*i]=='F':
-                    q=self.BCs['bc_right'][1+3*i]
-                    Bi=0
-                    
-                else:
-                    q=self.BCs['bc_right'][1+3*i][0]*self.BCs['bc_right'][1+3*i][1] # h*Tinf
-                    Bi=-self.BCs['bc_right'][1+3*i][0]*T_prev[st:en,-1] # h*Tij
-                
-                E[st:en,-1]+=(Bi+q)*self.dy[st:en,-1]*dt
-                if len(self.BCs['bc_right'])/3-i==1:
-                    if self.BCs['bc_right'][3*i]=='C':
-                        Bi=-self.BCs['bc_right'][1+3*i][0]*T_prev[-1,-1] # h*Tij
-                    E[-1,-1]+=(Bi+q)*self.dy[-1,-1]*dt
-        
-        # South face
-        for i in range(len(self.BCs['bc_south'])/3):
-            st=self.BCs['bc_south'][2+3*i][0]
-            en=self.BCs['bc_south'][2+3*i][1]
-            if self.BCs['bc_south'][3*i]=='T':
-                E[0,st:en]=self.BCs['bc_south'][1+3*i]*rho[0,st:en]*Cv[0,st:en]*vol[0,st:en]
-                if len(self.BCs['bc_south'])/3-i==1:
-                    E[0,-1]=self.BCs['bc_south'][-2]*rho[0,-1]*Cv[0,-1]*vol[0,-1]
-            
-            else:
-                if self.BCs['bc_south'][3*i]=='F':
-                    q=self.BCs['bc_south'][1+3*i]
-                    Bi=0
-                    
-                else:
-                    q=self.BCs['bc_south'][1+3*i][0]*self.BCs['bc_south'][1+3*i][1] # h*Tinf
-                    Bi=-self.BCs['bc_south'][1+3*i][0]*T_prev[0,st:en] # h*Tij
-                
-                E[0,st:en]+=(Bi+q)*self.dx[0,st:en]*dt
-                if len(self.BCs['bc_south'])/3-i==1:
-                    if self.BCs['bc_south'][3*i]=='C':
-                        Bi=-self.BCs['bc_south'][1+3*i][0]*T_prev[0,-1] # h*Tij
-                    E[0,-1]+=(Bi+q)*self.dx[0,-1]*dt
-                    
-        # North face
-        for i in range(len(self.BCs['bc_north'])/3):
-            st=self.BCs['bc_north'][2+3*i][0]
-            en=self.BCs['bc_north'][2+3*i][1]
-            if self.BCs['bc_north'][3*i]=='T':
-                E[-1,st:en]=self.BCs['bc_north'][1+3*i]*rho[-1,st:en]*Cv[-1,st:en]*vol[-1,st:en]
-                if len(self.BCs['bc_north'])/3-i==1:
-                    E[-1,-1]=self.BCs['bc_north'][-2]*rho[-1,-1]*Cv[-1,-1]*vol[-1,-1]
-            
-            else:
-                if self.BCs['bc_north'][3*i]=='F':
-                    q=self.BCs['bc_north'][1+3*i]
-                    Bi=0
-                    
-                else:
-                    q=self.BCs['bc_north'][1+3*i][0]*self.BCs['bc_north'][1+3*i][1] # h*Tinf
-                    Bi=-self.BCs['bc_north'][1+3*i][0]*T_prev[-1,st:en] # h*Tij
-                
-                E[-1,st:en]+=(Bi+q)*self.dx[-1,st:en]*dt
-                if len(self.BCs['bc_north'])/3-i==1:
-                    if self.BCs['bc_north'][3*i]=='C':
-                        Bi=-self.BCs['bc_north'][1+3*i][0]*T_prev[-1,-1] # h*Tij
-                    E[-1,-1]+=(Bi+q)*self.dx[-1,-1]*dt
-        
-        # Apply radiation BCs
-        if self.BCs['bc_left_rad']!='None':
-            E[:,0]+=self.dy[:,0]*dt*\
-                self.BCs['bc_left_rad'][0]*5.67*10**(-8)*\
-                (self.BCs['bc_left_rad'][1]**4-T_prev[:,0]**4)
-        if self.BCs['bc_right_rad']!='None':
-            E[:,-1]+=self.dy[:,-1]*dt*\
-                self.BCs['bc_right_rad'][0]*5.67*10**(-8)*\
-                (self.BCs['bc_right_rad'][1]**4-T_prev[:,-1]**4)
-        if self.BCs['bc_south_rad']!='None':
-            E[0,:]+=self.dx[0,:]*dt*\
-                self.BCs['bc_south_rad'][0]*5.67*10**(-8)*\
-                (self.BCs['bc_south_rad'][1]**4-T_prev[0,:]**4)
-        if self.BCs['bc_north_rad']!='None':
-            E[-1,:]+=self.dx[-1,:]*dt*\
-                self.BCs['bc_north_rad'][0]*5.67*10**(-8)*\
-                (self.BCs['bc_north_rad'][1]**4-T_prev[-1,:]**4)
-    
     # Main solver (1 time step)
     def Advance_Soln_Cond(self, nt, t, vol):
         max_Y,min_Y=0,1
@@ -257,7 +140,7 @@ class TwoDimPlanarSolve():
         rho_spec=self.Domain.rho_species
         Ax,Ay=self.Domain.CV_area()
         mu=10**(-5)
-        perm=10**(-11)
+        perm=0.0#10**(-11)
         
         if self.dt=='None':
             dt=self.getdt(k, rho, Cv)
@@ -417,7 +300,8 @@ class TwoDimPlanarSolve():
         # Apply energy from previous time step and boundary conditions
         self.Domain.E*= dt
         self.Domain.E+= E_0
-        self.Apply_BCs_Cond(self.Domain.E, T_c, dt, rho, Cv, vol)
+        self.BCs.Energy(self.Domain.E, T_c, dt, rho, Cv, vol)
+#        self.Apply_BCs_Cond(self.Domain.E, T_c, dt, rho, Cv, vol)
         
         ###################################################################
         # Divergence/Convergence checks

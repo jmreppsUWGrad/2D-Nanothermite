@@ -137,6 +137,9 @@ if type(settings['Restart']) is int:
     T=np.load('T_'+time_max+'.npy')
     if st.find(Sources['Source_Kim'],'True')>=0:
         domain.eta=np.load('eta_'+time_max+'.npy')
+    if bool(domain.m_species):
+        for i in range(len(Species['Species'])):
+            domain.m_species[Species['Species'][i]]=np.load('m_'+Species['Species'][i]+'_'+time_max+'.npy')
 
 k,rho,Cv,D=domain.calcProp()
 vol=domain.CV_vol()
@@ -221,22 +224,22 @@ while nt<settings['total_time_steps'] and t<settings['total_time']:
     if ((Sources['Ignition'][0]=='eta' and np.amax(domain.eta)>=Sources['Ignition'][1])\
         or (Sources['Ignition'][0]=='Temp' and np.amax(T)>=Sources['Ignition'][1]))\
         and not BCs_changed:
-        solver.BCs['bc_north']=solver.BCs['bc_right']
-        input_file.fout.write('##bc_north_new:')
-        input_file.Write_single_line(str(solver.BCs['bc_north']))
+        solver.BCs.BCs['bc_north_E']=solver.BCs.BCs['bc_right_E']
+        input_file.fout.write('##bc_north_E_new:')
+        input_file.Write_single_line(str(solver.BCs.BCs['bc_north_E']))
         input_file.fout.write('\n')
         BCs_changed=True
         tign=t
         save_data(domain, Sources, Species, '{:f}'.format(t))
 #    if not BCs_changed:
 #        k,rho,Cv=domain.calcProp()
-#        T_theo=300+2*solver.BCs['bc_north'][1]/k[-1,0]\
+#        T_theo=300+2*solver.BCs.BCs['bc_north_E'][1]/k[-1,0]\
 #            *np.sqrt(k[-1,0]/rho[-1,0]/Cv[-1,0]*t/np.pi)
-#        dT_theo=solver.BCs['bc_north'][1]/k[-1,0]\
+#        dT_theo=solver.BCs.BCs['bc_north_E'][1]/k[-1,0]\
 #            *np.sqrt(k[-1,0]/rho[-1,0]/Cv[-1,0]/np.pi/t)
 ##        if (T_theo-T[-1,0])/T_theo<-0.3:
 #        if (dT_theo-((T[-1,0]-T_0[-1,0])/dt))/dT_theo<-1.0:
-#            solver.BCs['bc_north']=solver.BCs['bc_right']
+#            solver.BCs.BCs['bc_north_E']=solver.BCs.BCs['bc_right_E']
 #            BCs_changed=True
 #            tign=t
 #            save_data(domain, Sources, '{:f}'.format(t))
