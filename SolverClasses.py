@@ -137,10 +137,9 @@ class TwoDimPlanarSolve():
         max_Y,min_Y=0,1
         # Calculate properties
         k, rho, Cv, D=self.Domain.calcProp()
-        rho_spec=self.Domain.rho_species
         Ax,Ay=self.Domain.CV_area()
         mu=10**(-5)
-        perm=0.0#10**(-11)
+        perm=10**(-11)
         
         if self.dt=='None':
             dt=self.getdt(k, rho, Cv)
@@ -152,10 +151,12 @@ class TwoDimPlanarSolve():
             return 1, dt
         print 'Time step %i, Step size=%.7f, Time elapsed=%f;'%(nt+1,dt, t+dt)
         
-        # Copy needed variables for conservation equations
+        # Copy needed variables and set pointers to other variables
         T_c=self.Domain.TempFromConserv()
         m_c=copy.deepcopy(self.Domain.m_species)
         E_0=copy.deepcopy(self.Domain.E)
+        rho_spec=self.Domain.rho_species
+        species=self.Domain.species_keys
 #        u_c=copy.deepcopy(self.Domain.rhou)/(rho*vol)
 #        v_c=copy.deepcopy(self.Domain.rhov)/(rho*vol)
         
@@ -173,40 +174,53 @@ class TwoDimPlanarSolve():
         
         # Adjust pressure
         print '     Gas mass: %f, %f'%(np.amax(self.Domain.m_species['g']),np.amin(self.Domain.m_species['g']))
-        self.Domain.P[:,:]=self.Domain.m_species['g']/102*1000*8.314*T_c/(0.6*vol)
+        print '     Gas density: %f, %f'%(np.amax(rho_spec['g']),np.amin(rho_spec['g']))
+        self.Domain.P[:,:]=self.Domain.m_species['g']/102*1000*8.314*300/(0.6*vol)
+#        self.BCs.P(self.Domain.P)
         print '     Pressure: %f, %f'%(np.amax(self.Domain.P),np.amin(self.Domain.P))
+        
         ###################################################################
         # Conservation of Mass
         ###################################################################
         # Use Darcy's law to directly calculate the velocities at the faces
         # Ingoing fluxes
-        self.Domain.m_species[self.Domain.species_keys[0]][:,1:]+=Ax[:,1:]*dt\
-            *rho_spec[self.Domain.species_keys[0]][:,1:]*\
+        flx=np.zeros_like(self.Domain.P)
+        fly=np.zeros_like(self.Domain.P)
+        
+        flx[:,1:]+=Ax[:,1:]*dt\
+            *0.5*(rho_spec[species[0]][:,1:]+rho_spec[species[0]][:,:-1])*\
             (-perm/mu*(self.Domain.P[:,1:]-self.Domain.P[:,:-1])/self.dx[:,:-1])
-        self.Domain.m_species[self.Domain.species_keys[0]][1:,:]+=Ay[1:,:]*dt\
-            *rho_spec[self.Domain.species_keys[0]][1:,:]*\
+        fly[1:,:]+=Ay[1:,:]*dt\
+            *0.5*(rho_spec[species[0]][1:,:]+rho_spec[species[0]][:-1,:])*\
             (-perm/mu*(self.Domain.P[1:,:]-self.Domain.P[:-1,:])/self.dy[:-1,:])
         
         # Outgoing fluxes
-        self.Domain.m_species[self.Domain.species_keys[0]][:,:-1]-=Ax[:,:-1]*dt\
-            *rho_spec[self.Domain.species_keys[0]][:,:-1]*\
+        flx[:,:-1]-=Ax[:,:-1]*dt\
+            *rho_spec[species[0]][:,:-1]*\
             (-perm/mu*(self.Domain.P[:,1:]-self.Domain.P[:,:-1])/self.dx[:,:-1])
-        self.Domain.m_species[self.Domain.species_keys[0]][:-1,:]-=Ay[:-1,:]*dt\
-            *rho_spec[self.Domain.species_keys[0]][:-1,:]*\
+        fly[:-1,:]-=Ay[:-1,:]*dt\
+            *rho_spec[species[0]][:-1,:]*\
             (-perm/mu*(self.Domain.P[1:,:]-self.Domain.P[:-1,:])/self.dy[:-1,:])
         
-        # Source terms
-        dm=deta*dt*\
-            (m_c[self.Domain.species_keys[0]]+m_c[self.Domain.species_keys[1]])
-        print '     Mass generated: %f, %f'%(np.amax(dm),np.amin(dm))
+        print '    Gas fluxes in x: %f, %f'%(np.amax(flx)*10**(6),np.amin(flx)*10**(6))
+        print '    Gas fluxes in y: %f, %f'%(np.amax(fly)*10**(6),np.amin(fly)*10**(6))
         
-        self.Domain.m_species[self.Domain.species_keys[0]]+=dm
-        self.Domain.m_species[self.Domain.species_keys[1]]-=dm
+        self.Domain.m_species[species[0]]+=flx+fly
+        
+        # Source terms
+        dm=deta*dt*(m_c[species[0]]+m_c[species[1]])
+#        print '     Mass generated: %f, %f'%(np.amax(dm)*10**(6),np.amin(dm)*10**(6))
+#        (m_c[species[0]]+m_c[species[1]])
+        self.Domain.m_species[species[0]]+=dm
+        self.Domain.m_species[species[1]]-=dm
                 
-        max_Y=max(np.amax(self.Domain.m_species[self.Domain.species_keys[0]]),\
-                  np.amax(self.Domain.m_species[self.Domain.species_keys[1]]))
-        min_Y=min(np.amin(self.Domain.m_species[self.Domain.species_keys[0]]),\
-                  np.amin(self.Domain.m_species[self.Domain.species_keys[1]]))
+        max_Y=max(np.amax(self.Domain.m_species[species[0]]),\
+                  np.amax(self.Domain.m_species[species[1]]))
+        min_Y=min(np.amin(self.Domain.m_species[species[0]]),\
+                  np.amin(self.Domain.m_species[species[1]]))
+        
+        # Apply BCs
+#        self.BCs.mass()
         
         ###################################################################
         # Conservation of Momentum (x direction; gas)
@@ -240,12 +254,12 @@ class TwoDimPlanarSolve():
 #        if bool(self.Domain.m_species):
 #            # Mole ratios
 #            mole_ratio={}
-#            mole_ratio[self.Domain.species_keys[0]]=-2.0/5 # Al
-#            mole_ratio[self.Domain.species_keys[1]]=-3.0/5 # CuO
-#            mole_ratio[self.Domain.species_keys[2]]=1.0/4  # Al2O3
-#            mole_ratio[self.Domain.species_keys[3]]=3.0/4  # Cu
+#            mole_ratio[species[0]]=-2.0/5 # Al
+#            mole_ratio[species[1]]=-3.0/5 # CuO
+#            mole_ratio[species[2]]=1.0/4  # Al2O3
+#            mole_ratio[species[3]]=3.0/4  # Cu
 #            
-#            for i in self.Domain.species_keys:
+#            for i in species:
 #                # Calculate flux coefficients
 #                aW,aE,aS,aN=self.get_Coeff(self.dx,self.dy, dt, rho*D[i], 'Linear')
 #                
@@ -314,8 +328,8 @@ class TwoDimPlanarSolve():
         elif (np.amax(self.Domain.eta)>1.0) or (np.amin(self.Domain.eta)<-10**(-9)):
             print '***********Divergence detected - reaction progress************'
             return 3, dt
-        elif bool(self.Domain.m_species) and ((max_Y>10**(5))):
-            print '***********Divergence detected - species mass fraction************'
+        elif bool(self.Domain.m_species) and ((max_Y>10**(5)) or (min_Y<-10**(-9))):
+            print '***********Divergence detected - species mass ****************'
             return 4, dt
         else:
             return 0, dt

@@ -34,6 +34,7 @@ import string as st
 import os
 import sys
 import time
+import copy
 
 import GeomClasses as Geom
 import SolverClasses as Solvers
@@ -147,7 +148,13 @@ domain.E[:,:]=rho*Cv*vol*T
 del k,rho,Cv,D,T
 if bool(domain.m_species):
     for i in range(len(Species['Species'])):
+#        domain.m_species[Species['Species'][i]][:,:]=Species['Specie_IC'][i]
         domain.m_species[Species['Species'][i]][:,:]=Species['Specie_IC'][i]
+        domain.m_species[Species['Species'][i]][:,0] *=0.5
+        domain.m_species[Species['Species'][i]][:,-1]*=0.5
+        domain.m_species[Species['Species'][i]][0,:] *=0.5
+        domain.m_species[Species['Species'][i]][-1,:]*=0.5
+m_0=copy.deepcopy(domain.m_species)
 print '################################'
 ##########################################################################
 # ------------------------Write Input File settings to output directory
@@ -208,8 +215,7 @@ while nt<settings['total_time_steps'] and t<settings['total_time']:
         save_data(domain, Sources, Species, '{:f}'.format(t))
         input_file.Write_single_line('#################### Solver aborted #######################')
         input_file.Write_single_line('Time step %i, Time elapsed=%f, error code=%i;'%(nt,t,err))
-        input_file.Write_single_line('Error codes: 1-time step, 2-Energy, 3-reaction progress')
-        input_file.Write_single_line('4-Species balance\n')
+        input_file.Write_single_line('Error codes: 1-time step, 2-Energy, 3-reaction progress, 4-Species balance')
         break
     
     # Output data to numpy files
@@ -266,5 +272,7 @@ except:
     print 'Average wave speed: 0 m/s'
     input_file.Write_single_line('Average wave speed: 0 m/s')
     input_file.close()
-
+T=domain.TempFromConserv()
+P=domain.P
+m=domain.m_species
 print('Solver has finished its run')

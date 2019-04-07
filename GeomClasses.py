@@ -227,9 +227,10 @@ class TwoDimPlanar():
                 D[i][:,:]=0
         
         # Species densities
-#        for i in range(len(self.species_keys)):
-#            self.rho_species[self.species_keys[i]]=\
-#                self.m_species[self.species_keys[i]]/self.CV_vol()
+        por=[0.6,0.4]
+        for i in range(len(self.species_keys)):
+            self.rho_species[self.species_keys[i]]=\
+                self.m_species[self.species_keys[i]]/(por[i]*self.CV_vol())
                 
         return k, rho, Cv, D
     
