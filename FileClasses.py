@@ -25,10 +25,11 @@ keys_Species=['Species','Specie_rho','Specie_IC']
 keys_Time_adv=['Fo','dt','total_time_steps', 'total_time','Restart',\
                'Time_Scheme','Convergence','Max_iterations','Number_Data_Output']
 
-keys_BCs=     ['bc_left_E','bc_left_rad',\
-              'bc_right_E','bc_right_rad',\
-              'bc_south_E','bc_south_rad',\
-              'bc_north_E','bc_north_rad']
+keys_BCs=     ['bc_left_E','bc_right_E','bc_south_E','bc_north_E',\
+              'bc_left_rad','bc_right_rad','bc_south_rad','bc_north_rad',\
+              'bc_left_P','bc_right_P','bc_north_P','bc_south_P']#,\
+#              'bc_left_mass','bc_right_mass','bc_north_mass','bc_south_mass']
+
 
 newline_check='\n' # This should be \n for Windows, \r for Ubuntu
 
@@ -196,13 +197,12 @@ class FileIn():
                         settings[line[0]]=line[1]+':'+st.split(line[2], newline_check)[0]
                     else:
                         settings[line[0]]=float(line[1])
-                # Boundary conditions
+                # Boundary conditions (all equations)
                 elif line[0] in keys_BCs:
                     BC_info=st.split(line[1], ',')
                     BCs[line[0]]=[]
                     # Radiation BCs
-                    if line[0]=='bc_left_rad' or line[0]=='bc_right_rad'\
-                        or line[0]=='bc_north_rad' or line[0]=='bc_south_rad':
+                    if st.find(line[0], 'rad')>=0:
                         try:
                             BCs[line[0]]=[float(BC_info[0])]
                             BCs[line[0]]+=[float(BC_info[1])]
@@ -214,27 +214,21 @@ class FileIn():
                     while len(BC_info)>1:
                         BCs[line[0]]+=[BC_info[0]]
                         del BC_info[0]
-                        # Temp or flux BC
-                        if BCs[line[0]][3*i]=='T' or BCs[line[0]][3*i]=='F':
+                        # Constant value/flux of variable BCs
+                        if BCs[line[0]][3*i]=='T' or BCs[line[0]][3*i]=='F'\
+                            or BCs[line[0]][3*i]=='grad':
                             # Value into a float
                             BCs[line[0]]+=[float(BC_info[0])]
                             del BC_info[0]
                             BCs[line[0]]+=[(int(BC_info[0]),int(BC_info[1]))]
                             del BC_info[1], BC_info[0]
                         # Convective BC
-                        elif BCs[line[0]][3*i]=='C':
+                        else:
                             BCs[line[0]]+=[(float(BC_info[0]),float(BC_info[1]))]
                             del BC_info[1], BC_info[0]
                             BCs[line[0]]+=[(int(BC_info[0]),int(BC_info[1]))]
                             del BC_info[1], BC_info[0]
-                        # Radiation BC
-                        else:
-                            try:
-                                BCs[line[0]]=[float(BCs[line[0]][0])]
-                                BCs[line[0]]+=[float(BC_info[0])]
-                            except:
-                                continue
-                            del BC_info[0]
+                        
                         i+=1
                     
         self.fin.close()
