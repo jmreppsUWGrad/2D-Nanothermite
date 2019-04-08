@@ -153,11 +153,11 @@ class TwoDimPlanarSolve():
         
         # Copy needed variables and set pointers to other variables
         T_c=self.Domain.TempFromConserv()
-        m_c=copy.deepcopy(self.Domain.m_species)
+#        m_c=copy.deepcopy(self.Domain.m_species)
         E_0=copy.deepcopy(self.Domain.E)
         rho_spec=self.Domain.rho_species
         species=self.Domain.species_keys
-        Cp_spec=self.Domain.Cp_species
+#        Cp_spec=self.Domain.Cp_species
 #        u_c=copy.deepcopy(self.Domain.rhou)/(rho*vol)
 #        v_c=copy.deepcopy(self.Domain.rhov)/(rho*vol)
         
@@ -203,8 +203,8 @@ class TwoDimPlanarSolve():
             *rho_spec[species[0]][:-1,:]*\
             (-perm/mu*(self.Domain.P[1:,:]-self.Domain.P[:-1,:])/self.dy[:-1,:])
         
-        print '    Gas fluxes in x: %f, %f'%(np.amax(flx)*10**(6),np.amin(flx)*10**(6))
-        print '    Gas fluxes in y: %f, %f'%(np.amax(fly)*10**(6),np.amin(fly)*10**(6))
+#        print '    Gas fluxes in x: %f, %f'%(np.amax(flx)*10**(6),np.amin(flx)*10**(6))
+#        print '    Gas fluxes in y: %f, %f'%(np.amax(fly)*10**(6),np.amin(fly)*10**(6))
         
         self.Domain.m_species[species[0]]+=flx+fly
         

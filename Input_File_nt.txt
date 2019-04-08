@@ -69,6 +69,7 @@ Ignition:eta,0.8
 Species:g,s
 Specie_IC:0,0.000000306
 Specie_rho:1.1,3065
+Specie_Cp:1000,600
 
 ######################################################
 #			Meshing details
@@ -100,7 +101,7 @@ bias_size_y:1e-06
 Fo:0.2
 #dt:0.00000001
 dt:None
-total_time_steps:75
+total_time_steps:70
 total_time:None
 #total_time:0.002
 Time_Scheme:Explicit
@@ -109,7 +110,7 @@ Restart:None
 Convergence:0.0001
 Max_iterations:100
 
-Number_Data_Output:1
+Number_Data_Output:7
 
 ######################################################
 #			Boundary conditions
