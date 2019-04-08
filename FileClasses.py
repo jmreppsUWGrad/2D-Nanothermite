@@ -20,7 +20,7 @@ keys_Settings=['Domain','Length','Width','Nodes_x','Nodes_y','k','Cp','rho',\
                
 keys_Sources=['Source_Uniform','Source_Kim','Ea','A0','dH', 'Ignition']
 
-keys_Species=['Species','Specie_rho','Specie_IC']
+keys_Species=['Species','Specie_rho','Specie_IC','Specie_Cp']
 
 keys_Time_adv=['Fo','dt','total_time_steps', 'total_time','Restart',\
                'Time_Scheme','Convergence','Max_iterations','Number_Data_Output']

@@ -157,6 +157,7 @@ class TwoDimPlanarSolve():
         E_0=copy.deepcopy(self.Domain.E)
         rho_spec=self.Domain.rho_species
         species=self.Domain.species_keys
+        Cp_spec=self.Domain.Cp_species
 #        u_c=copy.deepcopy(self.Domain.rhou)/(rho*vol)
 #        v_c=copy.deepcopy(self.Domain.rhov)/(rho*vol)
         
@@ -208,7 +209,8 @@ class TwoDimPlanarSolve():
         self.Domain.m_species[species[0]]+=flx+fly
         
         # Source terms
-        dm=deta*dt*(m_c[species[0]]+m_c[species[1]])
+#        dm=deta*dt*(m_c[species[0]]+m_c[species[1]])
+        dm=deta*dt*(self.Domain.m_0)
 #        print '     Mass generated: %f, %f'%(np.amax(dm)*10**(6),np.amin(dm)*10**(6))
 #        (m_c[species[0]]+m_c[species[1]])
         self.Domain.m_species[species[0]]+=dm
@@ -305,8 +307,27 @@ class TwoDimPlanarSolve():
         self.Domain.E +=E_unif
         self.Domain.E +=E_kim
         
-        # Porous medium advection [TO BE CONTINUED]
-        
+        # Porous medium advection
+#            # Incoming fluxes
+#        self.Domain.E[:,1:]+=Ax[:,1:]*dt\
+#            *0.5*(rho_spec[species[0]][:,1:]+rho_spec[species[0]][:,:-1])*\
+#            (-perm/mu*(self.Domain.P[:,1:]-self.Domain.P[:,:-1])/self.dx[:,:-1])\
+#            *0.5*(T_c[:,1:]+T_c[:,:-1])*0.5*(Cp_spec[:,1:]+Cp_spec[:,:-1])
+#        self.Domain.E[1:,:]+=Ay[1:,:]*dt\
+#            *0.5*(rho_spec[species[0]][1:,:]+rho_spec[species[0]][:-1,:])*\
+#            (-perm/mu*(self.Domain.P[1:,:]-self.Domain.P[:-1,:])/self.dy[:-1,:])\
+#            *0.5*(T_c[1:,:]+T_c[:-1,:])*0.5*(Cp_spec[1:,:]+Cp_spec[:-1,:])
+#        
+#            # Outgoing fluxes
+#        self.Domain.E[:,:-1]-=Ax[:,:-1]*dt\
+#            *rho_spec[species[0]][:,:-1]*\
+#            (-perm/mu*(self.Domain.P[:,1:]-self.Domain.P[:,:-1])/self.dx[:,:-1])\
+#            *0.5*(T_c[:,1:]+T_c[:,:-1])*0.5*(Cp_spec[:,1:]+Cp_spec[:,:-1])
+#        self.Domain.E[:-1,:]-=Ay[:-1,:]*dt\
+#            *rho_spec[species[0]][:-1,:]*\
+#            (-perm/mu*(self.Domain.P[1:,:]-self.Domain.P[:-1,:])/self.dy[:-1,:])\
+#            *0.5*(T_c[1:,:]+T_c[:-1,:])*0.5*(Cp_spec[1:,:]+Cp_spec[:-1,:])
+
         
 #        # Radiation effects
 #        self.Domain.T[1:-1,1:-1]+=0.8*5.67*10**(-8)*(T_c[:-2,1:-1]**4+T_c[2:,1:-1]**4+T_c[1:-1,:-2]**4+T_c[1:-1,2:]**4)
