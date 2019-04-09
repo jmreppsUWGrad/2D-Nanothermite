@@ -297,7 +297,7 @@ class TwoDimPlanarSolve():
 #        self.Domain.T[1:-1,1:-1]+=0.8*5.67*10**(-8)*(T_c[:-2,1:-1]**4+T_c[2:,1:-1]**4+T_c[1:-1,:-2]**4+T_c[1:-1,2:]**4)
         
         # Apply boundary conditions
-        self.BCs.Energy(self.Domain.E, T_c, dt, rho, Cv, vol)
+        self.BCs.Energy(self.Domain.E, T_c, dt, rho, Cv, vol, Ax, Ay)
         
         ###################################################################
         # Divergence/Convergence checks
