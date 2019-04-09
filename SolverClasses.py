@@ -174,7 +174,7 @@ class TwoDimPlanarSolve():
 #            E_kim, deta =self.get_source.Source_Comb_Umbrajkar(rho, T_c, self.Domain.eta, self.Domain.CV_vol(), dt)
         
         # Adjust pressure
-        print '     Gas mass: %f, %f'%(np.amax(self.Domain.m_species['g']),np.amin(self.Domain.m_species['g']))
+        print '     Gas mass: %f, %f'%(np.amax(self.Domain.m_species['g'])*10**6,np.amin(self.Domain.m_species['g'])*10**6)
         print '     Gas density: %f, %f'%(np.amax(rho_spec['g']),np.amin(rho_spec['g']))
         self.Domain.P[:,:]=self.Domain.m_species['g']/102*1000*8.314*300/(0.6*vol)
 #        self.BCs.P(self.Domain.P)
@@ -203,15 +203,15 @@ class TwoDimPlanarSolve():
             *rho_spec[species[0]][:-1,:]*\
             (-perm/mu*(self.Domain.P[1:,:]-self.Domain.P[:-1,:])/self.dy[:-1,:])
         
-#        print '    Gas fluxes in x: %f, %f'%(np.amax(flx)*10**(6),np.amin(flx)*10**(6))
-#        print '    Gas fluxes in y: %f, %f'%(np.amax(fly)*10**(6),np.amin(fly)*10**(6))
+        print '    Gas fluxes in x: %f, %f'%(np.amax(flx)*10**(9),np.amin(flx)*10**(9))
+        print '    Gas fluxes in y: %f, %f'%(np.amax(fly)*10**(9),np.amin(fly)*10**(9))
         
         self.Domain.m_species[species[0]]+=flx+fly
         
         # Source terms
 #        dm=deta*dt*(m_c[species[0]]+m_c[species[1]])
         dm=deta*dt*(self.Domain.m_0)
-#        print '     Mass generated: %f, %f'%(np.amax(dm)*10**(6),np.amin(dm)*10**(6))
+        print '     Mass generated: %f, %f'%(np.amax(dm)*10**(9),np.amin(dm)*10**(9))
 #        (m_c[species[0]]+m_c[species[1]])
         self.Domain.m_species[species[0]]+=dm
         self.Domain.m_species[species[1]]-=dm
