@@ -49,6 +49,8 @@ class TwoDimPlanar():
         
         # Species
         self.m_species={}
+        self.mu_species={}
+        self.mv_species={}
         self.rho_species={}
         self.Cp_species={}
         if bool(Species):
@@ -56,6 +58,8 @@ class TwoDimPlanar():
             i=0
             for key in self.species_keys:
                 self.m_species[key]=np.zeros_like(self.E)
+                self.mu_species[key]=np.zeros_like(self.E)
+                self.mv_species[key]=np.zeros_like(self.E)
                 self.rho_species[key]=np.ones_like(self.E)*Species['Specie_rho'][i]
                 self.Cp_species[key]=np.ones_like(self.E)*Species['Specie_Cp'][i]
                 i+=1

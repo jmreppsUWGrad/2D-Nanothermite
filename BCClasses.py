@@ -46,11 +46,11 @@ class BCs():
                     q=self.BCs['bc_left_E'][1+3*i][0]*self.BCs['bc_left_E'][1+3*i][1] # h*Tinf
                     Bi=-self.BCs['bc_left_E'][1+3*i][0]*T_prev[st:en,0] # h*Tij
                 
-                E[st:en,0]+=(Bi+q)*self.dy[st:en,0]*dt
+                E[st:en,0]+=(Bi+q)*dt*self.dy[st:en,0]
                 if len(self.BCs['bc_left_E'])/3-i==1:
                     if self.BCs['bc_left_E'][3*i]=='C':
                         Bi=-self.BCs['bc_left_E'][1+3*i][0]*T_prev[-1,0] # h*Tij
-                    E[-1,0]+=(Bi+q)*self.dy[-1,0]*dt
+                    E[-1,0]+=(Bi+q)*dt*self.dy[-1,0]
         
         # Right face
         for i in range(len(self.BCs['bc_right_E'])/3):
@@ -70,11 +70,11 @@ class BCs():
                     q=self.BCs['bc_right_E'][1+3*i][0]*self.BCs['bc_right_E'][1+3*i][1] # h*Tinf
                     Bi=-self.BCs['bc_right_E'][1+3*i][0]*T_prev[st:en,-1] # h*Tij
                 
-                E[st:en,-1]+=(Bi+q)*self.dy[st:en,-1]*dt
+                E[st:en,-1]+=(Bi+q)*dt*self.dy[st:en,-1]
                 if len(self.BCs['bc_right_E'])/3-i==1:
                     if self.BCs['bc_right_E'][3*i]=='C':
                         Bi=-self.BCs['bc_right_E'][1+3*i][0]*T_prev[-1,-1] # h*Tij
-                    E[-1,-1]+=(Bi+q)*self.dy[-1,-1]*dt
+                    E[-1,-1]+=(Bi+q)*dt*self.dy[-1,-1]
         
         # South face
         for i in range(len(self.BCs['bc_south_E'])/3):
@@ -94,11 +94,11 @@ class BCs():
                     q=self.BCs['bc_south_E'][1+3*i][0]*self.BCs['bc_south_E'][1+3*i][1] # h*Tinf
                     Bi=-self.BCs['bc_south_E'][1+3*i][0]*T_prev[0,st:en] # h*Tij
                 
-                E[0,st:en]+=(Bi+q)*self.dx[0,st:en]*dt
+                E[0,st:en]+=(Bi+q)*dt*self.dx[0,st:en]
                 if len(self.BCs['bc_south_E'])/3-i==1:
                     if self.BCs['bc_south_E'][3*i]=='C':
                         Bi=-self.BCs['bc_south_E'][1+3*i][0]*T_prev[0,-1] # h*Tij
-                    E[0,-1]+=(Bi+q)*self.dx[0,-1]*dt
+                    E[0,-1]+=(Bi+q)*dt*self.dx[0,-1]
                     
         # North face
         for i in range(len(self.BCs['bc_north_E'])/3):
@@ -118,11 +118,11 @@ class BCs():
                     q=self.BCs['bc_north_E'][1+3*i][0]*self.BCs['bc_north_E'][1+3*i][1] # h*Tinf
                     Bi=-self.BCs['bc_north_E'][1+3*i][0]*T_prev[-1,st:en] # h*Tij
                 
-                E[-1,st:en]+=(Bi+q)*self.dx[-1,st:en]*dt
+                E[-1,st:en]+=(Bi+q)*dt*self.dx[-1,st:en]
                 if len(self.BCs['bc_north_E'])/3-i==1:
                     if self.BCs['bc_north_E'][3*i]=='C':
                         Bi=-self.BCs['bc_north_E'][1+3*i][0]*T_prev[-1,-1] # h*Tij
-                    E[-1,-1]+=(Bi+q)*self.dx[-1,-1]*dt
+                    E[-1,-1]+=(Bi+q)*dt*self.dx[-1,-1]
         
         # Apply radiation BCs
         if self.BCs['bc_left_rad']!='None':

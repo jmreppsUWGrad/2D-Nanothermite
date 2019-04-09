@@ -66,80 +66,13 @@ class TwoDimPlanarSolve():
         else:
             return 2*k1*k2/(k1+k2)
         
-    # coefficients for temperature weighting in Advance_Soln_Cond
-    def get_Coeff(self, dx, dy, dt, k, inter_type):
-        aW=np.zeros_like(dx)
-        aE=np.zeros_like(dx)
-        aS=np.zeros_like(dx)
-        aN=np.zeros_like(dx)
-        
-        # Left/right face factors
-        aW[1:-1,1:-1] =0.5*self.interpolate(k[1:-1,1:-1], k[1:-1,:-2], inter_type)\
-                    *(dy[1:-1,1:-1]+dy[:-2,1:-1])/(dx[1:-1,:-2])
-        aE[1:-1,1:-1] =0.5*self.interpolate(k[1:-1,1:-1],k[1:-1,2:], inter_type)\
-                    *(dy[1:-1,1:-1]+dy[:-2,1:-1])/(dx[1:-1,1:-1])
-        # At north/south bondaries
-        aW[0,1:-1]    =0.5*self.interpolate(k[0,1:-1],k[0,:-2], inter_type)\
-            *(dy[0,1:-1])/(dx[0,:-2])
-        aE[0,1:-1]    =0.5*self.interpolate(k[0,1:-1],k[0,2:], inter_type)\
-            *(dy[0,1:-1])/(dx[0,1:-1])
-        aW[-1,1:-1]   =0.5*self.interpolate(k[-1,1:-1],k[-1,:-2], inter_type)\
-            *(dy[-1,1:-1])/(dx[-1,:-2])
-        aE[-1,1:-1]   =0.5*self.interpolate(k[-1,1:-1],k[-1,2:], inter_type)\
-            *(dy[-1,1:-1])/(dx[-1,1:-1])
-        # At east/west boundaries
-        aE[0,0]       =0.5*self.interpolate(k[0,0],k[0,1], inter_type)\
-            *(dy[0,0])/dx[0,0]
-        aE[1:-1,0]    =0.5*self.interpolate(k[1:-1,0],k[1:-1,1], inter_type)\
-            *(dy[1:-1,0]+dy[:-2,0])/dx[1:-1,0]
-        aE[-1,0]      =0.5*self.interpolate(k[-1,0],k[-1,1], inter_type)\
-            *(dy[-1,0])/dx[-1,0]
-        aW[0,-1]      =0.5*self.interpolate(k[0,-1],k[0,-2], inter_type)\
-            *(dy[0,-1])/dx[0,-1]
-        aW[1:-1,-1]   =0.5*self.interpolate(k[1:-1,-1],k[1:-1,-2], inter_type)\
-            *(dy[1:-1,-1]+dy[:-2,-1])/dx[1:-1,-1]
-        aW[-1,-1]     =0.5*self.interpolate(k[-1,-1],k[-1,-2], inter_type)\
-            *(dy[-1,-1])/dx[-1,-1]
-        
-        # Top/bottom faces
-        aS[1:-1,1:-1]=0.5*self.interpolate(k[1:-1,1:-1],k[:-2,1:-1], inter_type)\
-            *(dx[1:-1,1:-1]+dx[1:-1,:-2])/dy[:-2,1:-1]
-        aN[1:-1,1:-1]=0.5*self.interpolate(k[1:-1,1:-1],k[2:,1:-1], inter_type)\
-            *(dx[1:-1,1:-1]+dx[1:-1,:-2])/dy[1:-1,1:-1]
-        
-        # Area account for east/west boundary nodes
-        aS[1:-1,0]    =0.5*self.interpolate(k[1:-1,0],k[:-2,0], inter_type)\
-            *(dx[1:-1,0])/(dy[:-2,0])
-        aN[1:-1,0]    =0.5*self.interpolate(k[1:-1,0],k[2:,0], inter_type)\
-            *(dx[1:-1,0])/(dy[1:-1,0])
-        aS[1:-1,-1]   =0.5*self.interpolate(k[1:-1,-1],k[:-2,-1], inter_type)\
-            *(dx[1:-1,-1])/(dy[:-2,-1])
-        aN[1:-1,-1]   =0.5*self.interpolate(k[1:-1,-1],k[2:,-1], inter_type)\
-            *(dx[1:-1,-1])/(dy[1:-1,-1])
-        # Forward/backward difference for north/south boundaries
-        aN[0,0]       =0.5*self.interpolate(k[0,0],k[1,0], inter_type)\
-            *dx[0,0]/dy[0,0]
-        aN[0,1:-1]    =0.5*self.interpolate(k[0,1:-1],k[1,1:-1], inter_type)\
-            *(dx[0,1:-1]+dx[0,:-2])/dy[0,1:-1]
-        aN[0,-1]      =0.5*self.interpolate(k[0,-1],k[1,-1], inter_type)\
-            *dx[0,-1]/dy[0,-1]
-        aS[-1,0]      =0.5*self.interpolate(k[-1,0],k[-2,0], inter_type)\
-            *dx[-1,0]/dy[-1,0]
-        aS[-1,1:-1]   =0.5*self.interpolate(k[-1,1:-1],k[-2,1:-1], inter_type)\
-            *(dx[0,1:-1]+dx[0,:-2])/dy[-1,1:-1]
-        aS[-1,-1]     =0.5*self.interpolate(k[-1,-1],k[-2,-1], inter_type)\
-            *dx[-1,-1]/dy[-1,-1]
-        
-        return aW,aE,aS,aN
-    
     # Main solver (1 time step)
-    def Advance_Soln_Cond(self, nt, t, vol):
+    def Advance_Soln_Cond(self, nt, t, vol, Ax, Ay):
         max_Y,min_Y=0,1
         # Calculate properties
         k, rho, Cv, D=self.Domain.calcProp()
-        Ax,Ay=self.Domain.CV_area()
         mu=10**(-5)
-        perm=10**(-11)
+        perm=0*10**(-11)
         
         if self.dt=='None':
             dt=self.getdt(k, rho, Cv)
@@ -153,13 +86,17 @@ class TwoDimPlanarSolve():
         
         # Copy needed variables and set pointers to other variables
         T_c=self.Domain.TempFromConserv()
-#        m_c=copy.deepcopy(self.Domain.m_species)
+        m_c=copy.deepcopy(self.Domain.m_species)
         E_0=copy.deepcopy(self.Domain.E)
         rho_spec=self.Domain.rho_species
         species=self.Domain.species_keys
 #        Cp_spec=self.Domain.Cp_species
-#        u_c=copy.deepcopy(self.Domain.rhou)/(rho*vol)
-#        v_c=copy.deepcopy(self.Domain.rhov)/(rho*vol)
+        mu_c=copy.deepcopy(self.Domain.mu_species)
+        mv_c=copy.deepcopy(self.Domain.mv_species)
+        
+        # Velocity
+        u=mu_c[species[0]]/m_c[species[0]]
+        v=mv_c[species[0]]/m_c[species[0]]
         
         ###################################################################
         # Calculate source and Porous medium terms
@@ -189,19 +126,25 @@ class TwoDimPlanarSolve():
         fly=np.zeros_like(self.Domain.P)
         
         flx[:,1:]+=Ax[:,1:]*dt\
-            *0.5*(rho_spec[species[0]][:,1:]+rho_spec[species[0]][:,:-1])*\
+            *self.interpolate(rho_spec[species[0]][:,1:],rho_spec[species[0]][:,:-1],'Linear')*\
             (-perm/mu*(self.Domain.P[:,1:]-self.Domain.P[:,:-1])/self.dx[:,:-1])
+#            self.interpolate(u[:,1:], u[:,:-1], 'Linear')
+
         fly[1:,:]+=Ay[1:,:]*dt\
-            *0.5*(rho_spec[species[0]][1:,:]+rho_spec[species[0]][:-1,:])*\
+            *self.interpolate(rho_spec[species[0]][:-1,:],rho_spec[species[0]][1:,:],'Linear')*\
             (-perm/mu*(self.Domain.P[1:,:]-self.Domain.P[:-1,:])/self.dy[:-1,:])
+#            self.interpolate(v[1:,:], v[:-1,:], 'Linear')
         
         # Outgoing fluxes
         flx[:,:-1]-=Ax[:,:-1]*dt\
-            *rho_spec[species[0]][:,:-1]*\
+            *self.interpolate(rho_spec[species[0]][:,:-1],rho_spec[species[0]][:,1:], 'Linear')*\
             (-perm/mu*(self.Domain.P[:,1:]-self.Domain.P[:,:-1])/self.dx[:,:-1])
+#            self.interpolate(u[:,1:], u[:,:-1], 'Linear')
+
         fly[:-1,:]-=Ay[:-1,:]*dt\
-            *rho_spec[species[0]][:-1,:]*\
+            *self.interpolate(rho_spec[species[0]][1:,:], rho_spec[species[0]][:-1,:], 'Linear')*\
             (-perm/mu*(self.Domain.P[1:,:]-self.Domain.P[:-1,:])/self.dy[:-1,:])
+#            self.interpolate(v[1:,:], v[:-1,:], 'Linear')
         
         print '    Gas fluxes in x: %f, %f'%(np.amax(flx)*10**(9),np.amin(flx)*10**(9))
         print '    Gas fluxes in y: %f, %f'%(np.amax(fly)*10**(9),np.amin(fly)*10**(9))
@@ -228,26 +171,45 @@ class TwoDimPlanarSolve():
         # Conservation of Momentum (x direction; gas)
         ###################################################################
         # Fluxes
-#        self.Domain.rhou[:,1:]+=Ax[:,1:]*dt\
-#            *0.5*(rhou_c[:,1:]+rhou_c[:,:-1])*0.5*(u_c[:,1:]+u_c[:,:-1])
-#        self.Domain.rhou[1:,:]+=Ay[1:,:]*dt\
-#            *0.5*(rhou_c[1:,:]+rhou_c[:-1,:])*0.5*(v_c[1:,:]+v_c[:-1,:])
-#        self.Domain.rhou[:,:-1]-=Ax[:,:-1]*dt\
-#            *0.5*(rhou_c[:,1:]+rhou_c[:,:-1])*0.5*(u_c[:,1:]+u_c[:,:-1])
-#        self.Domain.rhou[:-1,:]-=Ay[:-1,:]*dt\
-#            *0.5*(rhou_c[1:,:]+rhou_c[:-1,:])*0.5*(v_c[1:,:]+v_c[:-1,:])
-        
-        # Pressure
-#        self.Domain.rhou[:,1:]+=Ax[:,1:]*dt\
+#        self.Domain.mu_species[species[0]][:,1:]+=Ax[:,1:]*dt\
+#            *0.5*(mu_c[species[0]][:,1:]+mu_c[species[0]][:,:-1])*0.5*(u[:,1:]+u[:,:-1])
+#        self.Domain.mu_species[species[0]][1:,:]+=Ay[1:,:]*dt\
+#            *0.5*(mu_c[species[0]][1:,:]+mu_c[species[0]][:-1,:])*0.5*(v[1:,:]+v[:-1,:])
+#        self.Domain.mu_species[species[0]][:,:-1]-=Ax[:,:-1]*dt\
+#            *0.5*(mu_c[species[0]][:,1:]+mu_c[species[0]][:,:-1])*0.5*(u[:,1:]+u[:,:-1])
+#        self.Domain.mu_species[species[0]][:-1,:]-=Ay[:-1,:]*dt\
+#            *0.5*(mu_c[species[0]][1:,:]+mu_c[species[0]][:-1,:])*0.5*(v[1:,:]+v[:-1,:])
+#        
+#        # Pressure
+#        self.Domain.mu_species[species[0]][:,1:]+=Ax[:,1:]*dt\
 #            *0.5*(self.Domain.P[:,1:]+self.Domain.P[:,:-1])
-#        self.Domain.rhou[1:,:]+=Ay[1:,:]*dt\
-#            *0.5*(self.Domain.P[1:,:]+self.Domain.P[:-1,:])
-#        self.Domain.rhou[:,:-1]-=Ax[:,:-1]*dt\
+#        self.Domain.mu_species[species[0]][:,:-1]-=Ax[:,:-1]*dt\
 #            *0.5*(self.Domain.P[:,1:]+self.Domain.P[:,:-1])
-#        self.Domain.rhou[:-1,:]-=Ay[:-1,:]*dt\
+#                
+#        # Porous medium losses
+#        self.Domain.mu_species[species[0]]-=mu/perm*u*vol*dt
+#        
+#        ###################################################################
+#        # Conservation of Momentum (y direction; gas)
+#        ###################################################################
+#        # Fluxes
+#        self.Domain.mv_species[species[0]][:,1:]+=Ax[:,1:]*dt\
+#            *0.5*(mv_c[species[0]][:,1:]+mv_c[species[0]][:,:-1])*0.5*(u[:,1:]+u[:,:-1])
+#        self.Domain.mv_species[species[0]][1:,:]+=Ay[1:,:]*dt\
+#            *0.5*(mv_c[species[0]][1:,:]+mv_c[species[0]][:-1,:])*0.5*(v[1:,:]+v[:-1,:])
+#        self.Domain.mv_species[species[0]][:,:-1]-=Ax[:,:-1]*dt\
+#            *0.5*(mv_c[species[0]][:,1:]+mv_c[species[0]][:,:-1])*0.5*(u[:,1:]+u[:,:-1])
+#        self.Domain.mv_species[species[0]][:-1,:]-=Ay[:-1,:]*dt\
+#            *0.5*(mv_c[species[0]][1:,:]+mv_c[species[0]][:-1,:])*0.5*(v[1:,:]+v[:-1,:])
+#        
+#        # Pressure
+#        self.Domain.mv_species[species[0]][1:,:]+=Ay[1:,:]*dt\
 #            *0.5*(self.Domain.P[1:,:]+self.Domain.P[:-1,:])
-        
-        # Porous medium losses
+#        self.Domain.mv_species[species[0]][:-1,:]-=Ay[:-1,:]*dt\
+#            *0.5*(self.Domain.P[1:,:]+self.Domain.P[:-1,:])
+#                
+#        # Porous medium losses
+#        self.Domain.mu_species[species[0]]-=mu/perm*v*vol*dt
         
         
         ###################################################################
@@ -291,21 +253,23 @@ class TwoDimPlanarSolve():
         ###################################################################
         # Conservation of Energy
         ###################################################################
-        # Calculate flux coefficients
-        aW,aE,aS,aN=self.get_Coeff(self.dx,self.dy, dt, k, 'Harmonic')
-        
-        # Heat diffusion contribution (2nd order central schemes)
-        self.Domain.E[:,1:]    = aW[:,1:]*T_c[:,:-1]
-        self.Domain.E[:,0]     = aE[:,0]*T_c[:,1]
-        
-        self.Domain.E[:,1:-1] += aE[:,1:-1]*T_c[:,2:]
-        self.Domain.E[1:,:]   += aS[1:,:]*T_c[:-1,:]
-        self.Domain.E[:-1,:]  += aN[:-1,:]*T_c[1:,:]
-        self.Domain.E         -= (aW+aE+aS+aN)*T_c
+        # Heat diffusion
+            #left faces
+        self.Domain.E[:,1:]   -= dt*self.interpolate(k[:,:-1],k[:,1:], 'Harmonic')\
+                    *(T_c[:,1:]-T_c[:,:-1])/self.dx[:,:-1]*Ax[:,1:]
+            # Right face
+        self.Domain.E[:,:-1] += dt*self.interpolate(k[:,:-1],k[:,1:], 'Harmonic')\
+                    *(T_c[:,1:]-T_c[:,:-1])/self.dx[:,:-1]*Ax[:,:-1]
+            # South face
+        self.Domain.E[1:,:]   -= dt*self.interpolate(k[1:,:],k[:-1,:], 'Harmonic')\
+                    *(T_c[1:,:]-T_c[:-1,:])/self.dy[:-1,:]*Ay[1:,:]
+            # North face
+        self.Domain.E[:-1,:]  += dt*self.interpolate(k[:-1,:],k[1:,:], 'Harmonic')\
+                    *(T_c[1:,:]-T_c[:-1,:])/self.dy[:-1,:]*Ay[:-1,:]
         
         # Source terms
-        self.Domain.E +=E_unif
-        self.Domain.E +=E_kim
+        self.Domain.E +=E_unif*dt
+        self.Domain.E +=E_kim *dt
         
         # Porous medium advection
 #            # Incoming fluxes
@@ -332,11 +296,8 @@ class TwoDimPlanarSolve():
 #        # Radiation effects
 #        self.Domain.T[1:-1,1:-1]+=0.8*5.67*10**(-8)*(T_c[:-2,1:-1]**4+T_c[2:,1:-1]**4+T_c[1:-1,:-2]**4+T_c[1:-1,2:]**4)
         
-        # Apply energy from previous time step and boundary conditions
-        self.Domain.E*= dt
-        self.Domain.E+= E_0
+        # Apply boundary conditions
         self.BCs.Energy(self.Domain.E, T_c, dt, rho, Cv, vol)
-#        self.Apply_BCs_Cond(self.Domain.E, T_c, dt, rho, Cv, vol)
         
         ###################################################################
         # Divergence/Convergence checks
@@ -349,7 +310,8 @@ class TwoDimPlanarSolve():
         elif (np.amax(self.Domain.eta)>1.0) or (np.amin(self.Domain.eta)<-10**(-9)):
             print '***********Divergence detected - reaction progress************'
             return 3, dt
-        elif bool(self.Domain.m_species) and ((max_Y>10**(5)) or (min_Y<-10**(-9))):
+        elif bool(self.Domain.m_species) and ((max_Y>10**(5)) or (min_Y<-10**(-9))\
+                  or np.isnan(max_Y)):
             print '***********Divergence detected - species mass ****************'
             return 4, dt
         else:
