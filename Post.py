@@ -91,7 +91,13 @@ while i>j:
     else:
         del times[j]
         i-=1
-    
+
+# Graph spacial limits
+xmin,xmax=0,0.001
+ymin,ymax=0,0.006
+#xmin,xmax=0.0004,0.0006
+#ymin,ymax=0.005,0.006
+
 # Generate graphs
 X=np.load('X.npy', False)
 Y=np.load('Y.npy', False)
@@ -108,6 +114,8 @@ for time in times:
     pyplot.xlabel('$x$ (m)')
     pyplot.ylabel('$y$ (m)')
 #    pyplot.clim(300, 10000)
+    pyplot.xlim([xmin,xmax])
+    pyplot.ylim([ymin,ymax])
     pyplot.title('Temperature distribution t='+time);
     fig.savefig('T_'+time+'.png',dpi=300)
     pyplot.close(fig)
@@ -130,6 +138,8 @@ for time in times:
         pyplot.xlabel('$x$ (m)')
         pyplot.ylabel('$y$ (m)')
     #    pyplot.clim(0.0, 1.0)
+        pyplot.xlim([xmin,xmax])
+        pyplot.ylim([ymin,ymax])
         pyplot.title('Progress distribution t='+time);
         fig.savefig('eta_'+time+'.png',dpi=300)
         pyplot.close(fig)
@@ -142,6 +152,8 @@ for time in times:
         pyplot.xlabel('$x$ (m)')
         pyplot.ylabel('$y$ (m)')
     #    pyplot.clim(0.0, 1.0)
+        pyplot.xlim([xmin,xmax])
+        pyplot.ylim([ymin,ymax])
         pyplot.title('Reaction rate t='+time);
         fig.savefig('Phi_'+time+'.png',dpi=300)
         pyplot.close(fig)
@@ -164,6 +176,8 @@ for time in times:
         pyplot.xlabel('$x$ (m)')
         pyplot.ylabel('$y$ (m)')
     #    pyplot.clim(300, 10000)
+        pyplot.xlim([xmin,xmax])
+        pyplot.ylim([ymin,ymax])
         pyplot.title('Pressure t='+time);
         fig.savefig('P_'+time+'.png',dpi=300)
         pyplot.close(fig)
@@ -172,19 +186,20 @@ for time in times:
         continue
     
         # Mass fraction contours
-        for i in range(len(titles)):
-            
-            Y_0=np.load('m_'+titles[i]+'_'+time+'.npy', False)
-            fig=pyplot.figure(figsize=(6, 6))
-            pyplot.contourf(X, Y, Y_0, alpha=0.5, cmap=cm.viridis)#, vmin=0.0, vmax=1.0)  
-            pyplot.colorbar()
-            pyplot.xlabel('$x$ (m)')
-            pyplot.ylabel('$y$ (m)')
-        #    pyplot.clim(0.0, 1.0)
-            pyplot.title('Mass; $'+titles[i]+'$, t='+time);
-            fig.savefig('m_'+titles[i]+'_'+time+'.png',dpi=300)
-            pyplot.close(fig)
-            Y_tot+=Y_0
+    for i in range(len(titles)):
+        Y_0=np.load('m_'+titles[i]+'_'+time+'.npy', False)
+        fig=pyplot.figure(figsize=(6, 6))
+        pyplot.contourf(X, Y, Y_0, alpha=0.5, cmap=cm.viridis)#, vmin=0.0, vmax=1.0)  
+        pyplot.colorbar()
+        pyplot.xlabel('$x$ (m)')
+        pyplot.ylabel('$y$ (m)')
+    #    pyplot.clim(0.0, 1.0)
+        pyplot.xlim([xmin,xmax])
+        pyplot.ylim([ymin,ymax])
+        pyplot.title('Mass; $'+titles[i]+'$, t='+time);
+        fig.savefig('m_'+titles[i]+'_'+time+'.png',dpi=300)
+        pyplot.close(fig)
+        Y_tot+=Y_0
             
         
     print 'Processed '+time

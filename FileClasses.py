@@ -22,13 +22,13 @@ keys_Sources=['Source_Uniform','Source_Kim','Ea','A0','dH', 'Ignition']
 
 keys_Species=['Species','Specie_rho','Specie_IC','Specie_Cp']
 
-keys_Time_adv=['Fo','dt','total_time_steps', 'total_time','Restart',\
+keys_Time_adv=['Fo','CFL','dt','total_time_steps', 'total_time','Restart',\
                'Time_Scheme','Convergence','Max_iterations','Number_Data_Output']
 
 keys_BCs=     ['bc_left_E','bc_right_E','bc_south_E','bc_north_E',\
               'bc_left_rad','bc_right_rad','bc_south_rad','bc_north_rad',\
-              'bc_left_P','bc_right_P','bc_north_P','bc_south_P']#,\
-#              'bc_left_mass','bc_right_mass','bc_north_mass','bc_south_mass']
+              'bc_left_P','bc_right_P','bc_north_P','bc_south_P',\
+              'bc_left_mass','bc_right_mass','bc_north_mass','bc_south_mass']
 
 
 newline_check='\n' # This should be \n for Windows, \r for Ubuntu

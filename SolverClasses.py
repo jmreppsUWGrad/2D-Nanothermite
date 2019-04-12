@@ -36,6 +36,7 @@ class TwoDimPlanarSolve():
         self.time_scheme=settings['Time_Scheme']
         self.dx,self.dy=np.meshgrid(geom_obj.dx,geom_obj.dy)
         self.Fo=settings['Fo']
+        self.CFL=settings['CFL']
         self.dt=settings['dt']
         self.conv=settings['Convergence']
         self.countmax=settings['Max_iterations']
@@ -49,15 +50,20 @@ class TwoDimPlanarSolve():
         self.BCs=BCClasses.BCs(BCs, self.dx, self.dy)
         
     # Time step check with dx, dy, Fo number
-    def getdt(self, k, rho, Cv):
-        # Stability check for Fourrier number
-        if self.time_scheme=='Explicit':
-            self.Fo=min(self.Fo, 1.0)
-        elif self.Fo=='None':
-            self.Fo=1.0
+    def getdt(self, k, rho, Cv, T):
+        # Time steps depending on Fo
+        dt_1=np.amin(self.Fo*rho*Cv/k*(self.dx)**2)
+        dt_2=np.amin(self.Fo*rho*Cv/k*(self.dy)**2)
         
-        dt=self.Fo*rho*Cv/k*self.Domain.CV_vol()
-        return np.amin(dt)
+        # Time steps depending on CFL (if flow model used)
+        if bool(self.Domain.m_species):
+            dt_3=np.amin(self.CFL*self.dx/np.sqrt(1.4*8.314/102*T))
+            dt_4=np.amin(self.CFL*self.dy/np.sqrt(1.4*8.314/102*T))
+        else:
+            dt_3=10**9
+            dt_4=10**9
+        
+        return min(dt_1,dt_2,dt_3,dt_4)
     
     # Interpolation function
     def interpolate(self, k1, k2, func):
@@ -72,31 +78,31 @@ class TwoDimPlanarSolve():
         # Calculate properties
         k, rho, Cv, D=self.Domain.calcProp()
         mu=10**(-5)
-        perm=0*10**(-11)
+        perm=10**(-11)
+        
+        # Copy needed variables and set pointers to other variables
+        T_c=self.Domain.TempFromConserv()
+        if bool(self.Domain.m_species):
+            m_c=copy.deepcopy(self.Domain.m_species)
+            rho_spec=self.Domain.rho_species
+            species=self.Domain.species_keys
+    #        Cp_spec=self.Domain.Cp_species
+            mu_c=copy.deepcopy(self.Domain.mu_species)
+            mv_c=copy.deepcopy(self.Domain.mv_species)
+            
+            # Velocity
+#            u=mu_c[species[0]]/m_c[species[0]]
+#            v=mv_c[species[0]]/m_c[species[0]]
         
         if self.dt=='None':
-            dt=self.getdt(k, rho, Cv)
+            dt=self.getdt(k, rho, Cv, T_c)
         else:
-            dt=min(self.dt,self.getdt(k, rho, Cv))
+            dt=min(self.dt,self.getdt(k, rho, Cv, T_c))
             
         if (np.isnan(dt)) or (dt<=0):
             print '*********Diverging time step***********'
             return 1, dt
         print 'Time step %i, Step size=%.7f, Time elapsed=%f;'%(nt+1,dt, t+dt)
-        
-        # Copy needed variables and set pointers to other variables
-        T_c=self.Domain.TempFromConserv()
-        m_c=copy.deepcopy(self.Domain.m_species)
-        E_0=copy.deepcopy(self.Domain.E)
-        rho_spec=self.Domain.rho_species
-        species=self.Domain.species_keys
-#        Cp_spec=self.Domain.Cp_species
-        mu_c=copy.deepcopy(self.Domain.mu_species)
-        mv_c=copy.deepcopy(self.Domain.mv_species)
-        
-        # Velocity
-        u=mu_c[species[0]]/m_c[species[0]]
-        v=mv_c[species[0]]/m_c[species[0]]
         
         ###################################################################
         # Calculate source and Porous medium terms
@@ -110,75 +116,81 @@ class TwoDimPlanarSolve():
             E_kim, deta =self.get_source.Source_Comb_Kim(rho, T_c, self.Domain.eta, vol, dt)
 #            E_kim, deta =self.get_source.Source_Comb_Umbrajkar(rho, T_c, self.Domain.eta, self.Domain.CV_vol(), dt)
         
-        # Adjust pressure
-        print '     Gas mass: %f, %f'%(np.amax(self.Domain.m_species['g'])*10**6,np.amin(self.Domain.m_species['g'])*10**6)
-        print '     Gas density: %f, %f'%(np.amax(rho_spec['g']),np.amin(rho_spec['g']))
-        self.Domain.P[:,:]=self.Domain.m_species['g']/102*1000*8.314*300/(0.6*vol)
-#        self.BCs.P(self.Domain.P)
-        print '     Pressure: %f, %f'%(np.amax(self.Domain.P),np.amin(self.Domain.P))
-        
         ###################################################################
         # Conservation of Mass
         ###################################################################
-        # Use Darcy's law to directly calculate the velocities at the faces
-        # Ingoing fluxes
-        flx=np.zeros_like(self.Domain.P)
-        fly=np.zeros_like(self.Domain.P)
-        
-        flx[:,1:]+=Ax[:,1:]*dt\
-            *self.interpolate(rho_spec[species[0]][:,1:],rho_spec[species[0]][:,:-1],'Linear')*\
-            (-perm/mu*(self.Domain.P[:,1:]-self.Domain.P[:,:-1])/self.dx[:,:-1])
-#            self.interpolate(u[:,1:], u[:,:-1], 'Linear')
-
-        fly[1:,:]+=Ay[1:,:]*dt\
-            *self.interpolate(rho_spec[species[0]][:-1,:],rho_spec[species[0]][1:,:],'Linear')*\
-            (-perm/mu*(self.Domain.P[1:,:]-self.Domain.P[:-1,:])/self.dy[:-1,:])
-#            self.interpolate(v[1:,:], v[:-1,:], 'Linear')
-        
-        # Outgoing fluxes
-        flx[:,:-1]-=Ax[:,:-1]*dt\
-            *self.interpolate(rho_spec[species[0]][:,:-1],rho_spec[species[0]][:,1:], 'Linear')*\
-            (-perm/mu*(self.Domain.P[:,1:]-self.Domain.P[:,:-1])/self.dx[:,:-1])
-#            self.interpolate(u[:,1:], u[:,:-1], 'Linear')
-
-        fly[:-1,:]-=Ay[:-1,:]*dt\
-            *self.interpolate(rho_spec[species[0]][1:,:], rho_spec[species[0]][:-1,:], 'Linear')*\
-            (-perm/mu*(self.Domain.P[1:,:]-self.Domain.P[:-1,:])/self.dy[:-1,:])
-#            self.interpolate(v[1:,:], v[:-1,:], 'Linear')
-        
-        print '    Gas fluxes in x: %f, %f'%(np.amax(flx)*10**(9),np.amin(flx)*10**(9))
-        print '    Gas fluxes in y: %f, %f'%(np.amax(fly)*10**(9),np.amin(fly)*10**(9))
-        
-        self.Domain.m_species[species[0]]+=flx+fly
-        
-        # Source terms
-#        dm=deta*dt*(m_c[species[0]]+m_c[species[1]])
-        dm=deta*dt*(self.Domain.m_0)
-        print '     Mass generated: %f, %f'%(np.amax(dm)*10**(9),np.amin(dm)*10**(9))
-#        (m_c[species[0]]+m_c[species[1]])
-        self.Domain.m_species[species[0]]+=dm
-        self.Domain.m_species[species[1]]-=dm
-                
-        max_Y=max(np.amax(self.Domain.m_species[species[0]]),\
-                  np.amax(self.Domain.m_species[species[1]]))
-        min_Y=min(np.amin(self.Domain.m_species[species[0]]),\
-                  np.amin(self.Domain.m_species[species[1]]))
-        
-        # Apply BCs
-#        self.BCs.mass()
+        if bool(self.Domain.m_species):
+            # Adjust pressure
+            print '     Gas mass: %f, %f'%(np.amax(self.Domain.m_species['g'])*10**6,np.amin(self.Domain.m_species['g'])*10**6)
+            print '     Gas density: %f, %f'%(np.amax(rho_spec['g']),np.amin(rho_spec['g']))
+            self.Domain.P[:,:]=self.Domain.m_species['g']/102*1000*8.314*300/(0.6*vol)
+    #        self.BCs.P(self.Domain.P)
+            print '     Pressure: %f, %f'%(np.amax(self.Domain.P),np.amin(self.Domain.P))
+            
+            # Use Darcy's law to directly calculate the velocities at the faces
+            # Ingoing fluxes
+            flx=np.zeros_like(self.Domain.P)
+            fly=np.zeros_like(self.Domain.P)
+            
+            # Left face
+            flx[:,1:]+=Ax[:,1:]*dt\
+                *self.interpolate(rho_spec[species[0]][:,1:],rho_spec[species[0]][:,:-1],'Linear')*\
+                (-perm/mu*(self.Domain.P[:,1:]-self.Domain.P[:,:-1])/self.dx[:,:-1])
+    #            self.interpolate(u[:,1:], u[:,:-1], 'Linear')
+            
+            # Right face
+            flx[:,:-1]-=Ax[:,:-1]*dt\
+                *self.interpolate(rho_spec[species[0]][:,1:],rho_spec[species[0]][:,:-1], 'Linear')*\
+                (-perm/mu*(self.Domain.P[:,1:]-self.Domain.P[:,:-1])/self.dx[:,:-1])
+    #            self.interpolate(u[:,1:], u[:,:-1], 'Linear')
+            
+            # South face
+            fly[1:,:]+=Ay[1:,:]*dt\
+                *self.interpolate(rho_spec[species[0]][1:,:],rho_spec[species[0]][:-1,:],'Linear')*\
+                (-perm/mu*(self.Domain.P[1:,:]-self.Domain.P[:-1,:])/self.dy[:-1,:])
+    #            self.interpolate(v[1:,:], v[:-1,:], 'Linear')
+            
+            # North face
+            fly[:-1,:]-=Ay[:-1,:]*dt\
+                *self.interpolate(rho_spec[species[0]][1:,:], rho_spec[species[0]][:-1,:], 'Linear')*\
+                (-perm/mu*(self.Domain.P[1:,:]-self.Domain.P[:-1,:])/self.dy[:-1,:])
+    #            self.interpolate(v[1:,:], v[:-1,:], 'Linear')
+            
+            print '    Gas fluxes in x: %f, %f'%(np.amax(flx)*10**(9),np.amin(flx)*10**(9))
+            print '    Gas fluxes in y: %f, %f'%(np.amax(fly)*10**(9),np.amin(fly)*10**(9))
+            
+            self.Domain.m_species[species[0]]+=flx+fly
+            
+            # Source terms
+    #        dm=deta*dt*(m_c[species[0]]+m_c[species[1]])
+#            dm=np.zeros_like(deta)
+            dm=deta*dt*(self.Domain.m_0)
+#            dm[dm<10**(-9)]=0
+            print '     Mass generated: %f, %f'%(np.amax(dm)*10**(9),np.amin(dm)*10**(9))
+    #        (m_c[species[0]]+m_c[species[1]])
+            self.Domain.m_species[species[0]]+=dm
+            self.Domain.m_species[species[1]]-=dm
+                    
+            max_Y=max(np.amax(self.Domain.m_species[species[0]]),\
+                      np.amax(self.Domain.m_species[species[1]]))
+            min_Y=min(np.amin(self.Domain.m_species[species[0]]),\
+                      np.amin(self.Domain.m_species[species[1]]))
+            
+            # Apply BCs
+#            self.BCs.mass(self.Domain.m_species[species[0]], self.Domain.P, Ax, Ay, vol)
         
         ###################################################################
         # Conservation of Momentum (x direction; gas)
         ###################################################################
         # Fluxes
 #        self.Domain.mu_species[species[0]][:,1:]+=Ax[:,1:]*dt\
-#            *0.5*(mu_c[species[0]][:,1:]+mu_c[species[0]][:,:-1])*0.5*(u[:,1:]+u[:,:-1])
+#            *0.5*(mu_c[species[0]][:,1:]+mu_c[species[0]][:,:-1])*self.interpolate(u[:,1:], u[:,:-1], 'Linear')
 #        self.Domain.mu_species[species[0]][1:,:]+=Ay[1:,:]*dt\
-#            *0.5*(mu_c[species[0]][1:,:]+mu_c[species[0]][:-1,:])*0.5*(v[1:,:]+v[:-1,:])
+#            *0.5*(mu_c[species[0]][1:,:]+mu_c[species[0]][:-1,:])*self.interpolate(v[1:,:], v[:-1,:], 'Linear')
 #        self.Domain.mu_species[species[0]][:,:-1]-=Ax[:,:-1]*dt\
-#            *0.5*(mu_c[species[0]][:,1:]+mu_c[species[0]][:,:-1])*0.5*(u[:,1:]+u[:,:-1])
+#            *0.5*(mu_c[species[0]][:,1:]+mu_c[species[0]][:,:-1])*self.interpolate(u[:,1:], u[:,:-1], 'Linear')
 #        self.Domain.mu_species[species[0]][:-1,:]-=Ay[:-1,:]*dt\
-#            *0.5*(mu_c[species[0]][1:,:]+mu_c[species[0]][:-1,:])*0.5*(v[1:,:]+v[:-1,:])
+#            *0.5*(mu_c[species[0]][1:,:]+mu_c[species[0]][:-1,:])*self.interpolate(v[1:,:], v[:-1,:], 'Linear')
 #        
 #        # Pressure
 #        self.Domain.mu_species[species[0]][:,1:]+=Ax[:,1:]*dt\
@@ -303,14 +315,13 @@ class TwoDimPlanarSolve():
         # Divergence/Convergence checks
         ###################################################################
         if (np.isnan(np.amax(self.Domain.E))) \
-        or (np.amax(self.Domain.E)>100*np.amax(E_0))\
         or (np.amin(self.Domain.E)<=0):
             print '***********Divergence detected - energy************'
             return 2, dt
         elif (np.amax(self.Domain.eta)>1.0) or (np.amin(self.Domain.eta)<-10**(-9)):
             print '***********Divergence detected - reaction progress************'
             return 3, dt
-        elif bool(self.Domain.m_species) and ((max_Y>10**(5)) or (min_Y<-10**(-9))\
+        elif bool(self.Domain.m_species) and ((min_Y<-10**(-9))\
                   or np.isnan(max_Y)):
             print '***********Divergence detected - species mass ****************'
             return 4, dt

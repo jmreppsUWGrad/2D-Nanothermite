@@ -148,14 +148,21 @@ class BCs():
         for i in range(len(self.BCs['bc_left_mass'])/3):
             st=self.BCs['bc_left_mass'][2+3*i][0]
             en=self.BCs['bc_left_mass'][2+3*i][1]
+            # Gradient
             if self.BCs['bc_left_mass'][3*i]=='grad':
                 m[st:en,0]=m[st:en,1]-self.BCs['bc_left_mass'][1+3*i]*self.dx[st:en,0]
                 if len(self.BCs['bc_left_mass'])/3-i==1:
                     m[-1,0]=m[-1,1]-self.BCs['bc_left_mass'][-2]*self.dx[-1,0]
+            # Pressure flux
             elif self.BCs['bc_left_mass'][3*i]=='grad_P':
                 m[st:en,0]=m[st:en,1]-self.BCs['bc_left_mass'][1+3*i]*self.dx[st:en,0]
                 if len(self.BCs['bc_left_mass'])/3-i==1:
                     m[-1,0]=m[-1,1]-self.BCs['bc_left_mass'][-2]*self.dx[-1,0]
+            # Constant
+            else:
+                m[st:en,0]=self.BCs['bc_left_mass'][1+3*i]*vol[st:en,0]
+                if len(self.BCs['bc_left_mass'])/3-i==1:
+                    m[-1,0]=self.BCs['bc_left_mass'][-2]*vol[-1,0]
         # Right face
         for i in range(len(self.BCs['bc_right_mass'])/3):
             st=self.BCs['bc_right_mass'][2+3*i][0]

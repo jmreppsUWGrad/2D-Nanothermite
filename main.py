@@ -34,7 +34,6 @@ import string as st
 import os
 import sys
 import time
-import copy
 
 import GeomClasses as Geom
 import SolverClasses as Solvers
@@ -42,12 +41,11 @@ import FileClasses
 
 def save_data(Domain, Sources, Species, time):
     T=Domain.TempFromConserv()
-    P=Domain.P
     np.save('T_'+time, T, False)
-    np.save('P_'+time, P, False)
     if st.find(Sources['Source_Kim'],'True')>=0:
         np.save('eta_'+time, Domain.eta, False)
     if bool(Species):
+        np.save('P_'+time, Domain.P, False)
         for i in Species['keys']:
             np.save('m_'+i+'_'+time, Domain.m_species[i], False)
 
@@ -148,7 +146,6 @@ vol=domain.CV_vol()
 Ax,Ay=domain.CV_area()
 domain.E[:,:]=rho*vol*Cv*T
 del k,rho,Cv,D,T
-m_0=np.zeros_like(domain.E)
 if (bool(domain.m_species)) and (type(settings['Restart']) is str):
     for i in range(len(Species['Species'])):
 #        domain.m_species[Species['Species'][i]][:,:]=Species['Specie_IC'][i]
@@ -215,7 +212,7 @@ while nt<settings['total_time_steps'] and t<settings['total_time']:
     if err>0:
         print '#################### Solver aborted #######################'
         print 'Saving data to numpy array files...'
-        save_data(domain, Sources, Species, '{:f}'.format(t))
+        save_data(domain, Sources, Species, '{:f}'.format(t*1000))
         input_file.Write_single_line('#################### Solver aborted #######################')
         input_file.Write_single_line('Time step %i, Time elapsed=%f, error code=%i;'%(nt,t,err))
         input_file.Write_single_line('Error codes: 1-time step, 2-Energy, 3-reaction progress, 4-Species balance')
@@ -225,7 +222,7 @@ while nt<settings['total_time_steps'] and t<settings['total_time']:
     if (output_data_nt!=0 and nt%output_data_nt==0) or \
         (output_data_t!=0 and (t>=output_data_t*t_inc and t-dt<output_data_t*t_inc)):
         print 'Saving data to numpy array files...'
-        save_data(domain, Sources, Species, '{:f}'.format(t))
+        save_data(domain, Sources, Species, '{:f}'.format(t*1000))
         t_inc+=1
         
     # Change boundary conditions
@@ -255,14 +252,14 @@ while nt<settings['total_time_steps'] and t<settings['total_time']:
     
     # Second point in calculating combustion propagation speed
     if st.find(Sources['Source_Kim'],'True')>=0 and BCs_changed:
-#        v_1=np.sum(domain.eta[:,int(len(domain.eta[0,:])/2)]*domain.dy)
-        v_1=np.sum(domain.eta*solver.dy)/len(domain.eta[0,:])
+        v_1=np.sum(domain.eta[:,int(len(domain.eta[0,:])/2)]*domain.dy)
+#        v_1=np.sum(domain.eta*solver.dy)/len(domain.eta[0,:])
         if (v_1-v_0)/dt>0.001:
             v+=(v_1-v_0)/dt
             N+=1
         
 time_end=time.time()
-input_file.Write_single_line('Final time step size: %f ms'%(dt*1000))
+input_file.Write_single_line('Final time step size: %f microseconds'%(dt*10**6))
 print 'Ignition time: %f ms'%(tign*1000)
 input_file.Write_single_line('Ignition time: %f ms'%(tign*1000))
 print 'Solver time per 1000 time steps: %f min'%((time_end-time_begin)/60.0*1000/nt)

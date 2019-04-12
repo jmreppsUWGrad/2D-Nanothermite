@@ -85,11 +85,11 @@ Number_Data_Output:5
 #  [IN PROGRESS] Profiles possible; must be same size as number of nodes on that boundary
 ######################################################
 
-bc_left:F, 0, 0, -1
+bc_left_E:F, 0, 0, -1
 bc_left_rad:None
-bc_right:T, 300, 0, -1
+bc_right_E:T, 300, 0, -1
 bc_right_rad:None
-bc_south:F, 0, 0, -1
+bc_south_E:F, 0, 0, -1
 bc_south_rad:None
-bc_north:F, 0, 0, -1
+bc_north_E:F, 0, 0, -1
 bc_north_rad:None

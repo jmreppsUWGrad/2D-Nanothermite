@@ -63,11 +63,14 @@ Ignition:eta,0.8
 ######################################################
 #			Species data
 #	Species: Indicate species chemical formula separated by commas
+#	Specie_IC: Initial masses of each species in order specified in 'Species'; value at domain interior
+#	Sepcie_Cp: Specific heats of each species in order specified in 'Species'; not implemented yet
+#	Commenting this section out will remove mass/momentum transfer from model
 ######################################################
 
 #Species:Al,CuO,Al_2O_3,Cu
 Species:g,s
-Specie_IC:0,0.000000306
+Specie_IC:0,1.22e-7
 Specie_rho:1.1,3065
 Specie_Cp:1000,600
 
@@ -89,7 +92,7 @@ bias_size_y:1e-06
 
 ######################################################
 #			Time advancement details
-#	'Fo' (in (0, 1.0)) OR 'dt' must be specified; if both are, then smallest will be used; Fo stability check to 1.0
+#	'Fo' (in (0, 1.0)), 'CFL' in (0, 1.0) OR 'dt' must be specified
 #	'Fo' in (0,1.0) for planar, (0, 50.0) for axisymmetric (experimentally determined for this code)
 #	'total_time_steps' OR 'total_time' must be specified; if both, then 'total_time_steps' will be used
 #	Time schemes: Explicit
@@ -98,11 +101,12 @@ bias_size_y:1e-06
 #	'Restart': None OR a number sequence in T data file name (will restart at this time)
 ######################################################
 
-Fo:0.2
+Fo:0.005
+CFL:0.01
 #dt:0.00000001
 dt:None
-total_time_steps:80
-total_time:None
+total_time_steps:None
+total_time:7e-4
 #total_time:0.002
 Time_Scheme:Explicit
 Restart:None
@@ -110,7 +114,7 @@ Restart:None
 Convergence:0.0001
 Max_iterations:100
 
-Number_Data_Output:8
+Number_Data_Output:10
 
 ######################################################
 #			Boundary conditions
@@ -154,5 +158,10 @@ bc_north_P:grad,0,0,-1
 
 #bc_left_mass:grad_P,0,0,-1
 #bc_right_mass:grad_P,0,0,-1
-#bc_south_mass:grad,0,0,-1
+#bc_south_mass:grad_P,0,0,-1
 #bc_north_mass:grad_P,0,0,-1
+
+bc_left_mass:grad,0,0,-1
+bc_right_mass:grad,0,0,-1
+bc_south_mass:grad,0,0,-1
+bc_north_mass:grad,0,0,-1
