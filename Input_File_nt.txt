@@ -30,7 +30,7 @@ rho:3065
 #Cp:625
 #rho:1523
 #k:eta,39,108
-#Cp:eta,599,518
+#Cp:eta,599,1000
 #rho:eta,5643,7191
 
 ######################################################
@@ -69,10 +69,10 @@ Ignition:eta,0.8
 ######################################################
 
 #Species:Al,CuO,Al_2O_3,Cu
-Species:g,s
-Specie_IC:0,1.22e-7
-Specie_rho:1.1,3065
-Specie_Cp:1000,600
+#Species:g,s
+#Specie_IC:0,1.22e-7
+#Specie_rho:1.1,3065
+#Specie_Cp:1000,600
 
 ######################################################
 #			Meshing details
@@ -92,8 +92,7 @@ bias_size_y:1e-06
 
 ######################################################
 #			Time advancement details
-#	'Fo' (in (0, 1.0)), 'CFL' in (0, 1.0) OR 'dt' must be specified
-#	'Fo' in (0,1.0) for planar, (0, 50.0) for axisymmetric (experimentally determined for this code)
+#	'Fo' (in (0, 1.0)), 'CFL' in (0, 1.0) OR 'dt' must be specified; CFL only if species present
 #	'total_time_steps' OR 'total_time' must be specified; if both, then 'total_time_steps' will be used
 #	Time schemes: Explicit
 #	'Convergence' and 'Max_iterations' are for implicit solver
@@ -101,7 +100,7 @@ bias_size_y:1e-06
 #	'Restart': None OR a number sequence in T data file name (will restart at this time)
 ######################################################
 
-Fo:0.005
+Fo:0.01
 CFL:0.01
 #dt:0.00000001
 dt:None
@@ -138,7 +137,8 @@ bc_left_E:C, 30, 300, 0, -1
 bc_right_E:C, 30, 300, 0, -1
 # numpy.linspace(400, 900, settings['Nodes_y'])
 bc_south_E:F, 0, 0, -1
-bc_north_E:C, 30, 300, 0, -61,F, 400000000, 40, -41,C, 30, 300, 60, -1
+#bc_north_E:C, 30, 300, 0, -61,F, 400000000, 40, -41,C, 30, 300, 60, -1
+bc_north_E:F, 200000000, 0, -61,C, 30, 300, 40, -1
 # numpy.linspace(400, 900, settings['Nodes_x'])
 
 bc_left_rad:None

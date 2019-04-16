@@ -93,8 +93,8 @@ while i>j:
         i-=1
 
 # Graph spacial limits
-xmin,xmax=0,0.001
-ymin,ymax=0,0.006
+xmin,xmax=0,1
+ymin,ymax=0,1
 #xmin,xmax=0.0004,0.0006
 #ymin,ymax=0.005,0.006
 
