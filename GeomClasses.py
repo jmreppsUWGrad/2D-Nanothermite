@@ -69,15 +69,15 @@ class TwoDimPlanar():
         self.k=settings['k']
         self.rho=settings['rho']
         self.Cv=settings['Cp']
-        if type(self.rho) is str:
+        if type(self.rho) is str and (st.find(self.rho, 'eta')>=0):
             line=st.split(self.rho, ',')
             self.rho0=float(line[1])
             self.rho1=float(line[2])
-        if type(self.Cv) is str:
+        if type(self.Cv) is str and (st.find(self.Cv, 'eta')>=0):
             line=st.split(self.Cv, ',')
             self.Cv0=float(line[1])
             self.Cv1=float(line[2])
-        if type(self.k) is str:
+        if type(self.k) is str and (st.find(self.k, 'eta')>=0):
             line=st.split(self.k, ',')
             self.k0=float(line[1])
             self.k1=float(line[2])
@@ -213,16 +213,28 @@ class TwoDimPlanar():
         Cv=np.zeros_like(self.eta)
         D=copy.deepcopy(self.m_species)
         
+        # Species densities
+        por=[0.6,0.4]
+        if bool(self.m_species):
+            m_tot=np.zeros_like(self.E)
+            for i in range(len(self.species_keys)):
+                self.rho_species[self.species_keys[i]]=\
+                    self.m_species[self.species_keys[i]]/(por[i]*self.CV_vol())
+                Cv+=self.m_species[self.species_keys[i]]*self.Cp_species[self.species_keys[i]]
+                m_tot+=self.m_species[self.species_keys[i]]
+            Cv/=m_tot
+            rho=m_tot/self.CV_vol()
+        
         # Calculate properties based on eta or constant
-        if type(self.k) is str:
+        if (type(self.k) is str) and (st.find(self.k, 'eta')>=0):
             k=(self.eta/self.k1+(1-self.eta)/self.k0)**(-1)
-        else:
+        elif type(self.k) is float:
             k[:,:]=self.k
-        if type(self.Cv) is str:
+        if (type(self.Cv) is str) and (st.find(self.Cv, 'eta')>=0):
             Cv=self.eta*self.Cv1+(1-self.eta)*self.Cv0
         else:
             Cv[:,:]=self.Cv
-        if type(self.rho) is str:
+        if (type(self.rho) is str) and (st.find(self.rho, 'eta')>=0):
             rho=self.eta*self.rho1+(1-self.eta)*self.rho0
         else:
             rho[:,:]=self.rho
@@ -233,12 +245,6 @@ class TwoDimPlanar():
 #                D[i][:,;]=self.Diff.get_Diff(300,i)
                 D[i][:,:]=0
         
-        # Species densities
-        por=[0.6,0.4]
-        if bool(self.m_species):
-            for i in range(len(self.species_keys)):
-                self.rho_species[self.species_keys[i]]=\
-                    self.m_species[self.species_keys[i]]/(por[i]*self.CV_vol())
                 
         return k, rho, Cv, D
     

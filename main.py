@@ -141,11 +141,6 @@ if type(settings['Restart']) is int:
             domain.m_species[Species['Species'][i]]=np.load('m_'+Species['Species'][i]+'_'+time_max+'.npy')
             domain.m_0+=domain.m_species[Species['Species'][i]]
 
-k,rho,Cv,D=domain.calcProp()
-vol=domain.CV_vol()
-Ax,Ay=domain.CV_area()
-domain.E[:,:]=rho*vol*Cv*T
-del k,rho,Cv,D,T
 if (bool(domain.m_species)) and (type(settings['Restart']) is str):
     for i in range(len(Species['Species'])):
 #        domain.m_species[Species['Species'][i]][:,:]=Species['Specie_IC'][i]
@@ -155,6 +150,11 @@ if (bool(domain.m_species)) and (type(settings['Restart']) is str):
         domain.m_species[Species['Species'][i]][0,:] *=0.5
         domain.m_species[Species['Species'][i]][-1,:]*=0.5
         domain.m_0+=domain.m_species[Species['Species'][i]] 
+k,rho,Cv,D=domain.calcProp()
+vol=domain.CV_vol()
+Ax,Ay=domain.CV_area()
+domain.E[:,:]=rho*vol*Cv*T
+del k,rho,Cv,D,T
 print '################################'
 ##########################################################################
 # ------------------------Write Input File settings to output directory
