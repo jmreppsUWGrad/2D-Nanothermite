@@ -22,9 +22,10 @@ import numpy as np
 #import string as st
 
 class BCs():
-    def __init__(self, BC_dict, dx, dy):
+    def __init__(self, BC_dict, dx, dy, domain):
         self.BCs=BC_dict
         self.dx,self.dy=dx,dy
+        self.domain=domain
         
     # Energy BCs
     def Energy(self, E, T_prev, dt, rho, Cv, vol, Ax, Ay):
@@ -37,7 +38,7 @@ class BCs():
                 if len(self.BCs['bc_left_E'])/3-i==1:
                     E[-1,0]=self.BCs['bc_left_E'][-2]*rho[-1,0]*Cv[-1,0]*vol[-1,0]
             
-            else:
+            elif self.domain!='Axisymmetric':
                 if self.BCs['bc_left_E'][3*i]=='F':
                     q=self.BCs['bc_left_E'][1+3*i]
                     Bi=0
@@ -71,10 +72,14 @@ class BCs():
                     Bi=-self.BCs['bc_right_E'][1+3*i][0]*T_prev[st:en,-1] # h*Tij
                 
                 E[st:en,-1]+=(Bi+q)*dt*Ax[st:en,-1]
+                if self.domain=='Axisymmetric':
+                    E[st:en,-1]+=(Bi+q)*dt*(self.dx[st:en,-1]/2*self.dy[st:en,-1])
                 if len(self.BCs['bc_right_E'])/3-i==1:
                     if self.BCs['bc_right_E'][3*i]=='C':
                         Bi=-self.BCs['bc_right_E'][1+3*i][0]*T_prev[-1,-1] # h*Tij
                     E[-1,-1]+=(Bi+q)*dt*Ax[-1,-1]
+                    if self.domain=='Axisymmetric':
+                        E[-1,-1]+=(Bi+q)*dt*(self.dx[-1,-1]/2*self.dy[-1,-1]/2)
         
         # South face
         for i in range(len(self.BCs['bc_south_E'])/3):
@@ -125,7 +130,7 @@ class BCs():
                     E[-1,-1]+=(Bi+q)*dt*Ay[-1,-1]
         
         # Apply radiation BCs
-        if self.BCs['bc_left_rad']!='None':
+        if self.BCs['bc_left_rad']!='None' and self.domain!='Axisymmetric':
             E[:,0]+=Ax[:,0]*dt*\
                 self.BCs['bc_left_rad'][0]*5.67*10**(-8)*\
                 (self.BCs['bc_left_rad'][1]**4-T_prev[:,0]**4)
