@@ -93,10 +93,10 @@ print '################################'
 
 
 print 'Initializing geometry package...'
-if settings['Domain']=='Planar':
-    domain=Geom.TwoDimPlanar(settings, Species, 'Solid')
-elif settings['Domain']=='Axisymmetric':
-    domain=Geom.AxisymDomain(settings, Species, 'Solid')
+#if settings['Domain']=='Planar':
+domain=Geom.TwoDimDomain(settings, Species, settings['Domain'])
+#elif settings['Domain']=='Axisymmetric':
+#    domain=Geom.AxisymDomain(settings, Species, 'Axisy')
 
 domain.mesh()
 print '################################'
@@ -180,7 +180,7 @@ np.save('Y', domain.Y, False)
 ##########################################################################
 # -------------------------------------Solve
 ##########################################################################
-t,nt,tign=float(time_max),0,0 # time, number steps and ignition time initializations
+t,nt,tign=float(time_max)/1000,0,0 # time, number steps and ignition time initializations
 v_0,v_1,v,N=0,0,0,0 # combustion wave speed variables initialization
 
 # Setup intervals to save data
