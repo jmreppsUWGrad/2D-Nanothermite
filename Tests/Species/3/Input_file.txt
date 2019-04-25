@@ -1,0 +1,86 @@
+######################################################
+#             2D Heat Conduction Solver              #
+#              Created by J. Mark Epps               #
+#          Part of Masters Thesis at UW 2018-2020    #
+######################################################
+
+############### INPUT FILE #########################
+##########Input_file##################
+
+Settings:
+Domain:Planar
+Length:0.001
+Width:0.006
+Nodes_x:101
+Nodes_y:601
+k:65.0
+Cp:600.0
+rho:3065.0
+
+Meshing details:
+bias_type_x:None
+bias_size_x:0.003
+bias_type_y:None
+bias_size_y:1e-06
+
+Species info:
+Species:g,s
+Specie_rho:1.1,3065.0
+Specie_IC:0.0,1.22e-07
+Specie_Cp:1000.0,600.0
+
+Source Terms:
+Source_Uniform:None
+Source_Kim:True
+Ea:48000.0
+A0:4890000.0
+dH:rho,4070000
+Ignition:eta,0.8
+
+Time advancement:
+Fo:0.2
+dt:None
+total_time_steps:100
+total_time:None
+Restart:None
+Time_Scheme:Explicit
+Convergence:0.0001
+Max_iterations:100
+Number_Data_Output:100
+Output_directory:Tests/4/3
+
+Boundary conditions:
+#bc_left_E:['C', (30.0, 300.0), (0, -1)]
+bc_left_E:C,30.0,300.0,0,-1
+#bc_right_E:['C', (30.0, 300.0), (0, -1)]
+bc_right_E:C,30.0,300.0,0,-1
+#bc_south_E:['F', 0.0, (0, -1)]
+bc_south_E:F,0.0,0,-1
+#bc_north_E:['C', (30.0, 300.0), (0, -61), 'F', 400000000.0, (40, -41), 'C', (30.0, 300.0), (60, -1)]
+bc_north_E:C,30.0,300.0,0,-61,F,400000000.0,40,-41,C,30.0,300.0,60,-1
+#bc_left_rad:None
+bc_left_rad:None
+#bc_right_rad:None
+bc_right_rad:None
+#bc_south_rad:None
+bc_south_rad:None
+#bc_north_rad:None
+bc_north_rad:None
+#bc_left_P:['grad', 0.0, (0, -1)]
+bc_left_P:grad,0.0,0,-1
+#bc_right_P:['grad', 0.0, (0, -1)]
+bc_right_P:grad,0.0,0,-1
+#bc_north_P:['grad', 0.0, (0, -1)]
+bc_north_P:grad,0.0,0,-1
+#bc_south_P:['grad', 0.0, (0, -1)]
+bc_south_P:grad,0.0,0,-1
+
+#################### Solver aborted #######################
+Time step 91, Time elapsed=0.000013, error code=4;
+Error codes: 1-time step, 2-Energy, 3-reaction progress, 4-Species balance
+Final time step size: 0.000141 ms
+Ignition time: 0.000000 ms
+Solver time per 1000 time steps: 0.884066 min
+Average wave speed: 0 m/s
+
+## increase resolution of plots and save every time step up to divergence; not full couple (no Temp, something else...)
