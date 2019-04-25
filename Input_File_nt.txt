@@ -15,22 +15,24 @@
 #			Settings
 #	Domain:Axisymmetric OR Planar
 #	Properties are in standard units J, kg, K, W, m
-#	k,Cp,rho: either a value, or in form: eta,[value when eta=0],[value when eta=1]
+#	k,Cp,rho: [value]
+#	k,Cp,rho: eta,[value when eta=0],[value when eta=1]
+#	rho,Cp: spec (calculate based on species mass fractions)
 ######################################################
 
-Domain:Planar
-Length:0.001
-Width:0.006
+Domain:Axisymmetric
+Length:1e-3
+Width:6e-3
 Nodes_x:101
 Nodes_y:601
 k:65
-Cp:600
+#Cp:spec
 rho:3065
 #k:65
 #Cp:625
 #rho:1523
 #k:eta,39,108
-#Cp:eta,599,1000
+Cp:eta,600,1000
 #rho:eta,5643,7191
 
 ######################################################
@@ -102,7 +104,7 @@ bias_size_y:1e-06
 
 Fo:0.01
 CFL:0.01
-#dt:0.00000001
+#dt:1e-9
 dt:None
 total_time_steps:None
 total_time:7e-4
@@ -137,7 +139,7 @@ bc_left_E:C, 30, 300, 0, -1
 bc_right_E:C, 30, 300, 0, -1
 # numpy.linspace(400, 900, settings['Nodes_y'])
 bc_south_E:F, 0, 0, -1
-#bc_north_E:C, 30, 300, 0, -61,F, 400000000, 40, -41,C, 30, 300, 60, -1
+#bc_north_E:F, 200000000, 0, -1
 bc_north_E:F, 200000000, 0, -61,C, 30, 300, 40, -1
 # numpy.linspace(400, 900, settings['Nodes_x'])
 
