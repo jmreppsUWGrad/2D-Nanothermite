@@ -187,13 +187,15 @@ class TwoDimDomain():
     
     # Calculate and return area of faces at each node
     def CV_area(self):
-        Ax=np.zeros_like(self.E)
+        Ax_l=np.zeros_like(self.E)
+        Ax_r=np.zeros_like(self.E)
         Ay=np.zeros_like(self.E)
         dx,dy=np.meshgrid(self.dx, self.dy)
-        # Left/right face areas
-        Ax[1:-1,:]=0.5*(dy[1:-1,:]+dy[:-2,:])
-        Ax[0,:]   =0.5*(dy[0,:])
-        Ax[-1,:]  =0.5*(dy[-1,:])
+        # Left face areas (same as right for planar)
+        Ax_l[1:-1,:]=0.5*(dy[1:-1,:]+dy[:-2,:])
+        Ax_l[0,:]   =0.5*(dy[0,:])
+        Ax_l[-1,:]  =0.5*(dy[-1,:])
+        Ax_r=Ax_l.copy()
         
         # North/south face areas
         Ay[:,1:-1]=0.5*(dx[:,1:-1]+dx[:,:-2])
@@ -202,12 +204,14 @@ class TwoDimDomain():
         
         # Axisymmetric
         if self.type=='Axisymmetric':
-            Ax[:,0]  *=(self.X[:,0]+dx[:,0]/2)
-            Ax[:,1:] *=(self.X[:,1:]-dx[:,:-1]/2)
+            Ax_l[:,0]  *=(self.X[:,0])
+            Ax_l[:,1:] *=(self.X[:,1:]-dx[:,:-1]/2)
+            Ax_r[:,0]  *=(self.X[:,0]+dx[:,0]/2)
+            Ax_r[:,1:] *=(self.X[:,1:]+dx[:,1:]/2)
             Ay[:,1:] *=(self.X[:,1:]-dx[:,:-1]/2)
             Ay[:,0]   =0.5*(dx[:,0]/2)**2
-            
-        return Ax, Ay
+        
+        return Ax_l, Ax_r, Ay
         
     # Calculate temperature dependent properties
     def calcProp(self):
@@ -216,11 +220,13 @@ class TwoDimDomain():
         Cv=np.zeros_like(self.eta)
         D=copy.deepcopy(self.m_species)
         
-        # Species densities
+        # Species properties and contribution to bulk properties
         por=[0.6,0.4]
         if bool(self.m_species):
             m_tot=np.zeros_like(self.E)
             for i in range(len(self.species_keys)):
+#                D[self.species_keys[i]][:,;]=self.Diff.get_Diff(300,i)
+                D[self.species_keys[i]][:,:]=0
                 self.rho_species[self.species_keys[i]]=\
                     self.m_species[self.species_keys[i]]/(por[i]*self.CV_vol())
                 Cv+=self.m_species[self.species_keys[i]]*self.Cp_species[self.species_keys[i]]
@@ -235,20 +241,13 @@ class TwoDimDomain():
             k[:,:]=self.k
         if (type(self.Cv) is str) and (st.find(self.Cv, 'eta')>=0):
             Cv=self.eta*self.Cv1+(1-self.eta)*self.Cv0
-        else:
+        elif type(self.Cv) is float:
             Cv[:,:]=self.Cv
         if (type(self.rho) is str) and (st.find(self.rho, 'eta')>=0):
             rho=self.eta*self.rho1+(1-self.eta)*self.rho0
-        else:
+        elif type(self.rho) is float:
             rho[:,:]=self.rho
         
-        # Mass diffusion coefficient; Al, CuO, Al2O3, Cu
-        if bool(D):
-            for i in self.species_keys:
-#                D[i][:,;]=self.Diff.get_Diff(300,i)
-                D[i][:,:]=0
-        
-                
         return k, rho, Cv, D
     
     # Calculate temperature from energy

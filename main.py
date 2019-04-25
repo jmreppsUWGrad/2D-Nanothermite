@@ -137,10 +137,19 @@ if type(settings['Restart']) is int:
     if st.find(Sources['Source_Kim'],'True')>=0:
         domain.eta=np.load('eta_'+time_max+'.npy')
     if bool(domain.m_species):
+        domain.P=np.load('P_'+time_max+'.npy')
         for i in range(len(Species['Species'])):
             domain.m_species[Species['Species'][i]]=np.load('m_'+Species['Species'][i]+'_'+time_max+'.npy')
-            domain.m_0+=domain.m_species[Species['Species'][i]]
-
+            domain.m_0[1:-1,1:-1]+=Species['Specie_IC'][i]
+            domain.m_0[1:-1,0] +=0.5*Species['Specie_IC'][i]
+            domain.m_0[1:-1,-1]+=0.5*Species['Specie_IC'][i]
+            domain.m_0[0,1:-1] +=0.5*Species['Specie_IC'][i]
+            domain.m_0[-1,1:-1]+=0.5*Species['Specie_IC'][i]
+            domain.m_0[0,0] +=0.25*Species['Specie_IC'][i]
+            domain.m_0[0,-1]+=0.25*Species['Specie_IC'][i]
+            domain.m_0[-1,0]+=0.25*Species['Specie_IC'][i]
+            domain.m_0[-1,-1] +=0.25*Species['Specie_IC'][i]
+            
 if (bool(domain.m_species)) and (type(settings['Restart']) is str):
     for i in range(len(Species['Species'])):
 #        domain.m_species[Species['Species'][i]][:,:]=Species['Specie_IC'][i]
@@ -152,7 +161,7 @@ if (bool(domain.m_species)) and (type(settings['Restart']) is str):
         domain.m_0+=domain.m_species[Species['Species'][i]] 
 k,rho,Cv,D=domain.calcProp()
 vol=domain.CV_vol()
-Ax,Ay=domain.CV_area()
+Ax_l,Ax_r,Ay=domain.CV_area()
 domain.E[:,:]=rho*vol*Cv*T
 del k,rho,Cv,D,T
 print '################################'
@@ -206,7 +215,7 @@ while nt<settings['total_time_steps'] and t<settings['total_time']:
     if st.find(Sources['Source_Kim'],'True')>=0 and BCs_changed:
 #        v_0=np.sum(domain.eta[:,int(len(domain.eta[0,:])/2)]*domain.dy)
         v_0=np.sum(domain.eta*solver.dy)/len(domain.eta[0,:])
-    err,dt=solver.Advance_Soln_Cond(nt, t, vol, Ax, Ay)
+    err,dt=solver.Advance_Soln_Cond(nt, t, vol, Ax_l, Ax_r, Ay)
     t+=dt
     nt+=1
     if err>0:
@@ -236,7 +245,7 @@ while nt<settings['total_time_steps'] and t<settings['total_time']:
         input_file.fout.write('\n')
         BCs_changed=True
         tign=t
-        save_data(domain, Sources, Species, '{:f}'.format(t))
+        save_data(domain, Sources, Species, '{:f}'.format(t*1000))
 #    if not BCs_changed:
 #        k,rho,Cv=domain.calcProp()
 #        T_theo=300+2*solver.BCs.BCs['bc_north_E'][1]/k[-1,0]\
@@ -264,6 +273,8 @@ print 'Ignition time: %f ms'%(tign*1000)
 input_file.Write_single_line('Ignition time: %f ms'%(tign*1000))
 print 'Solver time per 1000 time steps: %f min'%((time_end-time_begin)/60.0*1000/nt)
 input_file.Write_single_line('Solver time per 1000 time steps: %f min'%((time_end-time_begin)/60.0*1000/nt))
+print 'Number of time steps completed: %i'%(nt)
+input_file.Write_single_line('Number of time steps completed: %i'%(nt))
 try:
     print 'Average wave speed: %f m/s'%(v/N)
     input_file.Write_single_line('Average wave speed: %f m/s'%(v/N))

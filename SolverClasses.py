@@ -73,7 +73,7 @@ class TwoDimPlanarSolve():
             return 2*k1*k2/(k1+k2)
         
     # Main solver (1 time step)
-    def Advance_Soln_Cond(self, nt, t, vol, Ax, Ay):
+    def Advance_Soln_Cond(self, nt, t, vol, Ax_l, Ax_r, Ay):
         max_Y,min_Y=0,1
         # Calculate properties
         k, rho, Cv, D=self.Domain.calcProp()
@@ -86,9 +86,9 @@ class TwoDimPlanarSolve():
             m_c=copy.deepcopy(self.Domain.m_species)
             rho_spec=self.Domain.rho_species
             species=self.Domain.species_keys
-    #        Cp_spec=self.Domain.Cp_species
-            mu_c=copy.deepcopy(self.Domain.mu_species)
-            mv_c=copy.deepcopy(self.Domain.mv_species)
+            Cp_spec=self.Domain.Cp_species
+#            mu_c=copy.deepcopy(self.Domain.mu_species)
+#            mv_c=copy.deepcopy(self.Domain.mv_species)
             
             # Velocity
 #            u=mu_c[species[0]]/m_c[species[0]]
@@ -123,7 +123,7 @@ class TwoDimPlanarSolve():
             # Adjust pressure
             print '     Gas mass: %f, %f'%(np.amax(self.Domain.m_species['g'])*10**6,np.amin(self.Domain.m_species['g'])*10**6)
             print '     Gas density: %f, %f'%(np.amax(rho_spec['g']),np.amin(rho_spec['g']))
-            self.Domain.P[:,:]=self.Domain.m_species['g']/102*1000*8.314*300/(0.6*vol)
+            self.Domain.P=self.Domain.m_species['g']/102*1000*8.314/(0.6*vol)*T_c
     #        self.BCs.P(self.Domain.P)
             print '     Pressure: %f, %f'%(np.amax(self.Domain.P),np.amin(self.Domain.P))
             
@@ -133,13 +133,13 @@ class TwoDimPlanarSolve():
             fly=np.zeros_like(self.Domain.P)
             
             # Left face
-            flx[:,1:]+=Ax[:,1:]*dt\
+            flx[:,1:]+=Ax_l[:,1:]*dt\
                 *self.interpolate(rho_spec[species[0]][:,1:],rho_spec[species[0]][:,:-1],'Linear')*\
                 (-perm/mu*(self.Domain.P[:,1:]-self.Domain.P[:,:-1])/self.dx[:,:-1])
     #            self.interpolate(u[:,1:], u[:,:-1], 'Linear')
             
             # Right face
-            flx[:,:-1]-=Ax[:,:-1]*dt\
+            flx[:,:-1]-=Ax_r[:,:-1]*dt\
                 *self.interpolate(rho_spec[species[0]][:,1:],rho_spec[species[0]][:,:-1], 'Linear')*\
                 (-perm/mu*(self.Domain.P[:,1:]-self.Domain.P[:,:-1])/self.dx[:,:-1])
     #            self.interpolate(u[:,1:], u[:,:-1], 'Linear')
@@ -268,10 +268,10 @@ class TwoDimPlanarSolve():
         # Heat diffusion
             #left faces
         self.Domain.E[:,1:]   -= dt*self.interpolate(k[:,:-1],k[:,1:], 'Harmonic')\
-                    *(T_c[:,1:]-T_c[:,:-1])/self.dx[:,:-1]*Ax[:,1:]
+                    *(T_c[:,1:]-T_c[:,:-1])/self.dx[:,:-1]*Ax_l[:,1:]
             # Right face
         self.Domain.E[:,:-1] += dt*self.interpolate(k[:,:-1],k[:,1:], 'Harmonic')\
-                    *(T_c[:,1:]-T_c[:,:-1])/self.dx[:,:-1]*Ax[:,:-1]
+                    *(T_c[:,1:]-T_c[:,:-1])/self.dx[:,:-1]*Ax_r[:,:-1]
             # South face
         self.Domain.E[1:,:]   -= dt*self.interpolate(k[1:,:],k[:-1,:], 'Harmonic')\
                     *(T_c[1:,:]-T_c[:-1,:])/self.dy[:-1,:]*Ay[1:,:]
@@ -284,32 +284,33 @@ class TwoDimPlanarSolve():
         self.Domain.E +=E_kim *dt
         
         # Porous medium advection
-#            # Incoming fluxes
-#        self.Domain.E[:,1:]+=Ax[:,1:]*dt\
-#            *0.5*(rho_spec[species[0]][:,1:]+rho_spec[species[0]][:,:-1])*\
-#            (-perm/mu*(self.Domain.P[:,1:]-self.Domain.P[:,:-1])/self.dx[:,:-1])\
-#            *0.5*(T_c[:,1:]+T_c[:,:-1])*0.5*(Cp_spec[:,1:]+Cp_spec[:,:-1])
-#        self.Domain.E[1:,:]+=Ay[1:,:]*dt\
-#            *0.5*(rho_spec[species[0]][1:,:]+rho_spec[species[0]][:-1,:])*\
-#            (-perm/mu*(self.Domain.P[1:,:]-self.Domain.P[:-1,:])/self.dy[:-1,:])\
-#            *0.5*(T_c[1:,:]+T_c[:-1,:])*0.5*(Cp_spec[1:,:]+Cp_spec[:-1,:])
-#        
-#            # Outgoing fluxes
-#        self.Domain.E[:,:-1]-=Ax[:,:-1]*dt\
-#            *rho_spec[species[0]][:,:-1]*\
-#            (-perm/mu*(self.Domain.P[:,1:]-self.Domain.P[:,:-1])/self.dx[:,:-1])\
-#            *0.5*(T_c[:,1:]+T_c[:,:-1])*0.5*(Cp_spec[:,1:]+Cp_spec[:,:-1])
-#        self.Domain.E[:-1,:]-=Ay[:-1,:]*dt\
-#            *rho_spec[species[0]][:-1,:]*\
-#            (-perm/mu*(self.Domain.P[1:,:]-self.Domain.P[:-1,:])/self.dy[:-1,:])\
-#            *0.5*(T_c[1:,:]+T_c[:-1,:])*0.5*(Cp_spec[1:,:]+Cp_spec[:-1,:])
+        if bool(self.Domain.m_species):
+                # Incoming fluxes
+            self.Domain.E[:,1:]+=Ax_l[:,1:]*dt\
+                *0.5*(rho_spec[species[0]][:,1:]+rho_spec[species[0]][:,:-1])*\
+                (-perm/mu*(self.Domain.P[:,1:]-self.Domain.P[:,:-1])/self.dx[:,:-1])\
+                *0.5*(T_c[:,1:]+T_c[:,:-1])*0.5*(Cp_spec[species[0]][:,1:]+Cp_spec[species[0]][:,:-1])
+            self.Domain.E[1:,:]+=Ay[1:,:]*dt\
+                *0.5*(rho_spec[species[0]][1:,:]+rho_spec[species[0]][:-1,:])*\
+                (-perm/mu*(self.Domain.P[1:,:]-self.Domain.P[:-1,:])/self.dy[:-1,:])\
+                *0.5*(T_c[1:,:]+T_c[:-1,:])*0.5*(Cp_spec[species[0]][1:,:]+Cp_spec[species[0]][:-1,:])
+            
+                # Outgoing fluxes
+            self.Domain.E[:,:-1]-=Ax_r[:,:-1]*dt\
+                *rho_spec[species[0]][:,:-1]*\
+                (-perm/mu*(self.Domain.P[:,1:]-self.Domain.P[:,:-1])/self.dx[:,:-1])\
+                *0.5*(T_c[:,1:]+T_c[:,:-1])*0.5*(Cp_spec[species[0]][:,1:]+Cp_spec[species[0]][:,:-1])
+            self.Domain.E[:-1,:]-=Ay[:-1,:]*dt\
+                *rho_spec[species[0]][:-1,:]*\
+                (-perm/mu*(self.Domain.P[1:,:]-self.Domain.P[:-1,:])/self.dy[:-1,:])\
+                *0.5*(T_c[1:,:]+T_c[:-1,:])*0.5*(Cp_spec[species[0]][1:,:]+Cp_spec[species[0]][:-1,:])
 
         
 #        # Radiation effects
 #        self.Domain.T[1:-1,1:-1]+=0.8*5.67*10**(-8)*(T_c[:-2,1:-1]**4+T_c[2:,1:-1]**4+T_c[1:-1,:-2]**4+T_c[1:-1,2:]**4)
         
         # Apply boundary conditions
-        self.BCs.Energy(self.Domain.E, T_c, dt, rho, Cv, vol, Ax, Ay)
+        self.BCs.Energy(self.Domain.E, T_c, dt, rho, Cv, vol, Ax_l, Ay)
         
         ###################################################################
         # Divergence/Convergence checks
@@ -372,7 +373,7 @@ class AxisymmetricSolve():
             return 2*k1*k2/(k1+k2)
     
     # Main solver (1 time step)
-    def Advance_Soln_Cond(self, nt, t, vol, Ax, Ay):
+    def Advance_Soln_Cond(self, nt, t, vol, Ax_l, Ax_r, Ay):
         max_Y,min_Y=0,1
         # Calculate properties
         k, rho, Cv, D=self.Domain.calcProp()
@@ -385,9 +386,9 @@ class AxisymmetricSolve():
             m_c=copy.deepcopy(self.Domain.m_species)
             rho_spec=self.Domain.rho_species
             species=self.Domain.species_keys
-    #        Cp_spec=self.Domain.Cp_species
-            mu_c=copy.deepcopy(self.Domain.mu_species)
-            mv_c=copy.deepcopy(self.Domain.mv_species)
+            Cp_spec=self.Domain.Cp_species
+#            mu_c=copy.deepcopy(self.Domain.mu_species)
+#            mv_c=copy.deepcopy(self.Domain.mv_species)
             
             # Velocity
 #            u=mu_c[species[0]]/m_c[species[0]]
@@ -422,35 +423,55 @@ class AxisymmetricSolve():
             # Adjust pressure
             print '     Gas mass: %f, %f'%(np.amax(self.Domain.m_species['g'])*10**6,np.amin(self.Domain.m_species['g'])*10**6)
             print '     Gas density: %f, %f'%(np.amax(rho_spec['g']),np.amin(rho_spec['g']))
-            self.Domain.P[:,:]=self.Domain.m_species['g']/102*1000*8.314*300/(0.6*vol)
+            self.Domain.P=self.Domain.m_species['g']/102*1000*8.314/(0.6*vol)*T_c
     #        self.BCs.P(self.Domain.P)
             print '     Pressure: %f, %f'%(np.amax(self.Domain.P),np.amin(self.Domain.P))
             
             # Use Darcy's law to directly calculate the velocities at the faces
+            # Ingoing fluxes
+            flx=np.zeros_like(self.Domain.P)
+            fly=np.zeros_like(self.Domain.P)
+            
             # Left face
-            self.Domain.m_species[species[0]][:,1:]+=Ax[:,1:]*dt\
+            flx[:,1:]+=Ax_l[:,1:]*dt\
                 *self.interpolate(rho_spec[species[0]][:,1:],rho_spec[species[0]][:,:-1],'Linear')*\
                 (-perm/mu*(self.Domain.P[:,1:]-self.Domain.P[:,:-1])/self.dx[:,:-1])
+    #            self.interpolate(u[:,1:], u[:,:-1], 'Linear')
             
             # Right face
-            self.Domain.m_species[species[0]][:,:-1]-=Ax[:,:-1]*dt\
+            
+            flx[:,:-1]-=(Ax_r[:,:-1])*dt\
                 *self.interpolate(rho_spec[species[0]][:,1:],rho_spec[species[0]][:,:-1], 'Linear')*\
-                (-perm/mu(self.Domain.P[:,1:]-self.Domain.P[:,:-1])/self.dx[:,:-1])
+                (-perm/mu*(self.Domain.P[:,1:]-self.Domain.P[:,:-1])/self.dx[:,:-1])
+    #            self.interpolate(u[:,1:], u[:,:-1], 'Linear')
             
             # South face
-            self.Domain.m_species[species[0]][1:,:]+=Ay[1:,:]*dt\
+            fly[1:,:]+=Ay[1:,:]*dt\
                 *self.interpolate(rho_spec[species[0]][1:,:],rho_spec[species[0]][:-1,:],'Linear')*\
-                (-perm/mu(self.Domain.P[1:,:]-self.Domain.P[:-1,:])/self.dy[:-1,:])
+                (-perm/mu*(self.Domain.P[1:,:]-self.Domain.P[:-1,:])/self.dy[:-1,:])
+    #            self.interpolate(v[1:,:], v[:-1,:], 'Linear')
             
             # North face
-            self.Domain.m_species[species[0]][:-1,:]-=Ay[:-1,:]*dt\
+            fly[:-1,:]-=Ay[:-1,:]*dt\
                 *self.interpolate(rho_spec[species[0]][1:,:], rho_spec[species[0]][:-1,:], 'Linear')*\
                 (-perm/mu*(self.Domain.P[1:,:]-self.Domain.P[:-1,:])/self.dy[:-1,:])
+    #            self.interpolate(v[1:,:], v[:-1,:], 'Linear')
+            
+            print '    Gas fluxes in x: %f, %f'%(np.amax(flx)*10**(9),np.amin(flx)*10**(9))
+            print '    Gas fluxes in y: %f, %f'%(np.amax(fly)*10**(9),np.amin(fly)*10**(9))
+            
+            self.Domain.m_species[species[0]]+=flx+fly
             
             # Source terms
-            self.Domain.m_species[species[0]]+=deta*dt*(self.Domain.m_0)
-            self.Domain.m_species[species[1]]-=deta*dt*(self.Domain.m_0)
-            
+    #        dm=deta*dt*(m_c[species[0]]+m_c[species[1]])
+#            dm=np.zeros_like(deta)
+            dm=deta*dt*(self.Domain.m_0)
+#            dm[dm<10**(-9)]=0
+            print '     Mass generated: %f, %f'%(np.amax(dm)*10**(9),np.amin(dm)*10**(9))
+    #        (m_c[species[0]]+m_c[species[1]])
+            self.Domain.m_species[species[0]]+=dm
+            self.Domain.m_species[species[1]]-=dm
+                    
             max_Y=max(np.amax(self.Domain.m_species[species[0]]),\
                       np.amax(self.Domain.m_species[species[1]]))
             min_Y=min(np.amin(self.Domain.m_species[species[0]]),\
@@ -546,10 +567,10 @@ class AxisymmetricSolve():
         ###################################################################
             #left faces
         self.Domain.E[:,1:]   -= dt*self.interpolate(k[:,:-1],k[:,1:], 'Harmonic')\
-                    *(T_c[:,1:]-T_c[:,:-1])/self.dx[:,:-1]*Ax[:,1:]
+                    *(T_c[:,1:]-T_c[:,:-1])/self.dx[:,:-1]*Ax_l[:,1:]
             # Right face
         self.Domain.E[:,:-1] += dt*self.interpolate(k[:,:-1],k[:,1:], 'Harmonic')\
-                    *(T_c[:,1:]-T_c[:,:-1])/self.dx[:,:-1]*Ax[:,1:]
+                    *(T_c[:,1:]-T_c[:,:-1])/self.dx[:,:-1]*Ax_r[:,:-1]
             # South face
         self.Domain.E[1:,:]   -= dt*self.interpolate(k[1:,:],k[:-1,:], 'Harmonic')\
                     *(T_c[1:,:]-T_c[:-1,:])/self.dy[:-1,:]*Ay[1:,:]
@@ -561,32 +582,33 @@ class AxisymmetricSolve():
         self.Domain.E +=E_unif*dt
         self.Domain.E +=E_kim*dt
         
-        # Porous medium advection [TO BE CONTINUED]
-#            # Incoming fluxes
-#        self.Domain.E[:,1:]+=Ax[:,1:]*dt\
-#            *0.5*(rho_spec[species[0]][:,1:]+rho_spec[species[0]][:,:-1])*\
-#            (-perm/mu*(self.Domain.P[:,1:]-self.Domain.P[:,:-1])/self.dx[:,:-1])\
-#            *0.5*(T_c[:,1:]+T_c[:,:-1])*0.5*(Cp_spec[:,1:]+Cp_spec[:,:-1])
-#        self.Domain.E[1:,:]+=Ay[1:,:]*dt\
-#            *0.5*(rho_spec[species[0]][1:,:]+rho_spec[species[0]][:-1,:])*\
-#            (-perm/mu*(self.Domain.P[1:,:]-self.Domain.P[:-1,:])/self.dy[:-1,:])\
-#            *0.5*(T_c[1:,:]+T_c[:-1,:])*0.5*(Cp_spec[1:,:]+Cp_spec[:-1,:])
-#        
-#            # Outgoing fluxes
-#        self.Domain.E[:,:-1]-=Ax[:,:-1]*dt\
-#            *rho_spec[species[0]][:,:-1]*\
-#            (-perm/mu*(self.Domain.P[:,1:]-self.Domain.P[:,:-1])/self.dx[:,:-1])\
-#            *0.5*(T_c[:,1:]+T_c[:,:-1])*0.5*(Cp_spec[:,1:]+Cp_spec[:,:-1])
-#        self.Domain.E[:-1,:]-=Ay[:-1,:]*dt\
-#            *rho_spec[species[0]][:-1,:]*\
-#            (-perm/mu*(self.Domain.P[1:,:]-self.Domain.P[:-1,:])/self.dy[:-1,:])\
-#            *0.5*(T_c[1:,:]+T_c[:-1,:])*0.5*(Cp_spec[1:,:]+Cp_spec[:-1,:])
+        # Porous medium advection
+        if bool(self.Domain.m_species):
+                # Incoming fluxes
+            self.Domain.E[:,1:]+=Ax_l[:,1:]*dt\
+                *0.5*(rho_spec[species[0]][:,1:]+rho_spec[species[0]][:,:-1])*\
+                (-perm/mu*(self.Domain.P[:,1:]-self.Domain.P[:,:-1])/self.dx[:,:-1])\
+                *0.5*(T_c[:,1:]+T_c[:,:-1])*0.5*(Cp_spec[species[0]][:,1:]+Cp_spec[species[0]][:,:-1])
+            self.Domain.E[1:,:]+=Ay[1:,:]*dt\
+                *0.5*(rho_spec[species[0]][1:,:]+rho_spec[species[0]][:-1,:])*\
+                (-perm/mu*(self.Domain.P[1:,:]-self.Domain.P[:-1,:])/self.dy[:-1,:])\
+                *0.5*(T_c[1:,:]+T_c[:-1,:])*0.5*(Cp_spec[species[0]][1:,:]+Cp_spec[species[0]][:-1,:])
+            
+                # Outgoing fluxes
+            self.Domain.E[:,:-1]-=Ax_r[:,:-1]*dt\
+                *rho_spec[species[0]][:,:-1]*\
+                (-perm/mu*(self.Domain.P[:,1:]-self.Domain.P[:,:-1])/self.dx[:,:-1])\
+                *0.5*(T_c[:,1:]+T_c[:,:-1])*0.5*(Cp_spec[species[0]][:,1:]+Cp_spec[species[0]][:,:-1])
+            self.Domain.E[:-1,:]-=Ay[:-1,:]*dt\
+                *rho_spec[species[0]][:-1,:]*\
+                (-perm/mu*(self.Domain.P[1:,:]-self.Domain.P[:-1,:])/self.dy[:-1,:])\
+                *0.5*(T_c[1:,:]+T_c[:-1,:])*0.5*(Cp_spec[species[0]][1:,:]+Cp_spec[species[0]][:-1,:])
         
 #        # Radiation effects
 #        self.Domain.T[1:-1,1:-1]+=0.8*5.67*10**(-8)*(T_c[:-2,1:-1]**4+T_c[2:,1:-1]**4+T_c[1:-1,:-2]**4+T_c[1:-1,2:]**4)
         
         # Apply energy from previous time step and boundary conditions
-        self.BCs.Energy(self.Domain.E, T_c, dt, rho, Cv, vol, Ax, Ay)
+        self.BCs.Energy(self.Domain.E, T_c, dt, rho, Cv, vol, Ax_r, Ay)
         
         ###################################################################
         # Divergence/Convergence checks
