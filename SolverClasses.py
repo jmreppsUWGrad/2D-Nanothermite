@@ -34,7 +34,7 @@ class TwoDimSolver():
     def __init__(self, geom_obj, settings, Sources, BCs, solver):
         self.Domain=geom_obj # Geometry object
         self.time_scheme=settings['Time_Scheme']
-        self.dx,self.dy=np.meshgrid(geom_obj.dx,geom_obj.dy)
+        self.dx,self.dy=geom_obj.dX,geom_obj.dY
         self.Fo=settings['Fo']
         self.CFL=settings['CFL']
         self.dt=settings['dt']
@@ -85,12 +85,12 @@ class TwoDimSolver():
     def Advance_Soln_Cond(self, nt, t, vol, Ax_l, Ax_r, Ay):
         max_Y,min_Y=0,1
         # Calculate properties
-        k, rho, Cv, D=self.Domain.calcProp()
+        k, rho, Cv, D=self.Domain.calcProp(vol)
         mu=10**(-5)
         perm=10**(-11)
         
         # Copy needed variables and set pointers to other variables
-        T_c=self.Domain.TempFromConserv()
+        T_c=self.Domain.TempFromConserv(vol)
         if bool(self.Domain.m_species):
             m_c=copy.deepcopy(self.Domain.m_species)
             rho_spec=self.Domain.rho_species

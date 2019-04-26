@@ -29,19 +29,20 @@ class MPI_comms():
         self.Species=Species
         
     # MPI discretization routine
-    def MPI_discretize(self, domain):
+    def MPI_discretize(self, domain, vol, Ax_l, Ax_r, Ay):
         # Determine process arrangement
         ranks=np.linspace(0, self.size-1, self.size).astype(int) # Array of processes
         maxDim=int(np.sqrt(self.size)) # Square root of size (max dimension)
         
-        while maxDim>1:
+        while maxDim>=1:
             if self.size%maxDim!=0 or domain.Nx%maxDim!=0 or domain.Ny%(self.size/maxDim)!=0:
                 maxDim-=1
             else:
                 break
-        if maxDim==1:
-            return 1
+        if maxDim==0:
+            return 1,vol,Ax_l,Ax_r,Ay
         ranks=ranks.reshape((self.size/maxDim, maxDim))
+        domain.proc_arrang=ranks # Save process arrangment to each process domain class
         
         # Discretize domain to each process
         proc_x=len(ranks[0,:])
@@ -50,16 +51,283 @@ class MPI_comms():
         domain.Nx/=proc_x # Process discretization in x
         domain.Ny/=proc_y # Process discretization in y
         
-        # Loop through each process rank in the arrangment
+        # Allocate global array to appropriate process (including ghost node)
         for i in range(self.size/maxDim):
             # Only take parts of array if process belongs to this part of arrangment
-            if self.rank in ranks[i]:
-                domain.E=domain.E[(self.rank-i)*domain.Ny:(self.rank-i+1)*domain.Ny,\
-                                  (self.rank-i)*domain.Nx:(self.rank-i+1)*domain.Nx]
-                # domain.X, domain.Y, solver.dx, solver.dy, vol, Ax, Ay
-        
-        
-        return 0
+            # Unique case where there is only one row of processes
+            if self.rank in ranks[i] and maxDim==1:
+                domain.proc_left=-1
+                domain.proc_right=-1
+                # Process at y=0
+                if i==0:
+                    domain.proc_bottom=-1
+                    vol=vol[(i)*domain.Ny:(i+1)*domain.Ny+1,:]
+                    Ax_l=Ax_l[(i)*domain.Ny:(i+1)*domain.Ny+1,:]
+                    Ax_r=Ax_r[(i)*domain.Ny:(i+1)*domain.Ny+1,:]
+                    Ay=Ay[(i)*domain.Ny:(i+1)*domain.Ny+1,:]
+                    domain.X=domain.X[(i)*domain.Ny:(i+1)*domain.Ny+1,:]
+                    domain.Y=domain.Y[(i)*domain.Ny:(i+1)*domain.Ny+1,:]
+                    domain.dX=domain.dX[(i)*domain.Ny:(i+1)*domain.Ny+1,:]
+                    domain.dY=domain.dY[(i)*domain.Ny:(i+1)*domain.Ny+1,:]
+                    domain.E=domain.E[(i)*domain.Ny:(i+1)*domain.Ny+1,:]
+                    domain.proc_top=ranks[i+1,0]
+                    
+                # Process at y=y_max
+                elif i==self.size/maxDim-1:
+                    domain.proc_top=-1
+                    vol=vol[(i)*domain.Ny-1:(i+1)*domain.Ny,:]
+                    Ax_l=Ax_l[(i)*domain.Ny-1:(i+1)*domain.Ny,:]
+                    Ax_r=Ax_r[(i)*domain.Ny-1:(i+1)*domain.Ny,:]
+                    Ay=Ay[(i)*domain.Ny-1:(i+1)*domain.Ny,:]
+                    domain.X=domain.X[(i)*domain.Ny-1:(i+1)*domain.Ny,:]
+                    domain.Y=domain.Y[(i)*domain.Ny-1:(i+1)*domain.Ny,:]
+                    domain.dX=domain.dX[(i)*domain.Ny-1:(i+1)*domain.Ny,:]
+                    domain.dY=domain.dY[(i)*domain.Ny-1:(i+1)*domain.Ny,:]
+                    domain.E=domain.E[(i)*domain.Ny-1:(i+1)*domain.Ny,:]
+                    domain.proc_bottom=ranks[i-1,0]
+                    
+                # Interior
+                else:
+                    vol=vol[(i)*domain.Ny-1:(i+1)*domain.Ny+1,:]
+                    Ax_l=Ax_l[(i)*domain.Ny-1:(i+1)*domain.Ny+1,:]
+                    Ax_r=Ax_r[(i)*domain.Ny-1:(i+1)*domain.Ny+1,:]
+                    Ay=Ay[(i)*domain.Ny-1:(i+1)*domain.Ny+1,:]
+                    domain.X=domain.X[(i)*domain.Ny-1:(i+1)*domain.Ny+1,:]
+                    domain.Y=domain.Y[(i)*domain.Ny-1:(i+1)*domain.Ny+1,:]
+                    domain.dX=domain.dX[(i)*domain.Ny-1:(i+1)*domain.Ny+1,:]
+                    domain.dY=domain.dY[(i)*domain.Ny-1:(i+1)*domain.Ny+1,:]
+                    domain.E=domain.E[(i)*domain.Ny-1:(i+1)*domain.Ny+1,:]
+                    domain.proc_bottom=ranks[i-1,0]
+                    domain.proc_top=ranks[i+1,0]
+                    
+            # Processes at y=0
+            elif self.rank in ranks[i] and i==0:
+                domain.proc_bottom=-1
+                # Corner x=0
+                if self.rank==ranks[i,0]:
+                    vol=vol[(i)*domain.Ny:(i+1)*domain.Ny+1,\
+                          (self.rank-ranks[i,0])*domain.Nx:(self.rank-ranks[i,0]+1)*domain.Nx+1]
+                    Ax_l=Ax_l[(i)*domain.Ny:(i+1)*domain.Ny+1,\
+                          (self.rank-ranks[i,0])*domain.Nx:(self.rank-ranks[i,0]+1)*domain.Nx+1]
+                    Ax_r=Ax_r[(i)*domain.Ny:(i+1)*domain.Ny+1,\
+                          (self.rank-ranks[i,0])*domain.Nx:(self.rank-ranks[i,0]+1)*domain.Nx+1]
+                    Ay=Ay[(i)*domain.Ny:(i+1)*domain.Ny+1,\
+                          (self.rank-ranks[i,0])*domain.Nx:(self.rank-ranks[i,0]+1)*domain.Nx+1]
+                    domain.X=domain.X[(i)*domain.Ny:(i+1)*domain.Ny+1,\
+                          (self.rank-ranks[i,0])*domain.Nx:(self.rank-ranks[i,0]+1)*domain.Nx+1]
+                    domain.Y=domain.Y[(i)*domain.Ny:(i+1)*domain.Ny+1,\
+                          (self.rank-ranks[i,0])*domain.Nx:(self.rank-ranks[i,0]+1)*domain.Nx+1]
+                    domain.dX=domain.dX[(i)*domain.Ny:(i+1)*domain.Ny+1,\
+                          (self.rank-ranks[i,0])*domain.Nx:(self.rank-ranks[i,0]+1)*domain.Nx+1]
+                    domain.dY=domain.dY[(i)*domain.Ny:(i+1)*domain.Ny+1,\
+                          (self.rank-ranks[i,0])*domain.Nx:(self.rank-ranks[i,0]+1)*domain.Nx+1]
+                    domain.E=domain.E[(i)*domain.Ny:(i+1)*domain.Ny+1,\
+                          (self.rank-ranks[i,0])*domain.Nx:(self.rank-ranks[i,0]+1)*domain.Nx+1]
+                    domain.proc_top=ranks[i+1,0]
+                    domain.proc_left=-1
+                    domain.proc_right=ranks[i,1]
+                    
+                    
+                # Corner x=x_max
+                elif self.rank==ranks[i,-1]:
+                    vol=vol[(i)*domain.Ny:(i+1)*domain.Ny+1,\
+                          (self.rank-ranks[i,0])*domain.Nx-1:(self.rank-ranks[i,0]+1)*domain.Nx]
+                    Ax_l=Ax_l[(i)*domain.Ny:(i+1)*domain.Ny+1,\
+                          (self.rank-ranks[i,0])*domain.Nx-1:(self.rank-ranks[i,0]+1)*domain.Nx]
+                    Ax_r=Ax_r[(i)*domain.Ny:(i+1)*domain.Ny+1,\
+                          (self.rank-ranks[i,0])*domain.Nx-1:(self.rank-ranks[i,0]+1)*domain.Nx]
+                    Ay=Ay[(i)*domain.Ny:(i+1)*domain.Ny+1,\
+                          (self.rank-ranks[i,0])*domain.Nx-1:(self.rank-ranks[i,0]+1)*domain.Nx]
+                    domain.X=domain.X[(i)*domain.Ny:(i+1)*domain.Ny+1,\
+                          (self.rank-ranks[i,0])*domain.Nx-1:(self.rank-ranks[i,0]+1)*domain.Nx]
+                    domain.Y=domain.Y[(i)*domain.Ny:(i+1)*domain.Ny+1,\
+                          (self.rank-ranks[i,0])*domain.Nx-1:(self.rank-ranks[i,0]+1)*domain.Nx]
+                    domain.dX=domain.dX[(i)*domain.Ny:(i+1)*domain.Ny+1,\
+                          (self.rank-ranks[i,0])*domain.Nx-1:(self.rank-ranks[i,0]+1)*domain.Nx]
+                    domain.dY=domain.dY[(i)*domain.Ny:(i+1)*domain.Ny+1,\
+                          (self.rank-ranks[i,0])*domain.Nx-1:(self.rank-ranks[i,0]+1)*domain.Nx]
+                    domain.E=domain.E[(i)*domain.Ny:(i+1)*domain.Ny+1,\
+                          (self.rank-ranks[i,0])*domain.Nx-1:(self.rank-ranks[i,0]+1)*domain.Nx]
+                    domain.proc_top=ranks[i+1,-1]
+                    domain.proc_left=ranks[i,-2]
+                    domain.proc_right=-1
+                    
+                    
+                # Interior processes
+                else:
+                    vol=vol[(i)*domain.Ny:(i+1)*domain.Ny+1,\
+                          (self.rank-ranks[i,0])*domain.Nx-1:(self.rank-ranks[i,0]+1)*domain.Nx+1]
+                    Ax_l=Ax_l[(i)*domain.Ny:(i+1)*domain.Ny+1,\
+                          (self.rank-ranks[i,0])*domain.Nx-1:(self.rank-ranks[i,0]+1)*domain.Nx+1]
+                    Ax_r=Ax_r[(i)*domain.Ny:(i+1)*domain.Ny+1,\
+                          (self.rank-ranks[i,0])*domain.Nx-1:(self.rank-ranks[i,0]+1)*domain.Nx+1]
+                    Ay=Ay[(i)*domain.Ny:(i+1)*domain.Ny+1,\
+                          (self.rank-ranks[i,0])*domain.Nx-1:(self.rank-ranks[i,0]+1)*domain.Nx+1]
+                    domain.X=domain.X[(i)*domain.Ny:(i+1)*domain.Ny+1,\
+                          (self.rank-ranks[i,0])*domain.Nx-1:(self.rank-ranks[i,0]+1)*domain.Nx+1]
+                    domain.Y=domain.Y[(i)*domain.Ny:(i+1)*domain.Ny+1,\
+                          (self.rank-ranks[i,0])*domain.Nx-1:(self.rank-ranks[i,0]+1)*domain.Nx+1]
+                    domain.dX=domain.dX[(i)*domain.Ny:(i+1)*domain.Ny+1,\
+                          (self.rank-ranks[i,0])*domain.Nx-1:(self.rank-ranks[i,0]+1)*domain.Nx+1]
+                    domain.dY=domain.dY[(i)*domain.Ny:(i+1)*domain.Ny+1,\
+                          (self.rank-ranks[i,0])*domain.Nx-1:(self.rank-ranks[i,0]+1)*domain.Nx+1]
+                    domain.E=domain.E[(i)*domain.Ny:(i+1)*domain.Ny+1,\
+                          (self.rank-ranks[i,0])*domain.Nx-1:(self.rank-ranks[i,0]+1)*domain.Nx+1]
+                    domain.proc_top=ranks[i+1,self.rank-ranks[i,0]]
+                    domain.proc_left=ranks[i,self.rank-ranks[i,0]-1]
+                    domain.proc_right=ranks[i,self.rank-ranks[i,0]+1]
+                    
+            # Processes at y=y_max
+            elif self.rank in ranks[i] and i==self.size/maxDim-1:
+                domain.proc_top=-1
+                # Edge x=0
+                if self.rank==ranks[i,0]:
+                    vol=vol[(i)*domain.Ny-1:(i+1)*domain.Ny,\
+                          (self.rank-ranks[i,0])*domain.Nx:(self.rank-ranks[i,0]+1)*domain.Nx+1]
+                    Ax_l=Ax_l[(i)*domain.Ny-1:(i+1)*domain.Ny,\
+                          (self.rank-ranks[i,0])*domain.Nx:(self.rank-ranks[i,0]+1)*domain.Nx+1]
+                    Ax_r=Ax_r[(i)*domain.Ny-1:(i+1)*domain.Ny,\
+                          (self.rank-ranks[i,0])*domain.Nx:(self.rank-ranks[i,0]+1)*domain.Nx+1]
+                    Ay=Ay[(i)*domain.Ny-1:(i+1)*domain.Ny,\
+                          (self.rank-ranks[i,0])*domain.Nx:(self.rank-ranks[i,0]+1)*domain.Nx+1]
+                    domain.X=domain.X[(i)*domain.Ny-1:(i+1)*domain.Ny,\
+                          (self.rank-ranks[i,0])*domain.Nx:(self.rank-ranks[i,0]+1)*domain.Nx+1]
+                    domain.Y=domain.Y[(i)*domain.Ny-1:(i+1)*domain.Ny,\
+                          (self.rank-ranks[i,0])*domain.Nx:(self.rank-ranks[i,0]+1)*domain.Nx+1]
+                    domain.dX=domain.dX[(i)*domain.Ny-1:(i+1)*domain.Ny,\
+                          (self.rank-ranks[i,0])*domain.Nx:(self.rank-ranks[i,0]+1)*domain.Nx+1]
+                    domain.dY=domain.dY[(i)*domain.Ny-1:(i+1)*domain.Ny,\
+                          (self.rank-ranks[i,0])*domain.Nx:(self.rank-ranks[i,0]+1)*domain.Nx+1]
+                    domain.E=domain.E[(i)*domain.Ny-1:(i+1)*domain.Ny,\
+                          (self.rank-ranks[i,0])*domain.Nx:(self.rank-ranks[i,0]+1)*domain.Nx+1]
+                    domain.proc_left=-1
+                    domain.proc_right=ranks[i,1]
+                    domain.proc_bottom=ranks[i-1,0]
+                    
+                # Edge x=x_max
+                elif self.rank==ranks[i,-1]:
+                    vol=vol[(i)*domain.Ny-1:(i+1)*domain.Ny,\
+                          (self.rank-ranks[i,0])*domain.Nx-1:(self.rank-ranks[i,0]+1)*domain.Nx]
+                    Ax_l=Ax_l[(i)*domain.Ny-1:(i+1)*domain.Ny,\
+                          (self.rank-ranks[i,0])*domain.Nx-1:(self.rank-ranks[i,0]+1)*domain.Nx]
+                    Ax_r=Ax_r[(i)*domain.Ny-1:(i+1)*domain.Ny,\
+                          (self.rank-ranks[i,0])*domain.Nx-1:(self.rank-ranks[i,0]+1)*domain.Nx]
+                    Ay=Ay[(i)*domain.Ny-1:(i+1)*domain.Ny,\
+                          (self.rank-ranks[i,0])*domain.Nx-1:(self.rank-ranks[i,0]+1)*domain.Nx]
+                    domain.X=domain.X[(i)*domain.Ny-1:(i+1)*domain.Ny,\
+                          (self.rank-ranks[i,0])*domain.Nx-1:(self.rank-ranks[i,0]+1)*domain.Nx]
+                    domain.Y=domain.Y[(i)*domain.Ny-1:(i+1)*domain.Ny,\
+                          (self.rank-ranks[i,0])*domain.Nx-1:(self.rank-ranks[i,0]+1)*domain.Nx]
+                    domain.dX=domain.dX[(i)*domain.Ny-1:(i+1)*domain.Ny,\
+                          (self.rank-ranks[i,0])*domain.Nx-1:(self.rank-ranks[i,0]+1)*domain.Nx]
+                    domain.dY=domain.dY[(i)*domain.Ny-1:(i+1)*domain.Ny,\
+                          (self.rank-ranks[i,0])*domain.Nx-1:(self.rank-ranks[i,0]+1)*domain.Nx]
+                    domain.E=domain.E[(i)*domain.Ny-1:(i+1)*domain.Ny,\
+                          (self.rank-ranks[i,0])*domain.Nx-1:(self.rank-ranks[i,0]+1)*domain.Nx]
+                    domain.proc_left=ranks[i,-2]
+                    domain.proc_right=-1
+                    domain.proc_bottom=ranks[i-1,-1]
+                    
+                # Interior processes
+                else:
+                    vol=vol[(i)*domain.Ny-1:(i+1)*domain.Ny,\
+                          (self.rank-ranks[i,0])*domain.Nx-1:(self.rank-ranks[i,0]+1)*domain.Nx+1]
+                    Ax_l=Ax_l[(i)*domain.Ny-1:(i+1)*domain.Ny,\
+                          (self.rank-ranks[i,0])*domain.Nx-1:(self.rank-ranks[i,0]+1)*domain.Nx+1]
+                    Ax_r=Ax_r[(i)*domain.Ny-1:(i+1)*domain.Ny,\
+                          (self.rank-ranks[i,0])*domain.Nx-1:(self.rank-ranks[i,0]+1)*domain.Nx+1]
+                    Ay=Ay[(i)*domain.Ny-1:(i+1)*domain.Ny,\
+                          (self.rank-ranks[i,0])*domain.Nx-1:(self.rank-ranks[i,0]+1)*domain.Nx+1]
+                    domain.X=domain.X[(i)*domain.Ny-1:(i+1)*domain.Ny,\
+                          (self.rank-ranks[i,0])*domain.Nx-1:(self.rank-ranks[i,0]+1)*domain.Nx+1]
+                    domain.Y=domain.Y[(i)*domain.Ny-1:(i+1)*domain.Ny,\
+                          (self.rank-ranks[i,0])*domain.Nx-1:(self.rank-ranks[i,0]+1)*domain.Nx+1]
+                    domain.dX=domain.dX[(i)*domain.Ny-1:(i+1)*domain.Ny,\
+                          (self.rank-ranks[i,0])*domain.Nx-1:(self.rank-ranks[i,0]+1)*domain.Nx+1]
+                    domain.dY=domain.dY[(i)*domain.Ny-1:(i+1)*domain.Ny,\
+                          (self.rank-ranks[i,0])*domain.Nx-1:(self.rank-ranks[i,0]+1)*domain.Nx+1]
+                    domain.E=domain.E[(i)*domain.Ny-1:(i+1)*domain.Ny,\
+                          (self.rank-ranks[i,0])*domain.Nx-1:(self.rank-ranks[i,0]+1)*domain.Nx+1]
+                    domain.proc_left=ranks[i,self.rank-ranks[i,0]-1]
+                    domain.proc_right=ranks[i,self.rank-ranks[i,0]+1]
+                    domain.proc_bottom=ranks[i-1,self.rank-ranks[i,0]]
+            
+            # Interior y values
+            elif self.rank in ranks[i]:
+                domain.proc_top=ranks[i+1,self.rank-ranks[i,0]]
+                domain.proc_bottom=ranks[i-1,self.rank-ranks[i,0]]
+                # Edge x=0
+                if self.rank==ranks[i,0]:
+                    vol=vol[(i)*domain.Ny-1:(i+1)*domain.Ny+1,\
+                          (self.rank-ranks[i,0])*domain.Nx:(self.rank-ranks[i,0]+1)*domain.Nx+1]
+                    Ax_l=Ax_l[(i)*domain.Ny-1:(i+1)*domain.Ny+1,\
+                          (self.rank-ranks[i,0])*domain.Nx:(self.rank-ranks[i,0]+1)*domain.Nx+1]
+                    Ax_r=Ax_r[(i)*domain.Ny-1:(i+1)*domain.Ny+1,\
+                          (self.rank-ranks[i,0])*domain.Nx:(self.rank-ranks[i,0]+1)*domain.Nx+1]
+                    Ay=Ay[(i)*domain.Ny-1:(i+1)*domain.Ny+1,\
+                          (self.rank-ranks[i,0])*domain.Nx:(self.rank-ranks[i,0]+1)*domain.Nx+1]
+                    domain.X=domain.X[(i)*domain.Ny-1:(i+1)*domain.Ny+1,\
+                          (self.rank-ranks[i,0])*domain.Nx:(self.rank-ranks[i,0]+1)*domain.Nx+1]
+                    domain.Y=domain.Y[(i)*domain.Ny-1:(i+1)*domain.Ny+1,\
+                          (self.rank-ranks[i,0])*domain.Nx:(self.rank-ranks[i,0]+1)*domain.Nx+1]
+                    domain.dX=domain.dX[(i)*domain.Ny-1:(i+1)*domain.Ny+1,\
+                          (self.rank-ranks[i,0])*domain.Nx:(self.rank-ranks[i,0]+1)*domain.Nx+1]
+                    domain.dY=domain.dY[(i)*domain.Ny-1:(i+1)*domain.Ny+1,\
+                          (self.rank-ranks[i,0])*domain.Nx:(self.rank-ranks[i,0]+1)*domain.Nx+1]
+                    domain.E=domain.E[(i)*domain.Ny-1:(i+1)*domain.Ny+1,\
+                          (self.rank-ranks[i,0])*domain.Nx:(self.rank-ranks[i,0]+1)*domain.Nx+1]
+                    domain.proc_left=-1
+                    domain.proc_right=ranks[i,self.rank-ranks[i,0]+1]
+                    
+                    
+                # Edge x=x_max
+                elif self.rank==ranks[i,-1]:
+                    vol=vol[(i)*domain.Ny-1:(i+1)*domain.Ny+1,\
+                          (self.rank-ranks[i,0])*domain.Nx-1:(self.rank-ranks[i,0]+1)*domain.Nx]
+                    Ax_l=Ax_l[(i)*domain.Ny-1:(i+1)*domain.Ny+1,\
+                          (self.rank-ranks[i,0])*domain.Nx-1:(self.rank-ranks[i,0]+1)*domain.Nx]
+                    Ax_r=Ax_r[(i)*domain.Ny-1:(i+1)*domain.Ny+1,\
+                          (self.rank-ranks[i,0])*domain.Nx-1:(self.rank-ranks[i,0]+1)*domain.Nx]
+                    Ay=Ay[(i)*domain.Ny-1:(i+1)*domain.Ny+1,\
+                          (self.rank-ranks[i,0])*domain.Nx-1:(self.rank-ranks[i,0]+1)*domain.Nx]
+                    domain.X=domain.X[(i)*domain.Ny-1:(i+1)*domain.Ny+1,\
+                          (self.rank-ranks[i,0])*domain.Nx-1:(self.rank-ranks[i,0]+1)*domain.Nx]
+                    domain.Y=domain.Y[(i)*domain.Ny-1:(i+1)*domain.Ny+1,\
+                          (self.rank-ranks[i,0])*domain.Nx-1:(self.rank-ranks[i,0]+1)*domain.Nx]
+                    domain.dX=domain.dX[(i)*domain.Ny-1:(i+1)*domain.Ny+1,\
+                          (self.rank-ranks[i,0])*domain.Nx-1:(self.rank-ranks[i,0]+1)*domain.Nx]
+                    domain.dY=domain.dY[(i)*domain.Ny-1:(i+1)*domain.Ny+1,\
+                          (self.rank-ranks[i,0])*domain.Nx-1:(self.rank-ranks[i,0]+1)*domain.Nx]
+                    domain.E=domain.E[(i)*domain.Ny-1:(i+1)*domain.Ny+1,\
+                          (self.rank-ranks[i,0])*domain.Nx-1:(self.rank-ranks[i,0]+1)*domain.Nx]
+                    domain.proc_left=ranks[i,self.rank-ranks[i,0]-1]
+                    domain.proc_right=-1
+                    
+                # Interior processes
+                else:
+                    vol=vol[(i)*domain.Ny-1:(i+1)*domain.Ny+1,\
+                          (self.rank-ranks[i,0])*domain.Nx-1:(self.rank-ranks[i,0]+1)*domain.Nx+1]
+                    Ax_l=Ax_l[(i)*domain.Ny-1:(i+1)*domain.Ny+1,\
+                          (self.rank-ranks[i,0])*domain.Nx-1:(self.rank-ranks[i,0]+1)*domain.Nx+1]
+                    Ax_r=Ax_r[(i)*domain.Ny-1:(i+1)*domain.Ny+1,\
+                          (self.rank-ranks[i,0])*domain.Nx-1:(self.rank-ranks[i,0]+1)*domain.Nx+1]
+                    Ay=Ay[(i)*domain.Ny-1:(i+1)*domain.Ny+1,\
+                          (self.rank-ranks[i,0])*domain.Nx-1:(self.rank-ranks[i,0]+1)*domain.Nx+1]
+                    domain.X=domain.X[(i)*domain.Ny-1:(i+1)*domain.Ny+1,\
+                          (self.rank-ranks[i,0])*domain.Nx-1:(self.rank-ranks[i,0]+1)*domain.Nx+1]
+                    domain.Y=domain.Y[(i)*domain.Ny-1:(i+1)*domain.Ny+1,\
+                          (self.rank-ranks[i,0])*domain.Nx-1:(self.rank-ranks[i,0]+1)*domain.Nx+1]
+                    domain.dX=domain.dX[(i)*domain.Ny-1:(i+1)*domain.Ny+1,\
+                          (self.rank-ranks[i,0])*domain.Nx-1:(self.rank-ranks[i,0]+1)*domain.Nx+1]
+                    domain.dY=domain.dY[(i)*domain.Ny-1:(i+1)*domain.Ny+1,\
+                          (self.rank-ranks[i,0])*domain.Nx-1:(self.rank-ranks[i,0]+1)*domain.Nx+1]
+                    domain.E=domain.E[(i)*domain.Ny-1:(i+1)*domain.Ny+1,\
+                          (self.rank-ranks[i,0])*domain.Nx-1:(self.rank-ranks[i,0]+1)*domain.Nx+1]
+                    domain.proc_left=ranks[i,self.rank-ranks[i,0]-1]
+                    domain.proc_right=ranks[i,self.rank-ranks[i,0]+1]
+            
+        return 0,vol,Ax_l,Ax_r,Ay
+    
     # Update ghost nodes for processes
     def update_ghosts(self, domain):
         # Send to the left
@@ -78,44 +346,169 @@ class MPI_comms():
         sen=domain.E[:,-2].copy()
         self.comm.Send(sen, dest=domain.proc_right)
         # Receive from the left
-        a=np.ones(1)*domain.E[:,0]
+        len_arr=len(domain.E[:,0])
+        len_arr=self.comm.recv(source=domain.proc_left)
+        a=np.ones(len_arr)*domain.E[:,0]
         self.comm.Recv(a, source=domain.proc_left)
         domain.E[:,0]=a
         
+        # Send to the bottom
+        self.comm.send(len(domain.E[1,:]), dest=domain.proc_bottom)
+        sen=domain.E[1,:].copy()
+        self.comm.Send(sen, dest=domain.proc_bottom)
+        # Receive from the top
+        len_arr=len(domain.E[-1,:])
+        len_arr=self.comm.recv(source=domain.proc_top)
+        a=np.ones(len_arr)*domain.E[-1,:]
+        self.comm.Recv(a, source=domain.proc_top)
+        domain.E[-1,:]=a
+        
+        # Send to the top
+        self.comm.send(len(domain.E[-2,:]), dest=domain.proc_top)
+        sen=domain.E[-2,:].copy()
+        self.comm.Send(sen, dest=domain.proc_top)
+        # Receive from the bottom
+        len_arr=len(domain.E[0,:])
+        len_arr=self.comm.recv(source=domain.proc_bottom)
+        a=np.ones(len_arr)*domain.E[0,:]
+        self.comm.Recv(a, source=domain.proc_bottom)
+        domain.E[0,:]=a
+        
         if st.find(self.Sources['Source_Kim'],'True')>=0:
-            # Send to the left, receive from the right
-            a=np.ones(1)*domain.eta[-1]
-            self.comm.Send(domain.eta[1], dest=domain.proc_left)
+            # Send to the left
+            self.comm.send(len(domain.eta[:,1]), dest=domain.proc_left)
+            sen=domain.eta[:,1].copy()
+            self.comm.Send(sen, dest=domain.proc_left)
+            # Receive from the right
+            len_arr=len(domain.eta[:,-1])
+            len_arr=self.comm.recv(source=domain.proc_right)
+            a=np.ones(len_arr)*domain.eta[:,-1]
             self.comm.Recv(a, source=domain.proc_right)
-            domain.eta[-1]=a
-            # Send to the right, receive from the left
-            a=np.ones(1)*domain.eta[0]
-            self.comm.Send(domain.eta[-2], dest=domain.proc_right)
+            domain.eta[:,-1]=a
+            
+            # Send to the right
+            self.comm.send(len(domain.eta[:,-2]), dest=domain.proc_right)
+            sen=domain.eta[:,-2].copy()
+            self.comm.Send(sen, dest=domain.proc_right)
+            # Receive from the left
+            len_arr=len(domain.eta[:,0])
+            len_arr=self.comm.recv(source=domain.proc_left)
+            a=np.ones(len_arr)*domain.eta[:,0]
             self.comm.Recv(a, source=domain.proc_left)
-            domain.eta[0]=a
+            domain.eta[:,0]=a
+            
+            # Send to the bottom
+            self.comm.send(len(domain.eta[1,:]), dest=domain.proc_bottom)
+            sen=domain.eta[1,:].copy()
+            self.comm.Send(sen, dest=domain.proc_bottom)
+            # Receive from the top
+            len_arr=len(domain.eta[-1,:])
+            len_arr=self.comm.recv(source=domain.proc_top)
+            a=np.ones(len_arr)*domain.eta[-1,:]
+            self.comm.Recv(a, source=domain.proc_top)
+            domain.eta[-1,:]=a
+            
+            # Send to the top
+            self.comm.send(len(domain.eta[-2,:]), dest=domain.proc_top)
+            sen=domain.eta[-2,:].copy()
+            self.comm.Send(sen, dest=domain.proc_top)
+            # Receive from the bottom
+            len_arr=len(domain.eta[0,:])
+            len_arr=self.comm.recv(source=domain.proc_bottom)
+            a=np.ones(len_arr)*domain.eta[0,:]
+            self.comm.Recv(a, source=domain.proc_bottom)
+            domain.eta[0,:]=a
+        
         if bool(self.Species):
-            # Send to the left, receive from the right
-            self.comm.Send(domain.P[1], dest=domain.proc_left)
-            a=np.ones(1)*domain.P[-1]
+            # Send to the left
+            self.comm.send(len(domain.P[:,1]), dest=domain.proc_left)
+            sen=domain.P[:,1].copy()
+            self.comm.Send(sen, dest=domain.proc_left)
+            # Receive from the right
+            len_arr=len(domain.P[:,-1])
+            len_arr=self.comm.recv(source=domain.proc_right)
+            a=np.ones(len_arr)*domain.P[:,-1]
             self.comm.Recv(a, source=domain.proc_right)
-            domain.P[-1]=a
-            # Send to the right, receive from the left
-            self.comm.Send(domain.P[-2], dest=domain.proc_right)
-            a=np.ones(1)*domain.P[0]
+            domain.P[:,-1]=a
+            
+            # Send to the right
+            self.comm.send(len(domain.P[:,-2]), dest=domain.proc_right)
+            sen=domain.P[:,-2].copy()
+            self.comm.Send(sen, dest=domain.proc_right)
+            # Receive from the left
+            len_arr=len(domain.P[:,0])
+            len_arr=self.comm.recv(source=domain.proc_left)
+            a=np.ones(len_arr)*domain.P[:,0]
             self.comm.Recv(a, source=domain.proc_left)
-            domain.P[0]=a
+            domain.P[:,0]=a
+            
+            # Send to the bottom
+            self.comm.send(len(domain.P[1,:]), dest=domain.proc_bottom)
+            sen=domain.P[1,:].copy()
+            self.comm.Send(sen, dest=domain.proc_bottom)
+            # Receive from the top
+            len_arr=len(domain.P[-1,:])
+            len_arr=self.comm.recv(source=domain.proc_top)
+            a=np.ones(len_arr)*domain.P[-1,:]
+            self.comm.Recv(a, source=domain.proc_top)
+            domain.P[-1,:]=a
+            
+            # Send to the top
+            self.comm.send(len(domain.P[-2,:]), dest=domain.proc_top)
+            sen=domain.P[-2,:].copy()
+            self.comm.Send(sen, dest=domain.proc_top)
+            # Receive from the bottom
+            len_arr=len(domain.P[0,:])
+            len_arr=self.comm.recv(source=domain.proc_bottom)
+            a=np.ones(len_arr)*domain.P[0,:]
+            self.comm.Recv(a, source=domain.proc_bottom)
+            domain.P[0,:]=a
+            
             for i in self.Species['keys']:
-                # Send to the left, receive from the right
-                self.comm.Send(domain.m_species[i][1], dest=domain.proc_left)
-                a=np.ones(1)*domain.m_species[i][-1]
+                # Send to the left
+                self.comm.send(len(domain.m_species[i][:,1]), dest=domain.proc_left)
+                sen=domain.m_species[i][:,1].copy()
+                self.comm.Send(sen, dest=domain.proc_left)
+                # Receive from the right
+                len_arr=len(domain.m_species[i][:,-1])
+                len_arr=self.comm.recv(source=domain.proc_right)
+                a=np.ones(len_arr)*domain.m_species[i][:,-1]
                 self.comm.Recv(a, source=domain.proc_right)
-                domain.m_species[i][-1]=a
-                # Send to the right, receive from the left
-                self.comm.Send(domain.m_species[i][-2], dest=domain.proc_right)
-                a=np.ones(1)*domain.m_species[i][0]
+                domain.m_species[i][:,-1]=a
+                
+                # Send to the right
+                self.comm.send(len(domain.m_species[i][:,-2]), dest=domain.proc_right)
+                sen=domain.m_species[i][:,-2].copy()
+                self.comm.Send(sen, dest=domain.proc_right)
+                # Receive from the left
+                len_arr=len(domain.m_species[i][:,0])
+                len_arr=self.comm.recv(source=domain.proc_left)
+                a=np.ones(len_arr)*domain.m_species[i][:,0]
                 self.comm.Recv(a, source=domain.proc_left)
-                domain.m_species[i][0]=a
-    
+                domain.m_species[i][:,0]=a
+                
+                # Send to the bottom
+                self.comm.send(len(domain.m_species[i][1,:]), dest=domain.proc_bottom)
+                sen=domain.m_species[i][1,:].copy()
+                self.comm.Send(sen, dest=domain.proc_bottom)
+                # Receive from the top
+                len_arr=len(domain.m_species[i][-1,:])
+                len_arr=self.comm.recv(source=domain.proc_top)
+                a=np.ones(len_arr)*domain.m_species[i][-1,:]
+                self.comm.Recv(a, source=domain.proc_top)
+                domain.m_species[i][-1,:]=a
+                
+                # Send to the top
+                self.comm.send(len(domain.m_species[i][-2,:]), dest=domain.proc_top)
+                sen=domain.m_species[i][-2,:].copy()
+                self.comm.Send(sen, dest=domain.proc_top)
+                # Receive from the bottom
+                len_arr=len(domain.m_species[i][0,:])
+                len_arr=self.comm.recv(source=domain.proc_bottom)
+                a=np.ones(len_arr)*domain.m_species[i][0,:]
+                self.comm.Recv(a, source=domain.proc_bottom)
+                domain.m_species[i][0,:]=a
+                
     # General function to compile a variable from all processes
     def compile_var(self, var, Domain):
         var_global=var[:-1].copy()

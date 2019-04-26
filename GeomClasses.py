@@ -76,6 +76,7 @@ class TwoDimDomain():
         self.proc_right=-1
         self.proc_top=-1
         self.proc_bottom=-1
+        self.proc_arrang=0 # Array holding process arrangment in domain
         
     # Discretize domain and save dx and dy
     def mesh(self):
@@ -84,69 +85,69 @@ class TwoDimDomain():
             smallest=self.xbias[1]
             self.dx[:-1]=np.linspace(2*self.L/(self.Nx-1)-smallest,smallest,self.Nx-1)
             self.dx[-1]=self.dx[-2]
-            print 'One way biasing in x: smallest element at x=%2f'%self.L
-            print 'Element size range: %2f, %2f'%(smallest, 2*self.L/(self.Nx-1)-smallest)
+#            print 'One way biasing in x: smallest element at x=%2f'%self.L
+#            print 'Element size range: %2f, %2f'%(smallest, 2*self.L/(self.Nx-1)-smallest)
         elif self.xbias[0]=='OneWayDown':
             smallest=self.xbias[1]
             self.dx[:-1]=np.linspace(smallest,2*self.L/(self.Nx-1)-smallest,self.Nx-1)
             self.dx[-1]=self.dx[-2]
-            print 'One way biasing in x: smallest element at x=0'
-            print 'Element size range: %2f, %2f'%(smallest, 2*self.L/(self.Nx-1)-smallest)
+#            print 'One way biasing in x: smallest element at x=0'
+#            print 'Element size range: %2f, %2f'%(smallest, 2*self.L/(self.Nx-1)-smallest)
         elif self.xbias[0]=='TwoWayEnd':
             smallest=self.xbias[1]
             self.dx[:int(self.Nx/2)]=np.linspace(smallest,2*self.L/(self.Nx-1)-smallest,(self.Nx-1)/2)
             self.dx[int(self.Nx/2):-1]=np.linspace(2*self.L/(self.Nx-1)-smallest,smallest,(self.Nx-1)/2)
             self.dx[-1]=self.dx[-2]
-            print 'Two way biasing in x: smallest elements at x=0 and %2f'%self.L
-            print 'Element size range: %2f, %2f'%(smallest, 2*self.L/(self.Nx-1)-smallest)
+#            print 'Two way biasing in x: smallest elements at x=0 and %2f'%self.L
+#            print 'Element size range: %2f, %2f'%(smallest, 2*self.L/(self.Nx-1)-smallest)
         elif self.xbias[0]=='TwoWayMid':
             smallest=self.xbias[1]
             self.dx[:int(self.Nx/2)]=np.linspace(2*self.L/(self.Nx-1)-smallest,smallest,(self.Nx-1)/2)
             self.dx[int(self.Nx/2):-1]=np.linspace(smallest,2*self.L/(self.Nx-1)-smallest,(self.Nx-1)/2)
             self.dx[-1]=self.dx[-2]
-            print 'Two way biasing in x: smallest elements around x=%2f'%(self.L/2)
-            print 'Element size range: %2f, %2f'%(smallest, 2*self.L/(self.Nx-1)-smallest)
+#            print 'Two way biasing in x: smallest elements around x=%2f'%(self.L/2)
+#            print 'Element size range: %2f, %2f'%(smallest, 2*self.L/(self.Nx-1)-smallest)
         else:
             self.dx[:]=self.L/(self.Nx-1)
-            print 'No biasing schemes specified in x'
+#            print 'No biasing schemes specified in x'
         
         # Discretize y
         if self.ybias[0]=='OneWayUp':
             smallest=self.ybias[1]
             self.dy[:-1]=np.linspace(2*self.W/(self.Ny-1)-smallest,smallest,self.Ny-1)
             self.dy[-1]=self.dy[-2]
-            print 'One way biasing in y: smallest element at y=%2f'%self.W
-            print 'Element size range: %2f, %2f'%(smallest, 2*self.W/(self.Ny-1)-smallest)
+#            print 'One way biasing in y: smallest element at y=%2f'%self.W
+#            print 'Element size range: %2f, %2f'%(smallest, 2*self.W/(self.Ny-1)-smallest)
         elif self.ybias[0]=='OneWayDown':
             smallest=self.ybias[1]
             self.dy[:-1]=np.linspace(smallest,2*self.W/(self.Ny-1)-smallest,self.Ny-1)
             self.dy[-1]=self.dy[-2]
-            print 'One way biasing in y: smallest element at y=0'
-            print 'Element size range: %2f, %2f'%(smallest, 2*self.W/(self.Ny-1)-smallest)
+#            print 'One way biasing in y: smallest element at y=0'
+#            print 'Element size range: %2f, %2f'%(smallest, 2*self.W/(self.Ny-1)-smallest)
         elif self.ybias[0]=='TwoWayEnd':
             smallest=self.ybias[1]
             self.dy[:int(self.Ny/2)]=np.linspace(smallest,2*self.W/(self.Ny-1)-smallest,(self.Ny-1)/2)
             self.dy[int(self.Ny/2):-1]=np.linspace(2*self.W/(self.Ny-1)-smallest,smallest,(self.Ny-1)/2)
             self.dy[-1]=self.dy[-2]
-            print 'Two way biasing in y: smallest elements at y=0 and %2f'%self.W
-            print 'Element size range: %2f, %2f'%(smallest, 2*self.W/(self.Ny-1)-smallest)
+#            print 'Two way biasing in y: smallest elements at y=0 and %2f'%self.W
+#            print 'Element size range: %2f, %2f'%(smallest, 2*self.W/(self.Ny-1)-smallest)
         elif self.ybias[0]=='TwoWayMid':
             smallest=self.ybias[1]
             self.dy[:int(self.Ny/2)]=np.linspace(2*self.W/(self.Ny-1)-smallest,smallest,(self.Ny-1)/2)
             self.dy[int(self.Ny/2):-1]=np.linspace(smallest,2*self.W/(self.Ny-1)-smallest,(self.Ny-1)/2)
             self.dy[-1]=self.dy[-2]
-            print 'Two way biasing in y: smallest elements around y=%2f'%(self.W/2)
-            print 'Element size range: %2f, %2f'%(smallest, 2*self.W/(self.Ny-1)-smallest)
+#            print 'Two way biasing in y: smallest elements around y=%2f'%(self.W/2)
+#            print 'Element size range: %2f, %2f'%(smallest, 2*self.W/(self.Ny-1)-smallest)
         else:
             self.dy[:]=self.W/(self.Ny-1)
-            print 'No biasing schemes specified in y'
+#            print 'No biasing schemes specified in y'
 
         for i in range(self.Nx-1):
             self.x[i+1]=self.x[i]+self.dx[i]
         for i in range(self.Ny-1):
             self.y[i+1]=self.y[i]+self.dy[i]
         self.X,self.Y=np.meshgrid(self.x,self.y)
-        
+        self.dX,self.dY=np.meshgrid(self.dx,self.dy)
         self.isMeshed=True
     
     # Define other variables for calculations after MPI
@@ -175,7 +176,7 @@ class TwoDimDomain():
     # Calculate and return volume of each node
     def CV_vol(self):
         v=np.zeros_like(self.E)
-        dx,dy=np.meshgrid(self.dx, self.dy)
+        dx,dy=self.dX, self.dY
         v[1:-1,1:-1]=0.25*(dx[1:-1,1:-1]+dx[1:-1,:-2])*(dy[1:-1,1:-1]+dy[:-2,1:-1])
         v[0,0]      =0.25*(dx[0,0])*(dy[0,0])
         v[0,1:-1]   =0.25*(dx[0,1:-1]+dx[0,:-2])*(dy[0,1:-1])
@@ -198,7 +199,7 @@ class TwoDimDomain():
         Ax_l=np.zeros_like(self.E)
         Ax_r=np.zeros_like(self.E)
         Ay=np.zeros_like(self.E)
-        dx,dy=np.meshgrid(self.dx, self.dy)
+        dx,dy=self.dX, self.dY
         # Left face areas (same as right for planar)
         Ax_l[1:-1,:]=0.5*(dy[1:-1,:]+dy[:-2,:])
         Ax_l[0,:]   =0.5*(dy[0,:])
@@ -222,7 +223,7 @@ class TwoDimDomain():
         return Ax_l, Ax_r, Ay
         
     # Calculate temperature dependent properties
-    def calcProp(self):
+    def calcProp(self, vol):
         k=np.zeros_like(self.eta)
         rho=np.zeros_like(self.eta)
         Cv=np.zeros_like(self.eta)
@@ -236,11 +237,11 @@ class TwoDimDomain():
 #                D[self.species_keys[i]][:,;]=self.Diff.get_Diff(300,i)
                 D[self.species_keys[i]][:,:]=0
                 self.rho_species[self.species_keys[i]]=\
-                    self.m_species[self.species_keys[i]]/(por[i]*self.CV_vol())
+                    self.m_species[self.species_keys[i]]/(por[i]*vol)
                 Cv+=self.m_species[self.species_keys[i]]*self.Cp_species[self.species_keys[i]]
                 m_tot+=self.m_species[self.species_keys[i]]
             Cv/=m_tot
-            rho=m_tot/self.CV_vol()
+            rho=m_tot/vol
         
         # Calculate properties based on eta or constant
         if (type(self.k) is str) and (st.find(self.k, 'eta')>=0):
@@ -259,6 +260,6 @@ class TwoDimDomain():
         return k, rho, Cv, D
     
     # Calculate temperature from energy
-    def TempFromConserv(self):
-        k,rho,Cv,D=self.calcProp()
-        return self.E/Cv/rho/self.CV_vol()
+    def TempFromConserv(self, vol):
+        k,rho,Cv,D=self.calcProp(vol)
+        return self.E/Cv/rho/vol
