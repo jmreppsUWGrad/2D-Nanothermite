@@ -40,137 +40,11 @@ from mpi4py import MPI
 import GeomClasses as Geom
 import SolverClasses as Solvers
 import FileClasses
+import mpi_routines
 
 ##########################################################################
-# ----------------------------------Functions
+# -------------------------------------Beginning
 ##########################################################################
-# Update ghost nodes for processes
-def update_ghosts(domain, Sources, Species):
-    # Send to the left
-    comm.send(len(domain.E[:,1]), dest=domain.proc_left)
-    sen=domain.E[:,1].copy()
-    comm.Send(sen, dest=domain.proc_left)
-    # Receive from the right
-    len_arr=len(domain.E[:,-1])
-    len_arr=comm.recv(source=domain.proc_right)
-    a=np.ones(len_arr)*domain.E[:,-1]
-    comm.Recv(a, source=domain.proc_right)
-    domain.E[:,-1]=a
-    
-    # Send to the right
-    comm.send(len(domain.E[:,-2]), dest=domain.proc_right)
-    sen=domain.E[:,-2].copy()
-    comm.Send(sen, dest=domain.proc_right)
-    # Receive from the left
-    a=np.ones(1)*domain.E[:,0]
-    comm.Recv(a, source=domain.proc_left)
-    domain.E[:,0]=a
-    
-    if st.find(Sources['Source_Kim'],'True')>=0:
-        # Send to the left, receive from the right
-        a=np.ones(1)*domain.eta[-1]
-        comm.Send(domain.eta[1], dest=domain.proc_left)
-        comm.Recv(a, source=domain.proc_right)
-        domain.eta[-1]=a
-        # Send to the right, receive from the left
-        a=np.ones(1)*domain.eta[0]
-        comm.Send(domain.eta[-2], dest=domain.proc_right)
-        comm.Recv(a, source=domain.proc_left)
-        domain.eta[0]=a
-    if bool(Species):
-        # Send to the left, receive from the right
-        comm.Send(domain.P[1], dest=domain.proc_left)
-        a=np.ones(1)*domain.P[-1]
-        comm.Recv(a, source=domain.proc_right)
-        domain.P[-1]=a
-        # Send to the right, receive from the left
-        comm.Send(domain.P[-2], dest=domain.proc_right)
-        a=np.ones(1)*domain.P[0]
-        comm.Recv(a, source=domain.proc_left)
-        domain.P[0]=a
-        for i in Species['keys']:
-            # Send to the left, receive from the right
-            comm.Send(domain.m_species[i][1], dest=domain.proc_left)
-            a=np.ones(1)*domain.m_species[i][-1]
-            comm.Recv(a, source=domain.proc_right)
-            domain.m_species[i][-1]=a
-            # Send to the right, receive from the left
-            comm.Send(domain.m_species[i][-2], dest=domain.proc_right)
-            a=np.ones(1)*domain.m_species[i][0]
-            comm.Recv(a, source=domain.proc_left)
-            domain.m_species[i][0]=a
-
-# General function to compile a variable from all processes
-def compile_var(var, Domain, rank):
-    var_global=var[:-1].copy()
-    # Gather at process 0
-    if rank==0:
-        for i in range(size-1):
-            len_arr=comm.recv(source=i+1)
-            dat=np.empty(len_arr)
-            comm.Recv(dat, source=i+1)
-            var_global=np.block([var_global, dat])
-    # Any purely interior processes
-    elif (Domain.proc_left>=0) and (Domain.proc_right>=0)\
-        and (Domain.proc_top>=0) and (Domain.proc_bottom>=0):
-        len_arr=(np.shape(var)[0]-2,np.shape(var)[1]-2)
-        comm.send(len_arr, dest=0)
-        comm.Send(var[1:-1,1:-1], dest=0)
-    # Any corner processes
-    elif (Domain.proc_left*Domain.proc_top>=0) or (Domain.proc_left*Domain.proc_bottom>=0)\
-        or (Domain.proc_right*Domain.proc_top>=0) or (Domain.proc_right*Domain.proc_bottom>=0):
-        len_arr=(np.shape(var)[0]-1,np.shape(var)[1]-1)
-        comm.send(len_arr, dest=0)
-        if Domain.proc_left<0:
-            if Domain.proc_top<0:
-                comm.Send(var[:-1,:-1], dest=0)
-            else:
-                comm.Send(var[1:,:-1], dest=0)
-        else:
-            if Domain.proc_top<0:
-                comm.Send(var[:-1,1:], dest=0)
-            else:
-                comm.Send(var[1:,1:], dest=0)
-    # Processes with BC on bottom or top only
-    elif Domain.proc_bottom<0 or Domain.proc_top<0:
-        len_arr=(np.shape(var)[0]-1,np.shape(var)[1]-2)
-        comm.send(len_arr, dest=0)
-        if Domain.proc_bottom<0:
-            comm.Send(var[1:,1:-1], dest=0)
-        else:
-            comm.Send(var[:-1,1:-1], dest=0)
-    # Processes with BC on right or left only
-    elif Domain.proc_right<0 or Domain.proc_left<0:
-        len_arr=(np.shape(var)[0]-2,np.shape(var)[1]-1)
-        comm.send(len_arr, dest=0)
-        if Domain.proc_right<0:
-            comm.Send(var[1:-1,1:], dest=0)
-        else:
-            comm.Send(var[1:-1,:-1], dest=0)
-    else:
-        len_arr=len(var)-1
-        comm.send(len_arr, dest=0)
-        comm.Send(var[1:], dest=0)
-    len_arr=comm.bcast(np.shape(var_global), root=0)
-    if rank!=0:
-        var_global=np.empty(len_arr)
-    comm.Bcast(var_global, root=0)
-    return var_global
-
-# Function to save data to npy files
-def save_data(Domain, Sources, Species, time, rank):
-    T=compile_var(Domain.TempFromConserv(), Domain, rank)
-    np.save('T_'+time, T, False)
-    # Kim source term
-    if st.find(Sources['Source_Kim'],'True')>=0:
-        eta=compile_var(Domain.eta, Domain, rank)
-        np.save('eta_'+time, eta, False)
-    if bool(Species):
-        P=compile_var(Domain.P, Domain, rank)
-        np.save('P_'+time, P, False)
-        for i in Species['keys']:
-            m_i=compile_var(Domain.m_species[i], Domain, rank)
-            np.save('m_'+i+'_'+time, m_i, False)
 
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
@@ -230,6 +104,10 @@ if rank==0:
     print 'Initializing MPI and solver...'
     np.save('X', domain.X, False)
     np.save('Y', domain.Y, False)
+mpi=mpi_routines.MPI_comms(comm, rank, size, Sources, Species)
+err=mpi.MPI_discretize(domain)
+if err>0:
+    sys.exit('Problem discretizing domain into processes')
 ###################################### MPI discretization here ##################################
 domain.create_var(Species)
 solver=Solvers.TwoDimSolver(domain, settings, Sources, copy.deepcopy(BCs), 'Solid')
@@ -307,14 +185,14 @@ if rank==0:
     print '################################\n'
     
     print 'Saving data to numpy array files...'
-save_data(domain, Sources, Species, time_max, rank)
+mpi.save_data(domain, Sources, Species, time_max, rank)
 
 ##########################################################################
 # -------------------------------------Solve
 ##########################################################################
 t,nt,tign=float(time_max)/1000,0,0 # time, number steps and ignition time initializations
 v_0,v_1,v,N=0,0,0,0 # combustion wave speed variables initialization
-dy=compile_var(domain.dy, domain, rank)
+dy=mpi.compile_var(domain.dy, domain, rank)
 
 # Setup intervals to save data
 output_data_t,output_data_nt=0,0
@@ -338,13 +216,13 @@ while nt<settings['total_time_steps'] and t<settings['total_time']:
     # First point in calculating combustion propagation speed
     T_0=domain.TempFromConserv()
     if st.find(Sources['Source_Kim'],'True')>=0 and BCs_changed:
-        eta=compile_var(domain.eta, domain, rank)
+        eta=mpi.compile_var(domain.eta, domain, rank)
 #        v_0=np.sum(domain.eta[:,int(len(domain.eta[0,:])/2)]*domain.dy)
         if rank==0:
             v_0=np.sum(eta*dy)/len(domain.eta[0,:])
     
     # Update ghost nodes
-    update_ghosts(domain, Sources, Species)
+    mpi.update_ghosts(domain, Sources, Species)
     # Actual solve
     err,dt=solver.Advance_Soln_Cond(nt, t, vol, Ax_l, Ax_r, Ay)
     t+=dt
@@ -360,7 +238,7 @@ while nt<settings['total_time_steps'] and t<settings['total_time']:
             input_file.Write_single_line('#################### Solver aborted #######################')
             input_file.Write_single_line('Time step %i, Time elapsed=%f, error code=%i;'%(nt,t,err))
             input_file.Write_single_line('Error codes: 1-time step, 2-Energy, 3-reaction progress, 4-Species balance')
-        save_data(domain, Sources, Species, '{:f}'.format(t*1000), rank)
+        mpi.save_data(domain, Sources, Species, '{:f}'.format(t*1000), rank)
         break
     
     # Output data to numpy files
@@ -368,12 +246,12 @@ while nt<settings['total_time_steps'] and t<settings['total_time']:
         (output_data_t!=0 and (t>=output_data_t*t_inc and t-dt<output_data_t*t_inc)):
         if rank==0:
             print 'Saving data to numpy array files...'
-        save_data(domain, Sources, Species, '{:f}'.format(t*1000), rank)
+        mpi.save_data(domain, Sources, Species, '{:f}'.format(t*1000), rank)
         t_inc+=1
         
     # Change boundary conditions
-    T=compile_var(domain.TempFromConserv(), domain, rank)
-    eta=compile_var(domain.eta, domain, rank)
+    T=mpi.compile_var(domain.TempFromConserv(), domain, rank)
+    eta=mpi.compile_var(domain.eta, domain, rank)
     if ((Sources['Ignition'][0]=='eta' and np.amax(eta)>=Sources['Ignition'][1])\
         or (Sources['Ignition'][0]=='Temp' and np.amax(T)>=Sources['Ignition'][1]))\
         and not BCs_changed:
@@ -384,7 +262,7 @@ while nt<settings['total_time_steps'] and t<settings['total_time']:
             input_file.Write_single_line(str(solver.BCs.BCs['bc_north_E']))
             input_file.fout.write('\n')
             tign=t
-        save_data(domain, Sources, Species, '{:f}'.format(t*1000), rank)
+        mpi.save_data(domain, Sources, Species, '{:f}'.format(t*1000), rank)
         BCs_changed=True
         BCs_changed=comm.bcast(BCs_changed, root=0)
         
