@@ -48,7 +48,16 @@ class TwoDimSolver():
         
         # BC class
         self.BCs=BCClasses.BCs(BCs, self.dx, self.dy, settings['Domain'])
-        
+        # Modify BCs if process is next to current one
+        if self.Domain.proc_left>=0:
+            self.BCs.BCs['bc_left_E']=['F', 0.0, (0, -1)]
+        if self.Domain.proc_right>=0:
+            self.BCs.BCs['bc_right_E']=['F', 0.0, (0, -1)]
+        if self.Domain.proc_top>=0:
+            self.BCs.BCs['bc_north_E']=['F', 0.0, (0, -1)]
+        if self.Domain.proc_bottom>=0:
+            self.BCs.BCs['bc_south_E']=['F', 0.0, (0, -1)]
+            
     # Time step check with dx, dy, Fo number
     def getdt(self, k, rho, Cv, T):
         # Time steps depending on Fo
@@ -96,13 +105,20 @@ class TwoDimSolver():
         
         if self.dt=='None':
             dt=self.getdt(k, rho, Cv, T_c)
+            # Collect all dt from other processes and send minimum
+            dt=self.comm.reduce(dt, op=MPI.MIN, root=0)
+            dt=self.comm.bcast(dt, root=0)
         else:
             dt=min(self.dt,self.getdt(k, rho, Cv, T_c))
-            
+            # Collect all dt from other processes and send minimum
+            dt=self.comm.reduce(dt, op=MPI.MIN, root=0)
+            dt=self.comm.bcast(dt, root=0)
         if (np.isnan(dt)) or (dt<=0):
-            print '*********Diverging time step***********'
+            if self.Domain.rank==0:
+                print '*********Diverging time step***********'
             return 1, dt
-        print 'Time step %i, Step size=%.7f, Time elapsed=%f;'%(nt+1,dt, t+dt)
+        if self.Domain.rank==0:
+            print 'Time step %i, Step size=%.7f, Time elapsed=%f;'%(nt+1,dt, t+dt)
         
         ###################################################################
         # Calculate source and Porous medium terms

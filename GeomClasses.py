@@ -31,7 +31,7 @@ import copy
 from MatClasses import Diff_Coef
 
 class TwoDimDomain():
-    def __init__(self, settings, Species, solver):
+    def __init__(self, settings, Species, solver, rank):
         
         self.L=settings['Length']
         self.W=settings['Width']
@@ -42,29 +42,10 @@ class TwoDimDomain():
         self.y=np.zeros(self.Ny)
         self.dx=np.zeros(self.Nx) # NOTE: SIZE MADE TO MATCH REST OF ARRAYS (FOR NOW)
         self.dy=np.zeros(self.Ny) # NOTE: SIZE MADE TO MATCH REST OF ARRAYS (FOR NOW)
+        self.rank=rank
         
         # Variables for conservation equations
         self.E=np.zeros((self.Ny, self.Nx)) # Lumped energy
-        self.eta=np.zeros_like(self.E) # extent of reaction
-        self.P=np.zeros_like(self.E) # pressure
-        
-        # Species
-        self.m_species={}
-        self.mu_species={}
-        self.mv_species={}
-        self.rho_species={}
-        self.Cp_species={}
-        if bool(Species):
-            self.species_keys=Species['keys']
-            i=0
-            for key in self.species_keys:
-                self.m_species[key]=np.zeros_like(self.E)
-                self.mu_species[key]=np.zeros_like(self.E)
-                self.mv_species[key]=np.zeros_like(self.E)
-                self.rho_species[key]=np.ones_like(self.E)*Species['Specie_rho'][i]
-                self.Cp_species[key]=np.ones_like(self.E)*Species['Specie_Cp'][i]
-                i+=1
-        self.m_0=np.zeros_like(self.E)
         
         # Thermal properties
         self.k=settings['k']
@@ -89,8 +70,12 @@ class TwoDimDomain():
         self.xbias=[settings['bias_type_x'], settings['bias_size_x']]
         self.ybias=[settings['bias_type_y'], settings['bias_size_y']]
         self.isMeshed=False
-        # Other useful calculations (put elsewhere??)
         
+        # MPI information (set by function in main)
+        self.proc_left=-1
+        self.proc_right=-1
+        self.proc_top=-1
+        self.proc_bottom=-1
         
     # Discretize domain and save dx and dy
     def mesh(self):
@@ -164,6 +149,29 @@ class TwoDimDomain():
         
         self.isMeshed=True
     
+    # Define other variables for calculations after MPI
+    def create_var(self, Species):
+        self.eta=np.zeros_like(self.E) # extent of reaction
+        self.P=np.zeros_like(self.E) # pressure
+        
+        # Species
+        self.m_species={}
+        self.mu_species={}
+        self.mv_species={}
+        self.rho_species={}
+        self.Cp_species={}
+        if bool(Species):
+            self.species_keys=Species['keys']
+            i=0
+            for key in self.species_keys:
+                self.m_species[key]=np.zeros_like(self.E)
+                self.mu_species[key]=np.zeros_like(self.E)
+                self.mv_species[key]=np.zeros_like(self.E)
+                self.rho_species[key]=np.ones_like(self.E)*Species['Specie_rho'][i]
+                self.Cp_species[key]=np.ones_like(self.E)*Species['Specie_Cp'][i]
+                i+=1
+        self.m_0=np.zeros_like(self.E)
+        
     # Calculate and return volume of each node
     def CV_vol(self):
         v=np.zeros_like(self.E)

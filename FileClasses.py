@@ -15,8 +15,8 @@ This file contains classes for reading and writing files in proper format:
 
 # Dictionaries containing expected input file data; organized by type
 
-keys_Settings=['Domain','Length','Width','Nodes_x','Nodes_y','k','Cp','rho',\
-               'bias_type_x','bias_size_x','bias_type_y','bias_size_y']
+keys_Settings=['MPI_Processes','Domain','Length','Width','Nodes_x','Nodes_y','k',\
+               'Cp','rho','bias_type_x','bias_size_x','bias_type_y','bias_size_y']
                
 keys_Sources=['Source_Uniform','Source_Kim','Ea','A0','dH', 'Ignition']
 
