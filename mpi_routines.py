@@ -511,64 +511,95 @@ class MPI_comms():
                 
     # General function to compile a variable from all processes
     def compile_var(self, var, Domain):
-        var_global=var[:-1].copy()
-        # Gather at process 0
-        if self.rank==0:
-            for i in range(self.size-1):
-                len_arr=self.comm.recv(source=i+1)
-                dat=np.empty(len_arr)
-                self.comm.Recv(dat, source=i+1)
-                var_global=np.block([var_global, dat])
-        # Any purely interior processes
-        elif (Domain.proc_left>=0) and (Domain.proc_right>=0)\
-            and (Domain.proc_top>=0) and (Domain.proc_bottom>=0):
-            len_arr=(np.shape(var)[0]-2,np.shape(var)[1]-2)
-            self.comm.send(len_arr, dest=0)
-            self.comm.Send(var[1:-1,1:-1], dest=0)
-        # Any corner processes
-        elif (Domain.proc_left*Domain.proc_top>=0) or (Domain.proc_left*Domain.proc_bottom>=0)\
-            or (Domain.proc_right*Domain.proc_top>=0) or (Domain.proc_right*Domain.proc_bottom>=0):
-            len_arr=(np.shape(var)[0]-1,np.shape(var)[1]-1)
-            self.comm.send(len_arr, dest=0)
-            if Domain.proc_left<0:
-                if Domain.proc_top<0:
-                    self.comm.Send(var[:-1,:-1], dest=0)
+        print '****Rank: %i, entered compile_var'%(self.rank)
+        # For one column of processes, use len(Domain.proc_arrang.shape)==1
+        
+        # Collect data from each row of processes at first process of the row
+        if self.rank in Domain.proc_arrang[:,0]:
+            # Locate the process in the arrangment
+            row=0
+            for i in range(len(Domain.proc_arrang[:,0])):
+                if self.rank in Domain.proc_arrang[i,:]:
+                    row=i
+                    break
                 else:
-                    self.comm.Send(var[1:,:-1], dest=0)
+                    continue
+            # Start global variable based on which row process is in
+            if row==0:
+                var_global=var[:-1,:-1]
+            elif row==Domain.proc_arrang[-1,0]:
+                var_global=var[1:,:-1]
             else:
-                if Domain.proc_top<0:
-                    self.comm.Send(var[:-1,1:], dest=0)
+                var_global=var[1:-1,:-1]
+            # Cycle through each process in x (right)
+            print '****Rank: %i, compiling variables'%(self.rank)
+            for i in range(len(Domain.proc_arrang[0,:])-1):
+                len_arr=self.comm.recv(source=Domain.proc_arrang[row,i+1])
+                a=np.empty(len_arr)
+                self.comm.Recv(a, source=Domain.proc_arrang[row,i+1])
+                var_global=np.block([var_global, a])
+            
+            # Send compiled variable to process 0 for final compile
+            if self.rank!=0:
+                print '****Rank: %i, sending compiled variables to 0'%(self.rank)
+                self.comm.send(np.shape(var_global), dest=0)
+                self.comm.Send(var_global, dest=0)
+            # Process 0 compiles global variable
+            else:
+                print '****Rank: %i, receiving compiled variables'%(self.rank)
+                for i in range(len(Domain.proc_arrang[:,0])-1):
+                    len_arr=self.comm.recv(source=Domain.proc_arrang[i+1,0])
+                    a=np.empty(len_arr)
+                    self.comm.Recv(a, source=Domain.proc_arrang[i+1,0])
+                    var_global=np.block([[var_global],[a]])
+        # Processes in each row will send data to first process of row
+        else:# self.rank in Domain.proc_arrang[:,1:]:
+            # Locate the process in the arrangment
+            row=0
+            for i in range(len(Domain.proc_arrang[:,0])):
+                if self.rank in Domain.proc_arrang[i,:]:
+                    row=i
+                    break
                 else:
-                    self.comm.Send(var[1:,1:], dest=0)
-        # Processes with BC on bottom or top only
-        elif Domain.proc_bottom<0 or Domain.proc_top<0:
-            len_arr=(np.shape(var)[0]-1,np.shape(var)[1]-2)
-            self.comm.send(len_arr, dest=0)
-            if Domain.proc_bottom<0:
-                self.comm.Send(var[1:,1:-1], dest=0)
+                    continue
+            # First row (y=0)
+            if row==0:
+                # Corner (x=x_max)
+                if self.rank==Domain.proc_arrang[row,-1]:
+                    sen=var[:-1,1:].copy()
+                # Interior processes
+                else:
+                    sen=var[:-1,1:-1].copy()
+            # Last row (y=y_max)
+            elif row==Domain.proc_arrang[-1,0]:
+                # Corner (x=x_max)
+                if self.rank==Domain.proc_arrang[row,-1]:
+                    sen=var[1:,1:].copy()
+                # Interior processes
+                else:
+                    sen=var[1:,1:-1].copy()
+            # Interior row
             else:
-                self.comm.Send(var[:-1,1:-1], dest=0)
-        # Processes with BC on right or left only
-        elif Domain.proc_right<0 or Domain.proc_left<0:
-            len_arr=(np.shape(var)[0]-2,np.shape(var)[1]-1)
-            self.comm.send(len_arr, dest=0)
-            if Domain.proc_right<0:
-                self.comm.Send(var[1:-1,1:], dest=0)
-            else:
-                self.comm.Send(var[1:-1,:-1], dest=0)
-        else:
-            len_arr=len(var)-1
-            self.comm.send(len_arr, dest=0)
-            self.comm.Send(var[1:], dest=0)
+                # Edge (x=x_max)
+                if self.rank==Domain.proc_arrang[row,-1]:
+                    sen=var[1:-1,1:].copy()
+                # Interior processes
+                else:
+                    sen=var[1:-1,1:-1].copy()
+            print '****Rank: %i, sending variables to %i'%(self.rank, Domain.proc_arrang[row,0])
+            self.comm.send(np.shape(sen), dest=Domain.proc_arrang[row,0])
+            self.comm.Send(sen, dest=Domain.proc_arrang[row,0])
+        
         len_arr=self.comm.bcast(np.shape(var_global), root=0)
         if self.rank!=0:
             var_global=np.empty(len_arr)
         self.comm.Bcast(var_global, root=0)
+        print '****Rank: %i, finished compile_var'%(self.rank)
         return var_global
     
     # Function to save data to npy files
-    def save_data(self, Domain, time):
-        T=self.compile_var(Domain.TempFromConserv(), Domain, self.rank)
+    def save_data(self, Domain, Sources, Species, time, vol):
+        T=self.compile_var(Domain.TempFromConserv(vol), Domain)
         np.save('T_'+time, T, False)
         # Kim source term
         if st.find(self.Sources['Source_Kim'],'True')>=0:

@@ -20,11 +20,11 @@
 #	rho,Cp: spec (calculate based on species mass fractions)
 ######################################################
 
-Domain:Axisymmetric
+Domain:Planar
 Length:1e-3
 Width:6e-3
-Nodes_x:101
-Nodes_y:601
+Nodes_x:100
+Nodes_y:600
 k:65
 #Cp:spec
 rho:3065
@@ -106,8 +106,9 @@ Fo:0.01
 CFL:0.01
 #dt:1e-9
 dt:None
-total_time_steps:None
-total_time:7e-4
+total_time_steps:4
+#total_time:7e-4
+total_time:None
 #total_time:0.002
 Time_Scheme:Explicit
 Restart:None
