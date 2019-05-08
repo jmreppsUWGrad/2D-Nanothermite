@@ -88,8 +88,8 @@ class TwoDimSolver():
         max_Y,min_Y=0,1
         # Calculate properties
         k, rho, Cv, D=self.Domain.calcProp(vol)
-        mu=10**(-5)
-        perm=10**(-11)
+        mu=self.Domain.mu
+        perm=self.Domain.perm
         
         # Copy needed variables and set pointers to other variables
         T_c=self.Domain.TempFromConserv(vol)
@@ -139,11 +139,11 @@ class TwoDimSolver():
         ###################################################################
         if bool(self.Domain.m_species):
             # Adjust pressure
-            print '     Gas mass: %f, %f'%(np.amax(self.Domain.m_species['g'])*10**6,np.amin(self.Domain.m_species['g'])*10**6)
-            print '     Gas density: %f, %f'%(np.amax(rho_spec['g']),np.amin(rho_spec['g']))
-            self.Domain.P=self.Domain.m_species['g']/102*1000*8.314/(0.6*vol)*T_c
+#            print '     Gas mass: %f, %f'%(np.amax(self.Domain.m_species['g'])*10**6,np.amin(self.Domain.m_species['g'])*10**6)
+#            print '     Gas density: %f, %f'%(np.amax(rho_spec['g']),np.amin(rho_spec['g']))
+            self.Domain.P=self.Domain.m_species['g']/102*1000*8.314/(self.Domain.porosity*vol)*T_c
     #        self.BCs.P(self.Domain.P)
-            print '     Pressure: %f, %f'%(np.amax(self.Domain.P),np.amin(self.Domain.P))
+#            print '     Pressure: %f, %f'%(np.amax(self.Domain.P),np.amin(self.Domain.P))
             
             # Use Darcy's law to directly calculate the velocities at the faces
             # Ingoing fluxes
@@ -174,8 +174,8 @@ class TwoDimSolver():
                 (-perm/mu*(self.Domain.P[1:,:]-self.Domain.P[:-1,:])/self.dy[:-1,:])
     #            self.interpolate(v[1:,:], v[:-1,:], 'Linear')
             
-            print '    Gas fluxes in x: %f, %f'%(np.amax(flx)*10**(9),np.amin(flx)*10**(9))
-            print '    Gas fluxes in y: %f, %f'%(np.amax(fly)*10**(9),np.amin(fly)*10**(9))
+#            print '    Gas fluxes in x: %f, %f'%(np.amax(flx)*10**(9),np.amin(flx)*10**(9))
+#            print '    Gas fluxes in y: %f, %f'%(np.amax(fly)*10**(9),np.amin(fly)*10**(9))
             
             self.Domain.m_species[species[0]]+=flx+fly
             
@@ -184,7 +184,7 @@ class TwoDimSolver():
 #            dm=np.zeros_like(deta)
             dm=deta*dt*(self.Domain.m_0)
 #            dm[dm<10**(-9)]=0
-            print '     Mass generated: %f, %f'%(np.amax(dm)*10**(9),np.amin(dm)*10**(9))
+#            print '     Mass generated: %f, %f'%(np.amax(dm)*10**(9),np.amin(dm)*10**(9))
     #        (m_c[species[0]]+m_c[species[1]])
             self.Domain.m_species[species[0]]+=dm
             self.Domain.m_species[species[1]]-=dm

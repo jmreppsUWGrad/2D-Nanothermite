@@ -15,8 +15,9 @@ This file contains classes for reading and writing files in proper format:
 
 # Dictionaries containing expected input file data; organized by type
 
-keys_Settings=['Domain','Length','Width','Nodes_x','Nodes_y','k',\
-               'Cp','rho','bias_type_x','bias_size_x','bias_type_y','bias_size_y']
+keys_Settings=['Domain','Length','Width','Nodes_x','Nodes_y','k','Cp','rho',\
+               'Darcy_mu', 'Darcy_perm','Porosity',\
+               'bias_type_x','bias_size_x','bias_type_y','bias_size_y']
                
 keys_Sources=['Source_Uniform','Source_Kim','Ea','A0','dH', 'Ignition']
 
@@ -62,7 +63,7 @@ class FileOut():
     def input_writer_cond(self, settings, Sources, Species, BCs):
         self.Write_single_line('Settings:')
         keys=['MPI_Processes','MPI_arrangment', 'Domain','Length','Width',\
-              'Nodes_x','Nodes_y','k','Cp','rho']
+              'Nodes_x','Nodes_y','k','Cp','rho','Darcy_mu','Darcy_perm','Porosity']
         for i in keys:
             self.fout.write(i)
             self.fout.write(':')

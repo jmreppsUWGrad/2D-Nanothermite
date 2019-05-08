@@ -21,8 +21,8 @@
 Domain:Axisymmetric
 Length:1.0
 Width:1.0
-Nodes_x:61
-Nodes_y:61
+Nodes_x:121
+Nodes_y:120
 k:70
 Cp:800
 rho:5000

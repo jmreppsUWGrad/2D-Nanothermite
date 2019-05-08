@@ -37,6 +37,7 @@ class TwoDimDomain():
         self.W=settings['Width']
         self.Nx=settings['Nodes_x']
         self.Ny=settings['Nodes_y']
+        self.porosity=settings['Porosity']
         self.type=solver
         self.x=np.zeros(self.Nx)
         self.y=np.zeros(self.Ny)
@@ -63,7 +64,8 @@ class TwoDimDomain():
             line=st.split(self.k, ',')
             self.k0=float(line[1])
             self.k1=float(line[2])
-        
+        self.mu=settings['Darcy_mu']
+        self.perm=settings['Darcy_perm']
         self.Diff=Diff_Coef()
         
         # Biasing options       
@@ -231,7 +233,7 @@ class TwoDimDomain():
         D=copy.deepcopy(self.m_species)
         
         # Species properties and contribution to bulk properties
-        por=[0.6,0.4]
+        por=[self.porosity,(1-self.porosity)]
         if bool(self.m_species):
             m_tot=np.zeros_like(self.E)
             for i in range(len(self.species_keys)):
