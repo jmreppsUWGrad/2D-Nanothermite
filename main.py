@@ -119,6 +119,7 @@ if err>0:
 domain.create_var(Species)
 solver=Solvers.TwoDimSolver(domain, settings, Sources, copy.deepcopy(BCs), comm)
 if rank==0:
+    settings['MPI_arrangment']=domain.proc_arrang.copy()
     print '################################'
     print 'Initializing domain...'
 
