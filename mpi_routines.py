@@ -43,12 +43,12 @@ class MPI_comms():
             return 1,vol,Ax_l,Ax_r,Ay
         ranks=ranks.reshape((self.size/maxDim, maxDim))
         domain.proc_arrang=ranks # Save process arrangment to each process domain class
-#        for i in range(len(domain.proc_arrang[:,0])):
-#                if self.rank in domain.proc_arrang[i,:]:
-#                    domain.proc_row=i
-#                    break
-#                else:
-#                    continue
+        for i in range(len(domain.proc_arrang[:,0])):
+                if self.rank in domain.proc_arrang[i,:]:
+                    domain.proc_row=i
+                    break
+                else:
+                    continue
         
         # Discretize domain to each process
         proc_x=len(ranks[0,:])
@@ -518,20 +518,30 @@ class MPI_comms():
     # General function to compile a variable from all processes
     def compile_var(self, var, Domain):
         var_global=var[1:-1,1:-1].copy()
-        # For one column of processes, use len(Domain.proc_arrang.shape)==1
-        
-        # Collect data from each row of processes at first process of the row
-        if self.rank in Domain.proc_arrang[:,0]:
-            # Locate the process in the arrangment
-            row=0
-            for i in range(len(Domain.proc_arrang[:,0])):
-                if self.rank in Domain.proc_arrang[i,:]:
-                    row=i
-                    break
-                else:
-                    continue
+        # For one column of processes
+        if Domain.proc_arrang.shape[1]==1:
             # Start global variable based on which row process is in
-            if row==0:
+            if Domain.proc_row==0:
+                var_global=var[:-1,:].copy()
+            elif self.rank==Domain.proc_arrang[-1,0]:
+                var_global=var[1:,:].copy()
+            else:
+                var_global=var[1:-1,:].copy()
+            # Send variable to process 0 for final compile
+            if self.rank!=0:
+                self.comm.send(np.shape(var_global), dest=0)
+                self.comm.Send(var_global, dest=0)
+            # Process 0 compiles global variable
+            else:
+                for i in range(len(Domain.proc_arrang[:,0])-1):
+                    len_arr=self.comm.recv(source=Domain.proc_arrang[i+1,0])
+                    a=np.empty(len_arr)
+                    self.comm.Recv(a, source=Domain.proc_arrang[i+1,0])
+                    var_global=np.block([[var_global],[a]])
+        # Collect data from each row of processes at first process of the row
+        elif self.rank in Domain.proc_arrang[:,0]:
+            # Start global variable based on which row process is in
+            if Domain.proc_row==0:
                 var_global=var[:-1,:-1].copy()
             elif self.rank==Domain.proc_arrang[-1,0]:
                 var_global=var[1:,:-1].copy()
@@ -539,9 +549,9 @@ class MPI_comms():
                 var_global=var[1:-1,:-1].copy()
             # Cycle through each process in x (right)
             for i in range(len(Domain.proc_arrang[0,:])-1):
-                len_arr=self.comm.recv(source=Domain.proc_arrang[row,i+1])
+                len_arr=self.comm.recv(source=Domain.proc_arrang[Domain.proc_row,i+1])
                 a=np.empty(len_arr)
-                self.comm.Recv(a, source=Domain.proc_arrang[row,i+1])
+                self.comm.Recv(a, source=Domain.proc_arrang[Domain.proc_row,i+1])
                 var_global=np.block([var_global, a])
             
             # Send compiled variable to process 0 for final compile
@@ -558,19 +568,10 @@ class MPI_comms():
         
         # Processes in each row will send data to first process of row
         else:# self.rank in Domain.proc_arrang[:,1:]:
-            
-            # Locate the process in the arrangment
-            row=0
-            for i in range(len(Domain.proc_arrang[:,0])):
-                if self.rank in Domain.proc_arrang[i,:]:
-                    row=i
-                    break
-                else:
-                    continue
             # First row (y=0)
-            if row==0:
+            if Domain.proc_row==0:
                 # Corner (x=x_max)
-                if self.rank==Domain.proc_arrang[row,-1]:
+                if self.rank==Domain.proc_arrang[Domain.proc_row,-1]:
                     sen=var[:-1,1:].copy()
                 # Interior processes
                 else:
@@ -578,7 +579,7 @@ class MPI_comms():
             # Last row (y=y_max)
             elif self.rank in Domain.proc_arrang[-1,:]:
                 # Corner (x=x_max)
-                if self.rank==Domain.proc_arrang[row,-1]:
+                if self.rank==Domain.proc_arrang[Domain.proc_row,-1]:
                     sen=var[1:,1:].copy()
                 # Interior processes
                 else:
@@ -586,13 +587,13 @@ class MPI_comms():
             # Interior row
             else:
                 # Edge (x=x_max)
-                if self.rank==Domain.proc_arrang[row,-1]:
+                if self.rank==Domain.proc_arrang[Domain.proc_row,-1]:
                     sen=var[1:-1,1:].copy()
                 # Interior processes
                 else:
                     sen=var[1:-1,1:-1].copy()
-            self.comm.send(np.shape(sen), dest=Domain.proc_arrang[row,0])
-            self.comm.Send(sen, dest=Domain.proc_arrang[row,0])
+            self.comm.send(np.shape(sen), dest=Domain.proc_arrang[Domain.proc_row,0])
+            self.comm.Send(sen, dest=Domain.proc_arrang[Domain.proc_row,0])
             
         len_arr=self.comm.bcast(np.shape(var_global), root=0)
         if self.rank!=0:
