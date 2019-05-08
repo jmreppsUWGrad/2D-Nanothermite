@@ -117,7 +117,7 @@ if err>0:
 #print '****Rank: %i, vol/Area shapes: '%(rank)+str(vol.shape)+', '+str(Ax_l.shape)+', '+str(Ax_r.shape)
 #print '****Rank: %i, process arrangemtn: '%(rank)+str(domain.proc_arrang)
 domain.create_var(Species)
-solver=Solvers.TwoDimSolver(domain, settings, Sources, copy.deepcopy(BCs), 'Solid')
+solver=Solvers.TwoDimSolver(domain, settings, Sources, copy.deepcopy(BCs), comm)
 if rank==0:
     print '################################'
     print 'Initializing domain...'
@@ -190,113 +190,112 @@ if rank==0:
     print '################################\n'
     
     print 'Saving data to numpy array files...'
-print '****Rank: %i, first save to numpy files'%(rank)
+#print '****Rank: %i, first save to numpy files'%(rank)
 mpi.save_data(domain, Sources, Species, time_max, vol)
-#
-###########################################################################
-## -------------------------------------Solve
-###########################################################################
-#t,nt,tign=float(time_max)/1000,0,0 # time, number steps and ignition time initializations
-#v_0,v_1,v,N=0,0,0,0 # combustion wave speed variables initialization
-#dy=mpi.compile_var(domain.dy, domain)
-#
-## Setup intervals to save data
-#output_data_t,output_data_nt=0,0
-#if settings['total_time_steps']=='None':
-#    output_data_t=settings['total_time']/settings['Number_Data_Output']
-#    settings['total_time_steps']=settings['total_time']*10**9
-#    t_inc=int(t/output_data_t)+1
-#elif settings['total_time']=='None':
-#    output_data_nt=int(settings['total_time_steps']/settings['Number_Data_Output'])
-#    settings['total_time']=settings['total_time_steps']*10**9
-#    t_inc=0
-#
-## Ignition conditions
-#Sources['Ignition']=st.split(Sources['Ignition'], ',')
-#Sources['Ignition'][1]=float(Sources['Ignition'][1])
-#BCs_changed=False
-#
-#if rank==0:
-#    print 'Solving:'
-#while nt<settings['total_time_steps'] and t<settings['total_time']:
-#    # First point in calculating combustion propagation speed
-##    T_0=domain.TempFromConserv(vol)
-#    print '****Rank: %i, entered the while loop'%(rank)
-#    if st.find(Sources['Source_Kim'],'True')>=0 and BCs_changed:
-#        eta=mpi.compile_var(domain.eta, domain)
-##        v_0=np.sum(eta[:,int(len(domain.eta[0,:])/2)]*dy[:,int(len(domain.eta[0,:])/2)])
-#        if rank==0:
-#            v_0=np.sum(eta*dy)/len(eta[0,:])
-#    
-#    # Update ghost nodes
-#    mpi.update_ghosts(domain, Sources, Species)
-#    # Actual solve
-#    err,dt=solver.Advance_Soln_Cond(nt, t, vol, Ax_l, Ax_r, Ay)
-#    t+=dt
-#    nt+=1
-#    # Check all error codes and send the maximum code to all processes
-#    err=comm.reduce(err, op=MPI.MAX, root=0)
-#    err=comm.bcast(err, root=0)
-#    
-#    if err>0:
-#        if rank==0:
-#            print '#################### Solver aborted #######################'
-#            print 'Saving data to numpy array files...'
-#            input_file.Write_single_line('#################### Solver aborted #######################')
-#            input_file.Write_single_line('Time step %i, Time elapsed=%f, error code=%i;'%(nt,t,err))
-#            input_file.Write_single_line('Error codes: 1-time step, 2-Energy, 3-reaction progress, 4-Species balance')
-#        mpi.save_data(domain, Sources, Species, '{:f}'.format(t*1000), vol)
-#        break
-#    
-#    # Output data to numpy files
-#    if (output_data_nt!=0 and nt%output_data_nt==0) or \
-#        (output_data_t!=0 and (t>=output_data_t*t_inc and t-dt<output_data_t*t_inc)):
-#        if rank==0:
-#            print 'Saving data to numpy array files...'
-#        mpi.save_data(domain, Sources, Species, '{:f}'.format(t*1000), vol)
-#        t_inc+=1
-#        
-#    # Change boundary conditions
-#    T=mpi.compile_var(domain.TempFromConserv(vol), domain)
-#    eta=mpi.compile_var(domain.eta, domain)
-#    if ((Sources['Ignition'][0]=='eta' and np.amax(eta)>=Sources['Ignition'][1])\
-#        or (Sources['Ignition'][0]=='Temp' and np.amax(T)>=Sources['Ignition'][1]))\
-#        and not BCs_changed:
-#        if domain.proc_top<0:
-#            solver.BCs.BCs['bc_north_E']=BCs['bc_right_E']
-#        if rank==0:
-#            input_file.fout.write('##bc_north_E_new:')
-#            input_file.Write_single_line(str(solver.BCs.BCs['bc_north_E']))
-#            input_file.fout.write('\n')
-#            tign=t
-#        mpi.save_data(domain, Sources, Species, '{:f}'.format(t*1000), vol)
-#        BCs_changed=True
-#        BCs_changed=comm.bcast(BCs_changed, root=0)
-#        
-#    # Second point in calculating combustion propagation speed
-#    if st.find(Sources['Source_Kim'],'True')>=0 and BCs_changed:
-#        if rank==0:
-#            v_1=np.sum(eta[:,int(len(eta[0,:])/2)]*dy[:,int(len(eta[0,:])/2)])
-#    #        v_1=np.sum(eta*dy)/len(eta[0,:])
-#            if (v_1-v_0)/dt>0.001:
-#                v+=(v_1-v_0)/dt
-#                N+=1
-#
-#if rank==0:
-#    time_end=time.time()
-#    input_file.Write_single_line('Final time step size: %f microseconds'%(dt*10**6))
-#    print 'Ignition time: %f ms'%(tign*1000)
-#    input_file.Write_single_line('Ignition time: %f ms'%(tign*1000))
-#    print 'Solver time per 1000 time steps: %f min'%((time_end-time_begin)/60.0*1000/nt)
-#    input_file.Write_single_line('Solver time per 1000 time steps: %f min'%((time_end-time_begin)/60.0*1000/nt))
-#    print 'Number of time steps completed: %i'%(nt)
-#    input_file.Write_single_line('Number of time steps completed: %i'%(nt))
-#    try:
-#        print 'Average wave speed: %f m/s'%(v/N)
-#        input_file.Write_single_line('Average wave speed: %f m/s'%(v/N))
-#        input_file.close()
-#    except:
-#        print 'Average wave speed: 0 m/s'
-#        input_file.Write_single_line('Average wave speed: 0 m/s')
-#        input_file.close()
-#    print('Solver has finished its run')
+
+##########################################################################
+# -------------------------------------Solve
+##########################################################################
+t,nt,tign=float(time_max)/1000,0,0 # time, number steps and ignition time initializations
+v_0,v_1,v,N=0,0,0,0 # combustion wave speed variables initialization
+dy=mpi.compile_var(domain.dY, domain)
+
+# Setup intervals to save data
+output_data_t,output_data_nt=0,0
+if settings['total_time_steps']=='None':
+    output_data_t=settings['total_time']/settings['Number_Data_Output']
+    settings['total_time_steps']=settings['total_time']*10**9
+    t_inc=int(t/output_data_t)+1
+elif settings['total_time']=='None':
+    output_data_nt=int(settings['total_time_steps']/settings['Number_Data_Output'])
+    settings['total_time']=settings['total_time_steps']*10**9
+    t_inc=0
+
+# Ignition conditions
+Sources['Ignition']=st.split(Sources['Ignition'], ',')
+Sources['Ignition'][1]=float(Sources['Ignition'][1])
+BCs_changed=False
+
+if rank==0:
+    print 'Solving:'
+while nt<settings['total_time_steps'] and t<settings['total_time']:
+    # First point in calculating combustion propagation speed
+#    T_0=domain.TempFromConserv(vol)
+    if st.find(Sources['Source_Kim'],'True')>=0 and BCs_changed:
+        eta=mpi.compile_var(domain.eta, domain)
+#        v_0=np.sum(eta[:,int(len(domain.eta[0,:])/2)]*dy[:,int(len(domain.eta[0,:])/2)])
+        if rank==0:
+            v_0=np.sum(eta*dy)/len(eta[0,:])
+    
+    # Update ghost nodes
+    mpi.update_ghosts(domain)
+    # Actual solve
+    err,dt=solver.Advance_Soln_Cond(nt, t, vol, Ax_l, Ax_r, Ay)
+    t+=dt
+    nt+=1
+    # Check all error codes and send the maximum code to all processes
+    err=comm.reduce(err, op=MPI.MAX, root=0)
+    err=comm.bcast(err, root=0)
+    
+    if err>0:
+        if rank==0:
+            print '#################### Solver aborted #######################'
+            print 'Saving data to numpy array files...'
+            input_file.Write_single_line('#################### Solver aborted #######################')
+            input_file.Write_single_line('Time step %i, Time elapsed=%f, error code=%i;'%(nt,t,err))
+            input_file.Write_single_line('Error codes: 1-time step, 2-Energy, 3-reaction progress, 4-Species balance')
+        mpi.save_data(domain, Sources, Species, '{:f}'.format(t*1000), vol)
+        break
+    
+    # Output data to numpy files
+    if (output_data_nt!=0 and nt%output_data_nt==0) or \
+        (output_data_t!=0 and (t>=output_data_t*t_inc and t-dt<output_data_t*t_inc)):
+        if rank==0:
+            print 'Saving data to numpy array files...'
+        mpi.save_data(domain, Sources, Species, '{:f}'.format(t*1000), vol)
+        t_inc+=1
+        
+    # Change boundary conditions
+    T=mpi.compile_var(domain.TempFromConserv(vol), domain)
+    eta=mpi.compile_var(domain.eta, domain)
+    if ((Sources['Ignition'][0]=='eta' and np.amax(eta)>=Sources['Ignition'][1])\
+        or (Sources['Ignition'][0]=='Temp' and np.amax(T)>=Sources['Ignition'][1]))\
+        and not BCs_changed:
+        if domain.proc_top<0:
+            solver.BCs.BCs['bc_north_E']=BCs['bc_right_E']
+        if rank==0:
+            input_file.fout.write('##bc_north_E_new:')
+            input_file.Write_single_line(str(solver.BCs.BCs['bc_north_E']))
+            input_file.fout.write('\n')
+            tign=t
+        mpi.save_data(domain, Sources, Species, '{:f}'.format(t*1000), vol)
+        BCs_changed=True
+        BCs_changed=comm.bcast(BCs_changed, root=0)
+        
+    # Second point in calculating combustion propagation speed
+    if st.find(Sources['Source_Kim'],'True')>=0 and BCs_changed:
+        if rank==0:
+            v_1=np.sum(eta[:,int(len(eta[0,:])/2)]*dy[:,int(len(eta[0,:])/2)])
+    #        v_1=np.sum(eta*dy)/len(eta[0,:])
+            if (v_1-v_0)/dt>0.001:
+                v+=(v_1-v_0)/dt
+                N+=1
+
+if rank==0:
+    time_end=time.time()
+    input_file.Write_single_line('Final time step size: %f microseconds'%(dt*10**6))
+    print 'Ignition time: %f ms'%(tign*1000)
+    input_file.Write_single_line('Ignition time: %f ms'%(tign*1000))
+    print 'Solver time per 1000 time steps: %f min'%((time_end-time_begin)/60.0*1000/nt)
+    input_file.Write_single_line('Solver time per 1000 time steps: %f min'%((time_end-time_begin)/60.0*1000/nt))
+    print 'Number of time steps completed: %i'%(nt)
+    input_file.Write_single_line('Number of time steps completed: %i'%(nt))
+    try:
+        print 'Average wave speed: %f m/s'%(v/N)
+        input_file.Write_single_line('Average wave speed: %f m/s'%(v/N))
+        input_file.close()
+    except:
+        print 'Average wave speed: 0 m/s'
+        input_file.Write_single_line('Average wave speed: 0 m/s')
+        input_file.close()
+    print('Solver has finished its run')

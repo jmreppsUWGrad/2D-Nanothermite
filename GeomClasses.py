@@ -77,6 +77,7 @@ class TwoDimDomain():
         self.proc_top=-1
         self.proc_bottom=-1
         self.proc_arrang=0 # Array holding process arrangment in domain
+        self.proc_row=0 # Row number where rank is in proc_arrang
         
     # Discretize domain and save dx and dy
     def mesh(self):

@@ -28,10 +28,11 @@ import copy
 #import temporal_schemes
 import Source_Comb
 import BCClasses
+from mpi4py import MPI
 
 # 2D solver (Cartesian coordinates)
 class TwoDimSolver():
-    def __init__(self, geom_obj, settings, Sources, BCs, solver):
+    def __init__(self, geom_obj, settings, Sources, BCs, comm):
         self.Domain=geom_obj # Geometry object
         self.time_scheme=settings['Time_Scheme']
         self.dx,self.dy=geom_obj.dX,geom_obj.dY
@@ -40,6 +41,7 @@ class TwoDimSolver():
         self.dt=settings['dt']
         self.conv=settings['Convergence']
         self.countmax=settings['Max_iterations']
+        self.comm=comm
         
         # Define source terms and pointer to source object here
         self.get_source=Source_Comb.Source_terms(Sources['Ea'], Sources['A0'], Sources['dH'])
