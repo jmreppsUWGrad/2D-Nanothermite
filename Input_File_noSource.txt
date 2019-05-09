@@ -68,7 +68,7 @@ bias_size_y:1e-06
 Fo:0.2
 CFL:None
 dt:1.0
-total_time_steps:10000
+total_time_steps:1
 total_time:None
 Time_Scheme:Explicit
 Restart:None
@@ -76,7 +76,7 @@ Restart:None
 Convergence:0.0001
 Max_iterations:100
 
-Number_Data_Output:10
+Number_Data_Output:1
 
 ######################################################
 #			Boundary conditions
@@ -89,14 +89,17 @@ Number_Data_Output:10
 #	e.g. F, 1000, 0,10,C,10,300,10,20
 #  [IN PROGRESS] Profiles possible; must be same size as number of nodes on that boundary
 ######################################################
+#T, 600, 0, 60,T, 400, 60, 120
+#T, 600, 0, 120
+#T,400.0,0,20,T,600.0,20,40,T,400.0,40,60,T,600.0,60,80,T,400.0,80,100,T,600.0,100,120
 
-bc_left_E:F, 0, 0, -1
+bc_left_E:T, 600, 0, 60,T, 400, 60, 120
 bc_left_rad:None
-bc_right_E:F, 0, 0, -1
+bc_right_E:T, 600, 0, 60,T, 400, 60, 120
 bc_right_rad:None
-bc_south_E:T, 300, 0, 120
+bc_south_E:F, 0, 0, 120
 bc_south_rad:None
-bc_north_E:T, 400, 0, 60,T, 600, 60, 120
+bc_north_E:F, 0, 0, 120
 bc_north_rad:None
 
 bc_left_P:grad,0,0,-1

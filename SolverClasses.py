@@ -52,6 +52,7 @@ class TwoDimSolver():
         self.BCs=BCClasses.BCs(BCs, self.dx, self.dy, settings['Domain'])
         # Ensure proper BCs for this process
         self.mult_BCs(BCs)
+    
     # Modify BCs based on processes next to current one AND if multiple
     # BCs are specified on a given boundary
     def mult_BCs(self, BC_global):
@@ -66,28 +67,35 @@ class TwoDimSolver():
                 # Lower bound of BC in this process
                 if BC_global['bc_left_E'][2+3*j][0]>=self.Domain.proc_row*self.Domain.Ny\
                     and BC_global['bc_left_E'][2+3*j][0]<(self.Domain.proc_row+1)*self.Domain.Ny:
+                    st=BC_global['bc_left_E'][2+3*j][0]-self.Domain.proc_row*self.Domain.Ny
                     # upper bound of BC in this process
                     if BC_global['bc_left_E'][2+3*j][1]<=(self.Domain.proc_row+1)*self.Domain.Ny:
-                        
-                        self.BCs.BCs['bc_left_E'][2+3*j]=\
-                            (BC_global['bc_left_E'][2+3*j][0]-self.Domain.proc_row*self.Domain.Ny,\
-                             BC_global['bc_left_E'][2+3*j][1]-self.Domain.proc_row*self.Domain.Ny)
-                        j+=1
+                        en=BC_global['bc_left_E'][2+3*j][1]-self.Domain.proc_row*self.Domain.Ny
                     # upper bound outside this process
                     else:
-                        self.BCs.BCs['bc_left_E'][2+3*j]=\
-                            (BC_global['bc_left_E'][2+3*j][0]-self.Domain.proc_row*self.Domain.Ny,\
-                             -1)
-                        j+=1
-                
+                        en=self.Domain.Ny
+                    # Ghost node on bottom
+                    if self.Domain.proc_bottom>=0:
+                        st+=1
+                        en+=1
+                    elif self.Domain.proc_top<0:
+                        en+=1
+                    self.BCs.BCs['bc_left_E'][2+3*j]=(st,en)
+                    j+=1
                 # Lower bound of BC not in this process, but upper bound is
                 elif BC_global['bc_left_E'][2+3*j][1]<=(self.Domain.proc_row+1)*self.Domain.Ny\
                     and BC_global['bc_left_E'][2+3*j][1]>self.Domain.proc_row*self.Domain.Ny:
-                    self.BCs.BCs['bc_left_E'][2+3*j]=\
-                            (0,\
-                             BC_global['bc_left_E'][2+3*j][1]-self.Domain.proc_row*self.Domain.Ny)
+                    st=0
+                    en=BC_global['bc_left_E'][2+3*j][1]-self.Domain.proc_row*self.Domain.Ny
+                    # Ghost node on bottom
+                    if self.Domain.proc_bottom>=0:
+                        st+=1
+                        en+=1
+                    elif self.Domain.proc_top<0:
+                        en+=1
+                    self.BCs.BCs['bc_left_E'][2+3*j]=(st,en)
                     j+=1
-                
+                    
                 # Process lies inside the upper and lower bounds (are outside process)
                 elif BC_global['bc_left_E'][2+3*j][0]<self.Domain.proc_row*self.Domain.Ny\
                     and BC_global['bc_left_E'][2+3*j][1]>(self.Domain.proc_row+1)*self.Domain.Ny:
@@ -109,26 +117,33 @@ class TwoDimSolver():
                 # Lower bound of BC in this process
                 if BC_global['bc_right_E'][2+3*j][0]>=self.Domain.proc_row*self.Domain.Ny\
                     and BC_global['bc_right_E'][2+3*j][0]<(self.Domain.proc_row+1)*self.Domain.Ny:
+                    st=BC_global['bc_right_E'][2+3*j][0]-self.Domain.proc_row*self.Domain.Ny
                     # upper bound of BC in this process
                     if BC_global['bc_right_E'][2+3*j][1]<=(self.Domain.proc_row+1)*self.Domain.Ny:
-                        
-                        self.BCs.BCs['bc_right_E'][2+3*j]=\
-                            (BC_global['bc_right_E'][2+3*j][0]-self.Domain.proc_row*self.Domain.Ny,\
-                             BC_global['bc_right_E'][2+3*j][1]-self.Domain.proc_row*self.Domain.Ny)
-                        j+=1
+                        en=BC_global['bc_right_E'][2+3*j][1]-self.Domain.proc_row*self.Domain.Ny
                     # upper bound outside this process
                     else:
-                        self.BCs.BCs['bc_right_E'][2+3*j]=\
-                            (BC_global['bc_right_E'][2+3*j][0]-self.Domain.proc_row*self.Domain.Ny,\
-                             -1)
-                        j+=1
-                
+                        en=self.Domain.Ny
+                    # Ghost node on bottom
+                    if self.Domain.proc_bottom>=0:
+                        st+=1
+                        en+=1
+                    elif self.Domain.proc_top<0:
+                        en+=1
+                    self.BCs.BCs['bc_right_E'][2+3*j]=(st,en)
+                    j+=1
                 # Lower bound of BC not in this process, but upper bound is
                 elif BC_global['bc_right_E'][2+3*j][1]<=(self.Domain.proc_row+1)*self.Domain.Ny\
                     and BC_global['bc_right_E'][2+3*j][1]>self.Domain.proc_row*self.Domain.Ny:
-                    self.BCs.BCs['bc_right_E'][2+3*j]=\
-                            (0,\
-                             BC_global['bc_right_E'][2+3*j][1]-self.Domain.proc_row*self.Domain.Ny)
+                    st=0
+                    en=BC_global['bc_right_E'][2+3*j][1]-self.Domain.proc_row*self.Domain.Ny
+                    # Ghost node on bottom
+                    if self.Domain.proc_bottom>=0:
+                        st+=1
+                        en+=1
+                    elif self.Domain.proc_top<0:
+                        en+=1
+                    self.BCs.BCs['bc_right_E'][2+3*j]=(st,en)
                     j+=1
                 
                 # Process lies inside the upper and lower bounds (are outside process)
@@ -160,26 +175,33 @@ class TwoDimSolver():
                 # Lower bound of BC in this process
                 if BC_global['bc_north_E'][2+3*j][0]>=coln*self.Domain.Nx\
                     and BC_global['bc_north_E'][2+3*j][0]<(coln+1)*self.Domain.Nx:
+                    st=BC_global['bc_north_E'][2+3*j][0]-coln*self.Domain.Nx
                     # upper bound of BC in this process
                     if BC_global['bc_north_E'][2+3*j][1]<=(coln+1)*self.Domain.Nx:
-                        
-                        self.BCs.BCs['bc_north_E'][2+3*j]=\
-                            (BC_global['bc_north_E'][2+3*j][0]-coln*self.Domain.Nx,\
-                             BC_global['bc_north_E'][2+3*j][1]-coln*self.Domain.Nx)
-                        j+=1
+                        en=BC_global['bc_north_E'][2+3*j][1]-coln*self.Domain.Nx
                     # upper bound outside this process
                     else:
-                        self.BCs.BCs['bc_north_E'][2+3*j]=\
-                            (BC_global['bc_north_E'][2+3*j][0]-coln*self.Domain.Nx,\
-                             -1)
-                        j+=1
-                
+                        en=self.Domain.Nx
+                    # Ghost node on left
+                    if self.Domain.proc_left>=0:
+                        st+=1
+                        en+=1
+                    elif self.Domain.proc_right<0:
+                        en+=1
+                    self.BCs.BCs['bc_north_E'][2+3*j]=(st,en)
+                    j+=1
                 # Lower bound of BC not in this process, but upper bound is
                 elif BC_global['bc_north_E'][2+3*j][1]<=(coln+1)*self.Domain.Nx\
                     and BC_global['bc_north_E'][2+3*j][1]>coln*self.Domain.Nx:
-                    self.BCs.BCs['bc_north_E'][2+3*j]=\
-                            (0,\
-                             BC_global['bc_north_E'][2+3*j][1]-coln*self.Domain.Nx)
+                    st=0
+                    en=BC_global['bc_north_E'][2+3*j][1]-coln*self.Domain.Nx
+                    # Ghost node on left
+                    if self.Domain.proc_left>=0:
+                        st+=1
+                        en+=1
+                    elif self.Domain.proc_right<0:
+                        en+=1
+                    self.BCs.BCs['bc_north_E'][2+3*j]=(st,en)
                     j+=1
                 
                 # Process lies inside the upper and lower bounds (are outside process)
@@ -203,26 +225,33 @@ class TwoDimSolver():
                 # Lower bound of BC in this process
                 if BC_global['bc_south_E'][2+3*j][0]>=coln*self.Domain.Nx\
                     and BC_global['bc_south_E'][2+3*j][0]<(coln+1)*self.Domain.Nx:
+                    st=BC_global['bc_south_E'][2+3*j][0]-coln*self.Domain.Nx
                     # upper bound of BC in this process
                     if BC_global['bc_south_E'][2+3*j][1]<=(coln+1)*self.Domain.Nx:
-                        
-                        self.BCs.BCs['bc_south_E'][2+3*j]=\
-                            (BC_global['bc_south_E'][2+3*j][0]-coln*self.Domain.Nx,\
-                             BC_global['bc_south_E'][2+3*j][1]-coln*self.Domain.Nx)
-                        j+=1
+                        en=BC_global['bc_south_E'][2+3*j][1]-coln*self.Domain.Nx
                     # upper bound outside this process
                     else:
-                        self.BCs.BCs['bc_south_E'][2+3*j]=\
-                            (BC_global['bc_south_E'][2+3*j][0]-coln*self.Domain.Nx,\
-                             -1)
-                        j+=1
-                
+                        en=self.Domain.Nx
+                    # Ghost node on left
+                    if self.Domain.proc_left>=0:
+                        st+=1
+                        en+=1
+                    elif self.Domain.proc_right<0:
+                        en+=1
+                    self.BCs.BCs['bc_south_E'][2+3*j]=(st,en)
+                    j+=1
                 # Lower bound of BC not in this process, but upper bound is
                 elif BC_global['bc_south_E'][2+3*j][1]<=(coln+1)*self.Domain.Nx\
                     and BC_global['bc_south_E'][2+3*j][1]>coln*self.Domain.Nx:
-                    self.BCs.BCs['bc_south_E'][2+3*j]=\
-                            (0,\
-                             BC_global['bc_south_E'][2+3*j][1]-coln*self.Domain.Nx)
+                    st=0
+                    en=BC_global['bc_south_E'][2+3*j][1]-coln*self.Domain.Nx
+                    # Ghost node on left
+                    if self.Domain.proc_left>=0:
+                        st+=1
+                        en+=1
+                    elif self.Domain.proc_right<0:
+                        en+=1
+                    self.BCs.BCs['bc_south_E'][2+3*j]=(st,en)
                     j+=1
                 
                 # Process lies inside the upper and lower bounds (are outside process)

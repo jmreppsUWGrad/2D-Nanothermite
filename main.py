@@ -122,7 +122,6 @@ if rank==0:
     settings['MPI_arrangment']=domain.proc_arrang.copy()
     print '################################'
     print 'Initializing domain...'
-    print str(domain.proc_arrang)
 
 time_max='0.000000'
 T=300*np.ones_like(domain.E)
