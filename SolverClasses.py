@@ -50,16 +50,191 @@ class TwoDimSolver():
         
         # BC class
         self.BCs=BCClasses.BCs(BCs, self.dx, self.dy, settings['Domain'])
-        # Modify BCs if process is next to current one
+        # Ensure proper BCs for this process
+        self.mult_BCs(BCs)
+    # Modify BCs based on processes next to current one AND if multiple
+    # BCs are specified on a given boundary
+    def mult_BCs(self, BC_global):
+        # Left boundary
         if self.Domain.proc_left>=0:
             self.BCs.BCs['bc_left_E']=['F', 0.0, (0, -1)]
+        # Global boundary with multiple BCs
+        elif len(BC_global['bc_left_E'])>3:
+            i=len(BC_global['bc_left_E'])/3
+            j=0
+            while i>j:
+                # Lower bound of BC in this process
+                if BC_global['bc_left_E'][2+3*j][0]>=self.Domain.proc_row*self.Domain.Ny\
+                    and BC_global['bc_left_E'][2+3*j][0]<(self.Domain.proc_row+1)*self.Domain.Ny:
+                    # upper bound of BC in this process
+                    if BC_global['bc_left_E'][2+3*j][1]<=(self.Domain.proc_row+1)*self.Domain.Ny:
+                        
+                        self.BCs.BCs['bc_left_E'][2+3*j]=\
+                            (BC_global['bc_left_E'][2+3*j][0]-self.Domain.proc_row*self.Domain.Ny,\
+                             BC_global['bc_left_E'][2+3*j][1]-self.Domain.proc_row*self.Domain.Ny)
+                        j+=1
+                    # upper bound outside this process
+                    else:
+                        self.BCs.BCs['bc_left_E'][2+3*j]=\
+                            (BC_global['bc_left_E'][2+3*j][0]-self.Domain.proc_row*self.Domain.Ny,\
+                             -1)
+                        j+=1
+                
+                # Lower bound of BC not in this process, but upper bound is
+                elif BC_global['bc_left_E'][2+3*j][1]<=(self.Domain.proc_row+1)*self.Domain.Ny\
+                    and BC_global['bc_left_E'][2+3*j][1]>self.Domain.proc_row*self.Domain.Ny:
+                    self.BCs.BCs['bc_left_E'][2+3*j]=\
+                            (0,\
+                             BC_global['bc_left_E'][2+3*j][1]-self.Domain.proc_row*self.Domain.Ny)
+                    j+=1
+                
+                # Process lies inside the upper and lower bounds (are outside process)
+                elif BC_global['bc_left_E'][2+3*j][0]<self.Domain.proc_row*self.Domain.Ny\
+                    and BC_global['bc_left_E'][2+3*j][1]>(self.Domain.proc_row+1)*self.Domain.Ny:
+                    self.BCs.BCs['bc_left_E'][2+3*j]=(0,-1)
+                    j+=1
+                # BC has no effect on this process
+                else:
+                    del self.BCs.BCs['bc_left_E'][3*j:3+3*j]
+                    i-=1
+
+        # Right boundary
         if self.Domain.proc_right>=0:
             self.BCs.BCs['bc_right_E']=['F', 0.0, (0, -1)]
+        # Global boundary with multiple BCs
+        elif len(BC_global['bc_right_E'])>3:
+            i=len(BC_global['bc_right_E'])/3
+            j=0
+            while i>j:
+                # Lower bound of BC in this process
+                if BC_global['bc_right_E'][2+3*j][0]>=self.Domain.proc_row*self.Domain.Ny\
+                    and BC_global['bc_right_E'][2+3*j][0]<(self.Domain.proc_row+1)*self.Domain.Ny:
+                    # upper bound of BC in this process
+                    if BC_global['bc_right_E'][2+3*j][1]<=(self.Domain.proc_row+1)*self.Domain.Ny:
+                        
+                        self.BCs.BCs['bc_right_E'][2+3*j]=\
+                            (BC_global['bc_right_E'][2+3*j][0]-self.Domain.proc_row*self.Domain.Ny,\
+                             BC_global['bc_right_E'][2+3*j][1]-self.Domain.proc_row*self.Domain.Ny)
+                        j+=1
+                    # upper bound outside this process
+                    else:
+                        self.BCs.BCs['bc_right_E'][2+3*j]=\
+                            (BC_global['bc_right_E'][2+3*j][0]-self.Domain.proc_row*self.Domain.Ny,\
+                             -1)
+                        j+=1
+                
+                # Lower bound of BC not in this process, but upper bound is
+                elif BC_global['bc_right_E'][2+3*j][1]<=(self.Domain.proc_row+1)*self.Domain.Ny\
+                    and BC_global['bc_right_E'][2+3*j][1]>self.Domain.proc_row*self.Domain.Ny:
+                    self.BCs.BCs['bc_right_E'][2+3*j]=\
+                            (0,\
+                             BC_global['bc_right_E'][2+3*j][1]-self.Domain.proc_row*self.Domain.Ny)
+                    j+=1
+                
+                # Process lies inside the upper and lower bounds (are outside process)
+                elif BC_global['bc_right_E'][2+3*j][0]<self.Domain.proc_row*self.Domain.Ny\
+                    and BC_global['bc_right_E'][2+3*j][1]>(self.Domain.proc_row+1)*self.Domain.Ny:
+                    self.BCs.BCs['bc_right_E'][2+3*j]=(0,-1)
+                    j+=1
+                # BC has no effect on this process
+                else:
+                    del self.BCs.BCs['bc_right_E'][3*j:3+3*j]
+                    i-=1
+        
+        # Locate column of current process
+        for i in range(len(self.Domain.proc_arrang[0,:])):
+            if self.Domain.rank in self.Domain.proc_arrang[:,i]:
+                coln=i
+                break
+            else:
+                continue
+        
+        # Top boundary
         if self.Domain.proc_top>=0:
             self.BCs.BCs['bc_north_E']=['F', 0.0, (0, -1)]
+        # Global boundary with multiple BCs
+        elif len(BC_global['bc_north_E'])>3:
+            i=len(BC_global['bc_north_E'])/3
+            j=0
+            while i>j:
+                # Lower bound of BC in this process
+                if BC_global['bc_north_E'][2+3*j][0]>=coln*self.Domain.Nx\
+                    and BC_global['bc_north_E'][2+3*j][0]<(coln+1)*self.Domain.Nx:
+                    # upper bound of BC in this process
+                    if BC_global['bc_north_E'][2+3*j][1]<=(coln+1)*self.Domain.Nx:
+                        
+                        self.BCs.BCs['bc_north_E'][2+3*j]=\
+                            (BC_global['bc_north_E'][2+3*j][0]-coln*self.Domain.Nx,\
+                             BC_global['bc_north_E'][2+3*j][1]-coln*self.Domain.Nx)
+                        j+=1
+                    # upper bound outside this process
+                    else:
+                        self.BCs.BCs['bc_north_E'][2+3*j]=\
+                            (BC_global['bc_north_E'][2+3*j][0]-coln*self.Domain.Nx,\
+                             -1)
+                        j+=1
+                
+                # Lower bound of BC not in this process, but upper bound is
+                elif BC_global['bc_north_E'][2+3*j][1]<=(coln+1)*self.Domain.Nx\
+                    and BC_global['bc_north_E'][2+3*j][1]>coln*self.Domain.Nx:
+                    self.BCs.BCs['bc_north_E'][2+3*j]=\
+                            (0,\
+                             BC_global['bc_north_E'][2+3*j][1]-coln*self.Domain.Nx)
+                    j+=1
+                
+                # Process lies inside the upper and lower bounds (are outside process)
+                elif BC_global['bc_north_E'][2+3*j][0]<coln*self.Domain.Nx\
+                    and BC_global['bc_north_E'][2+3*j][1]>(coln+1)*self.Domain.Nx:
+                    self.BCs.BCs['bc_north_E'][2+3*j]=(0,-1)
+                    j+=1
+                # BC has no effect on this process
+                else:
+                    del self.BCs.BCs['bc_north_E'][3*j:3+3*j]
+                    i-=1
+        
+        # Bottom boundary
         if self.Domain.proc_bottom>=0:
             self.BCs.BCs['bc_south_E']=['F', 0.0, (0, -1)]
-            
+        # Global boundary with multiple BCs
+        elif len(BC_global['bc_south_E'])>3:
+            i=len(BC_global['bc_south_E'])/3
+            j=0
+            while i>j:
+                # Lower bound of BC in this process
+                if BC_global['bc_south_E'][2+3*j][0]>=coln*self.Domain.Nx\
+                    and BC_global['bc_south_E'][2+3*j][0]<(coln+1)*self.Domain.Nx:
+                    # upper bound of BC in this process
+                    if BC_global['bc_south_E'][2+3*j][1]<=(coln+1)*self.Domain.Nx:
+                        
+                        self.BCs.BCs['bc_south_E'][2+3*j]=\
+                            (BC_global['bc_south_E'][2+3*j][0]-coln*self.Domain.Nx,\
+                             BC_global['bc_south_E'][2+3*j][1]-coln*self.Domain.Nx)
+                        j+=1
+                    # upper bound outside this process
+                    else:
+                        self.BCs.BCs['bc_south_E'][2+3*j]=\
+                            (BC_global['bc_south_E'][2+3*j][0]-coln*self.Domain.Nx,\
+                             -1)
+                        j+=1
+                
+                # Lower bound of BC not in this process, but upper bound is
+                elif BC_global['bc_south_E'][2+3*j][1]<=(coln+1)*self.Domain.Nx\
+                    and BC_global['bc_south_E'][2+3*j][1]>coln*self.Domain.Nx:
+                    self.BCs.BCs['bc_south_E'][2+3*j]=\
+                            (0,\
+                             BC_global['bc_south_E'][2+3*j][1]-coln*self.Domain.Nx)
+                    j+=1
+                
+                # Process lies inside the upper and lower bounds (are outside process)
+                elif BC_global['bc_south_E'][2+3*j][0]<coln*self.Domain.Nx\
+                    and BC_global['bc_south_E'][2+3*j][1]>(coln+1)*self.Domain.Nx:
+                    self.BCs.BCs['bc_south_E'][2+3*j]=(0,-1)
+                    j+=1
+                # BC has no effect on this process
+                else:
+                    del self.BCs.BCs['bc_south_E'][3*j:3+3*j]
+                    i-=1
+        
     # Time step check with dx, dy, Fo number
     def getdt(self, k, rho, Cv, T):
         # Time steps depending on Fo

@@ -128,9 +128,9 @@ Number_Data_Output:20
 #			Boundary conditions
 # Format: [type of BC], [values for BC], [first node #], [last node #]
 #	[first node #]-first node number to apply BC; 0 based index; must be positive
-#	[last node #] -last node number to apply BC; must be negative/relative to last node; node-Nodes_x
+#	[last node #] -last node number to apply BC; can be positive or -1 if last node; node-Nodes_x
 #		Mulitple BCs can be specified along a boundary; separate everything with commas;
-#	e.g. F, 1000, 0,-10,C,10,300,10,-1
+#	e.g. F, 1000, 0,10,C,10,300,10,-1
 # Energy options:
 #	[type of BC]  -T or F for const. temp or flux; each requires one value for [values for BC]
 #	[type of BC]  -C for convective BC; requires conv. HT coeff AND T_infty for [values for BC]
@@ -147,8 +147,8 @@ bc_right_E:C, 30, 300, 0, -1
 # numpy.linspace(400, 900, settings['Nodes_y'])
 bc_south_E:F, 0, 0, -1
 #bc_north_E:F, 200000000, 0, -1
-bc_north_E:F, 200000000, 0, -61,C, 30, 300, 40, -1
-bc_north_E:C,30.0,300.0,0,-61,F,400000000.0,40,-41,C,30.0,300.0,60,-1
+#bc_north_E:F, 200000000, 0, 20,C, 30, 300, 20, -1
+bc_north_E:C,30.0,300.0,0,40,F,400000000.0,40,60,C,30.0,300.0,60,-1
 # numpy.linspace(400, 900, settings['Nodes_x'])
 
 bc_left_rad:None
