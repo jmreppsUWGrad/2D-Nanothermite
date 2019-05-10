@@ -41,4 +41,5 @@ python Post.py [Output directory] [1D graphs]
 where:
 
 [Output directory]-directory where data files are stored
+
 [1D graphs] indicates whether 1D graphs should be output (1 or 0)
