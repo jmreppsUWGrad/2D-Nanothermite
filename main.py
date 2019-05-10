@@ -156,20 +156,28 @@ if type(settings['Restart']) is int:
             m_species=np.load('m_'+Species['Species'][i]+'_'+time_max+'.npy')
             domain.m_species[Species['Species'][i]]=mpi.split_var(m_species, domain)
             domain.m_0[:,:]+=Species['Specie_IC'][i]
-        domain.m_0[:,0] *=0.5
-        domain.m_0[:,-1]*=0.5
-        domain.m_0[0,:] *=0.5
-        domain.m_0[-1,:]*=0.5
-        del m_species, P    
+        if domain.proc_left<0:
+            domain.m_0[:,0] *=0.5
+        if domain.proc_right<0:
+            domain.m_0[:,-1]*=0.5
+        if domain.proc_bottom<0:
+            domain.m_0[0,:] *=0.5
+        if domain.proc_top<0:
+            domain.m_0[-1,:]*=0.5
+        del m_species, P
             
 if (bool(domain.m_species)) and (type(settings['Restart']) is str):
     for i in range(len(Species['Species'])):
 #        domain.m_species[Species['Species'][i]][:,:]=Species['Specie_IC'][i]
         domain.m_species[Species['Species'][i]][:,:]=Species['Specie_IC'][i]
-        domain.m_species[Species['Species'][i]][:,0] *=0.5
-        domain.m_species[Species['Species'][i]][:,-1]*=0.5
-        domain.m_species[Species['Species'][i]][0,:] *=0.5
-        domain.m_species[Species['Species'][i]][-1,:]*=0.5
+        if domain.proc_left<0:
+            domain.m_species[Species['Species'][i]][:,0] *=0.5
+        if domain.proc_right<0:
+            domain.m_species[Species['Species'][i]][:,-1]*=0.5
+        if domain.proc_bottom<0:
+            domain.m_species[Species['Species'][i]][0,:] *=0.5
+        if domain.proc_top<0:
+            domain.m_species[Species['Species'][i]][-1,:]*=0.5
         domain.m_0+=domain.m_species[Species['Species'][i]] 
 k,rho,Cv,D=domain.calcProp(vol)
 domain.E=rho*vol*Cv*T
