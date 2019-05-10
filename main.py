@@ -144,21 +144,23 @@ if type(settings['Restart']) is int:
             del times[j]
             i-=1
     T=np.load('T_'+time_max+'.npy')
+    T=mpi.split_var(T, domain)
     if st.find(Sources['Source_Kim'],'True')>=0:
-        domain.eta=np.load('eta_'+time_max+'.npy')
+        eta=np.load('eta_'+time_max+'.npy')
+        domain.eta=mpi.split_var(eta, domain)
+        del eta
     if bool(domain.m_species):
-        domain.P=np.load('P_'+time_max+'.npy')
+        P=np.load('P_'+time_max+'.npy')
+        domain.P=mpi.split_var(P, domain)
         for i in range(len(Species['Species'])):
-            domain.m_species[Species['Species'][i]]=np.load('m_'+Species['Species'][i]+'_'+time_max+'.npy')
-            domain.m_0[1:-1,1:-1]+=Species['Specie_IC'][i]
-            domain.m_0[1:-1,0] +=0.5*Species['Specie_IC'][i]
-            domain.m_0[1:-1,-1]+=0.5*Species['Specie_IC'][i]
-            domain.m_0[0,1:-1] +=0.5*Species['Specie_IC'][i]
-            domain.m_0[-1,1:-1]+=0.5*Species['Specie_IC'][i]
-            domain.m_0[0,0] +=0.25*Species['Specie_IC'][i]
-            domain.m_0[0,-1]+=0.25*Species['Specie_IC'][i]
-            domain.m_0[-1,0]+=0.25*Species['Specie_IC'][i]
-            domain.m_0[-1,-1] +=0.25*Species['Specie_IC'][i]
+            m_species=np.load('m_'+Species['Species'][i]+'_'+time_max+'.npy')
+            domain.m_species[Species['Species'][i]]=mpi.split_var(m_species, domain)
+            domain.m_0[:,:]+=Species['Specie_IC'][i]
+        domain.m_0[:,0] *=0.5
+        domain.m_0[:,-1]*=0.5
+        domain.m_0[0,:] *=0.5
+        domain.m_0[-1,:]*=0.5
+        del m_species, P    
             
 if (bool(domain.m_species)) and (type(settings['Restart']) is str):
     for i in range(len(Species['Species'])):

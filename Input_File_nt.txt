@@ -38,7 +38,7 @@ k:65
 #k:eta,39,108
 
 Darcy_mu:1e-5
-Darcy_perm:1e-11
+Darcy_perm:0.0
 Porosity:0.6
 
 ######################################################
@@ -110,11 +110,11 @@ bias_size_y:1e-06
 
 Fo:0.01
 CFL:0.01
-#dt:1e-9
-dt:None
-total_time_steps:None
-total_time:7e-4
-#total_time:None
+dt:1e-9
+#dt:None
+total_time_steps:10000
+#total_time:7e-4
+total_time:None
 #total_time:0.002
 Time_Scheme:Explicit
 Restart:None
@@ -122,7 +122,7 @@ Restart:None
 Convergence:0.0001
 Max_iterations:100
 
-Number_Data_Output:20
+Number_Data_Output:10
 
 ######################################################
 #			Boundary conditions
