@@ -106,7 +106,7 @@ class MPI_comms():
         return var_local
     
     # MPI discretization routine
-    def MPI_discretize(self, domain, vol, Ax_l, Ax_r, Ay):
+    def MPI_discretize(self, domain):
         # Determine process arrangement
         ranks=np.linspace(0, self.size-1, self.size).astype(int) # Array of processes
         maxDim=int(np.sqrt(self.size))+1 # Square root of size (max dimension)
@@ -117,7 +117,7 @@ class MPI_comms():
             else:
                 break
         if maxDim==0:
-            return 1,vol,Ax_l,Ax_r,Ay
+            return 1
         ranks=ranks.reshape((self.size/maxDim, maxDim))
         domain.proc_arrang=ranks # Save process arrangment to each process domain class
         for i in range(len(domain.proc_arrang[:,0])):
@@ -131,10 +131,6 @@ class MPI_comms():
         domain.Nx/=len(ranks[0,:])
         domain.Ny/=len(ranks[:,0])
         
-        vol=self.split_var(vol, domain)
-        Ax_l=self.split_var(Ax_l, domain)
-        Ax_r=self.split_var(Ax_r, domain)
-        Ay=self.split_var(Ay, domain)
         domain.X=self.split_var(domain.X, domain)
         domain.Y=self.split_var(domain.Y, domain)
         domain.dX=self.split_var(domain.dX, domain)
@@ -226,7 +222,7 @@ class MPI_comms():
                     domain.proc_left=ranks[i,self.rank-ranks[i,0]-1]
                     domain.proc_right=ranks[i,self.rank-ranks[i,0]+1]
             
-        return 0,vol,Ax_l,Ax_r,Ay
+        return 0
     
     # Update ghost nodes for processes
     def update_ghosts(self, domain):

@@ -88,7 +88,12 @@ fin.Read_Input(settings, Sources, Species, BCs)
 try:
     os.chdir(settings['Output_directory'])
 except:
-    os.makedirs(settings['Output_directory'])
+    if rank==0:
+        os.makedirs(settings['Output_directory'])
+        err=0
+    else:
+        err=1
+    err=comm.bcast(err, root=0) # Way of syncing processes
     os.chdir(settings['Output_directory'])
 
 ##########################################################################
@@ -107,9 +112,13 @@ if rank==0:
     np.save('X', domain.X, False)
     np.save('Y', domain.Y, False)
 mpi=mpi_routines.MPI_comms(comm, rank, size, Sources, Species)
-err,vol,Ax_l,Ax_r,Ay=mpi.MPI_discretize(domain, vol, Ax_l, Ax_r, Ay)
+err=mpi.MPI_discretize(domain)
 if err>0:
     sys.exit('Problem discretizing domain into processes')
+vol=mpi.split_var(vol, domain)
+Ax_l=mpi.split_var(Ax_l, domain)
+Ax_r=mpi.split_var(Ax_r, domain)
+Ay=mpi.split_var(Ay, domain)
 #print '****Rank: %i, X array: %f, %f'%(rank, np.amin(domain.X[0,:]), np.amax(domain.X[0,:]))
 #print '****Rank: %i, X array shape:  '%(rank)+str(np.shape(domain.X))
 #print '****Rank: %i, Y array: %f, %f'%(rank, np.amin(domain.Y[:,0]), np.amax(domain.Y[:,0]))
