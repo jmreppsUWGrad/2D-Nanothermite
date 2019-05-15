@@ -40,6 +40,7 @@ k:65
 Darcy_mu:1e-5
 Darcy_perm:0.0
 Porosity:0.6
+gas_constant:81.51
 
 ######################################################
 #			Source terms

@@ -362,48 +362,48 @@ class MPI_comms():
             
             for i in self.Species['keys']:
                 # Send to the left
-                self.comm.send(len(domain.m_species[i][:,1]), dest=domain.proc_left)
-                sen=domain.m_species[i][:,1].copy()
+                self.comm.send(len(domain.rho_species[i][:,1]), dest=domain.proc_left)
+                sen=domain.rho_species[i][:,1].copy()
                 self.comm.Send(sen, dest=domain.proc_left)
                 # Receive from the right
-                len_arr=len(domain.m_species[i][:,-1])
+                len_arr=len(domain.rho_species[i][:,-1])
                 len_arr=self.comm.recv(source=domain.proc_right)
-                a=np.ones(len_arr)*domain.m_species[i][:,-1]
+                a=np.ones(len_arr)*domain.rho_species[i][:,-1]
                 self.comm.Recv(a, source=domain.proc_right)
-                domain.m_species[i][:,-1]=a
+                domain.rho_species[i][:,-1]=a
                 
                 # Send to the right
-                self.comm.send(len(domain.m_species[i][:,-2]), dest=domain.proc_right)
-                sen=domain.m_species[i][:,-2].copy()
+                self.comm.send(len(domain.rho_species[i][:,-2]), dest=domain.proc_right)
+                sen=domain.rho_species[i][:,-2].copy()
                 self.comm.Send(sen, dest=domain.proc_right)
                 # Receive from the left
-                len_arr=len(domain.m_species[i][:,0])
+                len_arr=len(domain.rho_species[i][:,0])
                 len_arr=self.comm.recv(source=domain.proc_left)
-                a=np.ones(len_arr)*domain.m_species[i][:,0]
+                a=np.ones(len_arr)*domain.rho_species[i][:,0]
                 self.comm.Recv(a, source=domain.proc_left)
-                domain.m_species[i][:,0]=a
+                domain.rho_species[i][:,0]=a
                 
                 # Send to the bottom
-                self.comm.send(len(domain.m_species[i][1,:]), dest=domain.proc_bottom)
-                sen=domain.m_species[i][1,:].copy()
+                self.comm.send(len(domain.rho_species[i][1,:]), dest=domain.proc_bottom)
+                sen=domain.rho_species[i][1,:].copy()
                 self.comm.Send(sen, dest=domain.proc_bottom)
                 # Receive from the top
-                len_arr=len(domain.m_species[i][-1,:])
+                len_arr=len(domain.rho_species[i][-1,:])
                 len_arr=self.comm.recv(source=domain.proc_top)
-                a=np.ones(len_arr)*domain.m_species[i][-1,:]
+                a=np.ones(len_arr)*domain.rho_species[i][-1,:]
                 self.comm.Recv(a, source=domain.proc_top)
-                domain.m_species[i][-1,:]=a
+                domain.rho_species[i][-1,:]=a
                 
                 # Send to the top
-                self.comm.send(len(domain.m_species[i][-2,:]), dest=domain.proc_top)
-                sen=domain.m_species[i][-2,:].copy()
+                self.comm.send(len(domain.rho_species[i][-2,:]), dest=domain.proc_top)
+                sen=domain.rho_species[i][-2,:].copy()
                 self.comm.Send(sen, dest=domain.proc_top)
                 # Receive from the bottom
-                len_arr=len(domain.m_species[i][0,:])
+                len_arr=len(domain.rho_species[i][0,:])
                 len_arr=self.comm.recv(source=domain.proc_bottom)
-                a=np.ones(len_arr)*domain.m_species[i][0,:]
+                a=np.ones(len_arr)*domain.rho_species[i][0,:]
                 self.comm.Recv(a, source=domain.proc_bottom)
-                domain.m_species[i][0,:]=a
+                domain.rho_species[i][0,:]=a
                 
     # General function to compile a variable from all processes
     def compile_var(self, var, Domain):
@@ -493,8 +493,8 @@ class MPI_comms():
         return var_global
     
     # Function to save data to npy files
-    def save_data(self, Domain, Sources, Species, time, vol):
-        T=self.compile_var(Domain.TempFromConserv(vol), Domain)
+    def save_data(self, Domain, Sources, Species, time):
+        T=self.compile_var(Domain.TempFromConserv(), Domain)
         np.save('T_'+time, T, False)
         # Kim source term
         if st.find(self.Sources['Source_Kim'],'True')>=0:
@@ -504,5 +504,5 @@ class MPI_comms():
             P=self.compile_var(Domain.P, Domain)
             np.save('P_'+time, P, False)
             for i in self.Species['keys']:
-                m_i=self.compile_var(Domain.m_species[i], Domain)
-                np.save('m_'+i+'_'+time, m_i, False)
+                m_i=self.compile_var(Domain.rho_species[i], Domain)
+                np.save('rho_'+i+'_'+time, m_i, False)

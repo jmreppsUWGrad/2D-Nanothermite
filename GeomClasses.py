@@ -66,6 +66,7 @@ class TwoDimDomain():
             self.k1=float(line[2])
         self.mu=settings['Darcy_mu']
         self.perm=settings['Darcy_perm']
+        self.R=settings['gas_constant']
         self.Diff=Diff_Coef()
         
         # Biasing options       
@@ -159,92 +160,61 @@ class TwoDimDomain():
         self.P=np.zeros_like(self.E) # pressure
         
         # Species
-        self.m_species={}
-        self.mu_species={}
-        self.mv_species={}
         self.rho_species={}
+#        self.mu_species={}
+#        self.mv_species={}
         self.Cp_species={}
+        self.Cv_species={}
+        self.rho_0=np.zeros_like(self.E)
+        por=[self.porosity, 1-self.porosity]
         if bool(Species):
             self.species_keys=Species['keys']
             i=0
             for key in self.species_keys:
-                self.m_species[key]=np.zeros_like(self.E)
-                self.mu_species[key]=np.zeros_like(self.E)
-                self.mv_species[key]=np.zeros_like(self.E)
-                self.rho_species[key]=np.ones_like(self.E)*Species['Specie_rho'][i]
+#                self.mu_species[key]=np.zeros_like(self.E)
+#                self.mv_species[key]=np.zeros_like(self.E)
+                self.rho_species[key]=np.ones_like(self.E)*Species['Specie_IC'][i]
                 self.Cp_species[key]=np.ones_like(self.E)*Species['Specie_Cp'][i]
+                self.Cv_species[key]=np.ones_like(self.E)*Species['Specie_Cv'][i]
+                self.rho_0+=por[i]*self.rho_species[key]
                 i+=1
-        self.m_0=np.zeros_like(self.E)
         
-    # Calculate and return volume of each node
-    def CV_vol(self):
-        v=np.zeros_like(self.E)
-        dx,dy=self.dX, self.dY
-        v[1:-1,1:-1]=0.25*(dx[1:-1,1:-1]+dx[1:-1,:-2])*(dy[1:-1,1:-1]+dy[:-2,1:-1])
-        v[0,0]      =0.25*(dx[0,0])*(dy[0,0])
-        v[0,1:-1]   =0.25*(dx[0,1:-1]+dx[0,:-2])*(dy[0,1:-1])
-        v[1:-1,0]   =0.25*(dx[1:-1,0])*(dy[1:-1,0]+dy[:-2,0])
-        v[0,-1]     =0.25*(dx[0,-1])*(dy[0,-1])
-        v[-1,0]     =0.25*(dx[-1,0])*(dy[-1,0])
-        v[-1,1:-1]  =0.25*(dx[-1,1:-1]+dx[-1,:-2])*(dy[-1,1:-1])
-        v[1:-1,-1]  =0.25*(dx[1:-1,-1])*(dy[1:-1,-1]+dy[:-2,-1])
-        v[-1,-1]    =0.25*(dx[-1,-1])*(dy[-1,-1])
-        # If axisymmetric model
-        if self.type=='Axisymmetric':
-            v[:,1:]  *=(self.X[:,1:]-dx[:,:-1]/2)
-            v[0,0]      =0.25*(dx[0,0]/2)**2*(dy[0,0])
-            v[1:-1,0]   =0.25*(dx[1:-1,0]/2)**2*(dy[1:-1,0]+dy[:-2,0])
-            v[-1,0]     =0.25*(dx[-1,0]/2)**2*(dy[-1,0])
-        return v
+        
+    # Calculate and return the dimensions of control volumes
+    def CV_dim(self):
+        hx=np.zeros_like(self.E)
+        hy=np.zeros_like(self.E)
+        
+        hx[:,1:-1]=0.5*(self.dX[:,1:-1]+self.dX[:,:-2])
+        hx[:,0]=0.5*(self.dX[:,0])
+        hx[:,-1]=0.5*(self.dX[:,-1])
+        
+        hy[1:-1,:]=0.5*(self.dY[1:-1,:]+self.dY[:-2,:])
+        hy[0,:]=0.5*(self.dY[0,:])
+        hy[-1,:]=0.5*(self.dY[-1,:])
+        
+        return hx,hy
     
-    # Calculate and return area of faces at each node
-    def CV_area(self):
-        Ax_l=np.zeros_like(self.E)
-        Ax_r=np.zeros_like(self.E)
-        Ay=np.zeros_like(self.E)
-        dx,dy=self.dX, self.dY
-        # Left face areas (same as right for planar)
-        Ax_l[1:-1,:]=0.5*(dy[1:-1,:]+dy[:-2,:])
-        Ax_l[0,:]   =0.5*(dy[0,:])
-        Ax_l[-1,:]  =0.5*(dy[-1,:])
-        Ax_r=Ax_l.copy()
-        
-        # North/south face areas
-        Ay[:,1:-1]=0.5*(dx[:,1:-1]+dx[:,:-2])
-        Ay[:,0]   =0.5*(dx[:,0])
-        Ay[:,-1]  =0.5*(dx[:,-1])
-        
-        # Axisymmetric
-        if self.type=='Axisymmetric':
-            Ax_l[:,0]  *=(self.X[:,0])
-            Ax_l[:,1:] *=(self.X[:,1:]-dx[:,:-1]/2)
-            Ax_r[:,0]  *=(self.X[:,0]+dx[:,0]/2)
-            Ax_r[:,1:] *=(self.X[:,1:]+dx[:,1:]/2)
-            Ay[:,1:] *=(self.X[:,1:]-dx[:,:-1]/2)
-            Ay[:,0]   =0.5*(dx[:,0]/2)**2
-        
-        return Ax_l, Ax_r, Ay
-        
     # Calculate temperature dependent properties
-    def calcProp(self, vol):
+    def calcProp(self):
         k=np.zeros_like(self.eta)
         rho=np.zeros_like(self.eta)
         Cv=np.zeros_like(self.eta)
-        D=copy.deepcopy(self.m_species)
+        Cp=np.zeros_like(self.eta)
+        D=copy.deepcopy(self.rho_species)
         
         # Species properties and contribution to bulk properties
-        por=[self.porosity,(1-self.porosity)]
-        if bool(self.m_species):
-            m_tot=np.zeros_like(self.E)
+        if bool(self.rho_species):
             for i in range(len(self.species_keys)):
 #                D[self.species_keys[i]][:,;]=self.Diff.get_Diff(300,i)
                 D[self.species_keys[i]][:,:]=0
-                self.rho_species[self.species_keys[i]]=\
-                    self.m_species[self.species_keys[i]]/(por[i]*vol)
-                Cv+=self.m_species[self.species_keys[i]]*self.Cp_species[self.species_keys[i]]
-                m_tot+=self.m_species[self.species_keys[i]]
-            Cv/=m_tot
-            rho=m_tot/vol
+#                self.rho_species[self.species_keys[i]]=\
+#                    self.rho_species[self.species_keys[i]]
+                Cv+=self.rho_species[self.species_keys[i]]*self.Cv_species[self.species_keys[i]]
+                Cp+=self.rho_species[self.species_keys[i]]*self.Cp_species[self.species_keys[i]]
+                rho+=self.rho_species[self.species_keys[i]]
+            Cv/=rho
+            Cp/=rho
         
         # Calculate properties based on eta or constant
         if (type(self.k) is str) and (st.find(self.k, 'eta')>=0):
@@ -260,9 +230,9 @@ class TwoDimDomain():
         elif type(self.rho) is float:
             rho[:,:]=self.rho
         
-        return k, rho, Cv, D
+        return k, rho, Cv, Cp, D
     
     # Calculate temperature from energy
-    def TempFromConserv(self, vol):
-        k,rho,Cv,D=self.calcProp(vol)
-        return self.E/Cv/rho/vol
+    def TempFromConserv(self):
+        k,rho,Cv,Cp,D=self.calcProp()
+        return self.E/Cv/rho

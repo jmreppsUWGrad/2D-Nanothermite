@@ -42,7 +42,7 @@ class Source_terms():
     # Calculate source term for combustion based on
     # K. Kim, "Computational Modeling of Combustion Wave in Nanoscale Thermite Reaction",
     # Int. J of Energy and Power engineering, vol.8, no.7, pp. 612-615, 2014.
-    def Source_Comb_Kim(self, rho, T, eta, vol, dt):
+    def Source_Comb_Kim(self, rho, T, eta, dt):
         detadt=self.A0*(1-eta)*np.exp(-self.Ea/self.R/T)
         eta+=dt*detadt
         
@@ -50,14 +50,14 @@ class Source_terms():
 #        eta[eta<10**(-10)]=0
         
         if st.find(self.dH[0], 'vol')>=0:
-            return vol*self.dH[1]*detadt, detadt
+            return self.dH[1]*detadt, detadt
         else:
-            return rho*vol*self.dH[1]*detadt, detadt
+            return rho*self.dH[1]*detadt, detadt
     
     # Source term for combustion based on
     # Umbrajkar, S et al., "Exothermic reactions in Al-CuO nanocomposites",
     # Thermochimica Acta, vol.451, pp. 34-43, 2006.
-    def Source_Comb_Umbrajkar(self, rho, T, eta, vol, dt):
+    def Source_Comb_Umbrajkar(self, rho, T, eta, dt):
         # First temp range
         A=10**(6.68)
         n=0.6
@@ -88,9 +88,9 @@ class Source_terms():
         eta[eta<10**(-5)]=0
         
         if st.find(self.dH[0], 'vol')>=0:
-            return vol*self.dH[1]*detadt, detadt
+            return self.dH[1]*detadt, detadt
         else:
-            return rho*vol*self.dH[1]*detadt, detadt
+            return rho*self.dH[1]*detadt, detadt
     
     # Calculate source term for combustion (NEEDS MODIFYING)
     def Source_Comb(self, T, y_species, dx, dy):

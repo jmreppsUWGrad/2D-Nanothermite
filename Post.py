@@ -187,7 +187,7 @@ for time in times:
     
         # Mass fraction contours
     for i in range(len(titles)):
-        Y_0=np.load('m_'+titles[i]+'_'+time+'.npy', False)
+        Y_0=np.load('rho_'+titles[i]+'_'+time+'.npy', False)
         fig=pyplot.figure(figsize=(6, 6))
         pyplot.contourf(X*1000, Y*1000, Y_0, alpha=0.5, cmap=cm.viridis)#, vmin=0.0, vmax=1.0)  
         pyplot.colorbar()
@@ -196,8 +196,8 @@ for time in times:
     #    pyplot.clim(0.0, 1.0)
         pyplot.xlim([xmin,xmax])
         pyplot.ylim([ymin,ymax])
-        pyplot.title('Mass; $'+titles[i]+'$, t='+time+' ms');
-        fig.savefig('m_'+titles[i]+'_'+time+'.png',dpi=300)
+        pyplot.title('Density; $'+titles[i]+'$, t='+time+' ms');
+        fig.savefig('rho_'+titles[i]+'_'+time+'.png',dpi=300)
         pyplot.close(fig)
         Y_tot+=Y_0
             
