@@ -32,8 +32,8 @@ rho:3065
 #rho:1523
 #rho:eta,5643,7191
 #Cp:625
-Cp:spec
-#Cp:eta,600,1000
+#Cp:spec
+Cp:eta,600,1000
 k:65
 #k:eta,39,108
 
@@ -78,10 +78,10 @@ Ignition:eta,0.8
 ######################################################
 
 #Species:Al,CuO,Al_2O_3,Cu
-Species:g,s
-Specie_IC:0,1.22e-7
-Specie_rho:1.1,3065
-Specie_Cp:1000,600
+#Species:g,s
+#Specie_IC:0,1.22e-7
+#Specie_rho:1.1,3065
+#Specie_Cp:1000,600
 
 ######################################################
 #			Meshing details
@@ -111,7 +111,7 @@ bias_size_y:1e-06
 
 Fo:0.01
 CFL:0.01
-dt:1e-9
+dt:None
 #dt:None
 total_time_steps:10000
 #total_time:7e-4
