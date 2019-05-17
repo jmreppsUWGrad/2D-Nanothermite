@@ -85,6 +85,8 @@ if rank==0:
     print 'Reading input file...'
 fin=FileClasses.FileIn(input_file, 0)
 fin.Read_Input(settings, Sources, Species, BCs)
+err=rank
+err=comm.bcast(err, root=0) # Way of syncing processes
 try:
     os.chdir(settings['Output_directory'])
 except:
@@ -92,7 +94,7 @@ except:
         os.makedirs(settings['Output_directory'])
         err=0
     else:
-        err=1
+        err=rank
     err=comm.bcast(err, root=0) # Way of syncing processes
     os.chdir(settings['Output_directory'])
 
@@ -240,9 +242,8 @@ while nt<settings['total_time_steps'] and t<settings['total_time']:
 #    T_0=domain.TempFromConserv()
     if st.find(Sources['Source_Kim'],'True')>=0 and BCs_changed:
         eta=mpi.compile_var(domain.eta, domain)
-#        v_0=np.sum(eta[:,int(len(domain.eta[0,:])/2)]*dy[:,int(len(domain.eta[0,:])/2)])
         if rank==0:
-            v_0=np.sum(eta*dy)/len(eta[0,:])
+            v_0=np.sum(eta[:,int(len(eta[0,:])/2)]*dy[:,int(len(eta[0,:])/2)])#/len(eta[0,:])
     
     # Update ghost nodes
     mpi.update_ghosts(domain)
@@ -293,7 +294,7 @@ while nt<settings['total_time_steps'] and t<settings['total_time']:
     # Second point in calculating combustion propagation speed
     if st.find(Sources['Source_Kim'],'True')>=0 and BCs_changed:
         if rank==0:
-            v_1=np.sum(eta[:,int(len(eta[0,:])/2)]*dy[:,int(len(eta[0,:])/2)])
+            v_1=np.sum(eta[:,int(len(eta[0,:])/2)]*dy[:,int(len(eta[0,:])/2)])#/len(eta[0,:])
     #        v_1=np.sum(eta*dy)/len(eta[0,:])
             if (v_1-v_0)/dt>0.001:
                 v+=(v_1-v_0)/dt
