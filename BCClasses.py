@@ -25,6 +25,7 @@ class BCs():
     def __init__(self, BC_dict, dx, dy, domain):
         self.BCs=BC_dict
         self.dx,self.dy=dx,dy
+        self.X=np.empty_like(dx)
         self.domain=domain
         
     # Energy BCs
@@ -63,7 +64,11 @@ class BCs():
                     q=self.BCs['bc_right_E'][1+3*i][0]*self.BCs['bc_right_E'][1+3*i][1] # h*Tinf
                     Bi=-self.BCs['bc_right_E'][1+3*i][0]*T_prev[st:en,-1] # h*Tij
                 
-                E[st:en,-1]+=(Bi+q)*dt/hx[st:en,-1]
+                if self.domain=='Axisymmetric':
+                    E[st:en,-1]+=(Bi+q)*dt*self.X[st:en,-1]\
+                        /hx[st:en,-1]/(self.X[st:en,-1]-self.dx[st:en,-2])
+                else:
+                    E[st:en,-1]+=(Bi+q)*dt/hx[st:en,-1]
                 
         # South face
         for i in range(len(self.BCs['bc_south_E'])/3):
