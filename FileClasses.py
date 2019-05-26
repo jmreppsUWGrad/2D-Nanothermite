@@ -195,10 +195,11 @@ class FileIn():
                             
                 # Time advancement details
                 elif line[0] in keys_Time_adv:
-                    if line[0]=='Time_Scheme' or st.find(line[1], 'None')>=0:
+                    if line[0]=='Time_Scheme' or st.find(line[1], 'None')>=0\
+                        or line[0]=='Restart':
                         settings[line[0]]=st.split(line[1], newline_check)[0]
                     elif line[0]=='total_time_steps' or line[0]=='Max_iterations'\
-                        or line[0]=='Number_Data_Output' or line[0]=='Restart':
+                        or line[0]=='Number_Data_Output':
                         settings[line[0]]=int(line[1])
                     elif line[0]=='Output_directory':
                         settings[line[0]]=line[1]+':'+st.split(line[2], newline_check)[0]

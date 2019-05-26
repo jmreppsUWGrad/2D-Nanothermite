@@ -134,7 +134,7 @@ if rank==0:
 time_max='0.000000'
 T=300*np.ones_like(domain.E)
 # Restart from previous data
-if type(settings['Restart']) is int:
+if st.find(settings['Restart'], 'None')<0:
     times=os.listdir('.')
     i=len(times)
     if i<2:
@@ -174,7 +174,7 @@ if type(settings['Restart']) is int:
             domain.m_0[-1,:]*=0.5
         del rho_species, P
             
-if (bool(domain.rho_species)) and (type(settings['Restart']) is str):
+if (bool(domain.rho_species)) and (st.find(settings['Restart'], 'None')>=0):
     for i in range(len(Species['Species'])):
 #        domain.rho_species[Species['Species'][i]][:,:]=Species['Specie_IC'][i]
         domain.rho_species[Species['Species'][i]][:,:]=Species['Specie_IC'][i]
@@ -284,7 +284,7 @@ while nt<settings['total_time_steps'] and t<settings['total_time']:
             solver.BCs.BCs['bc_north_E']=BCs['bc_right_E']
         if rank==0:
             input_file.fout.write('##bc_north_E_new:')
-            input_file.Write_single_line(str(solver.BCs.BCs['bc_north_E']))
+            input_file.Write_single_line(str(BCs['bc_right_E']))
             input_file.fout.write('\n')
             tign=t
         mpi.save_data(domain, Sources, Species, '{:f}'.format(t*1000))
