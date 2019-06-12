@@ -239,12 +239,14 @@ if rank==0:
     print 'Solving:'
 while nt<settings['total_time_steps'] and t<settings['total_time']:
     # First point in calculating combustion propagation speed
-#    T_0=domain.TempFromConserv()
     if st.find(Sources['Source_Kim'],'True')>=0 and BCs_changed:
         eta=mpi.compile_var(domain.eta, domain)
         if rank==0:
             v_0=np.sum(eta[:,int(len(eta[0,:])/2)]*dy[:,int(len(eta[0,:])/2)])#/len(eta[0,:])
     
+    # Temperature at beginning (heating rate)
+    if domain.proc_top<0:
+        T_0=domain.TempFromConserv()
     # Update ghost nodes
     mpi.update_ghosts(domain)
     # Actual solve
@@ -276,6 +278,8 @@ while nt<settings['total_time_steps'] and t<settings['total_time']:
         
     # Change boundary conditions
     T=mpi.compile_var(domain.TempFromConserv(), domain)
+#    if domain.proc_top<0:
+#        if T[-1,:]
     eta=mpi.compile_var(domain.eta, domain)
     if ((Sources['Ignition'][0]=='eta' and np.amax(eta)>=Sources['Ignition'][1])\
         or (Sources['Ignition'][0]=='Temp' and np.amax(T)>=Sources['Ignition'][1]))\

@@ -95,8 +95,9 @@ while i>j:
 # Graph spacial limits
 #xmin,xmax=0,1
 #ymin,ymax=0,1
-xmin,xmax=0,1000
-ymin,ymax=0,1000
+xmin,xmax=0,1
+ymin,ymax=0,6
+fig_size=(6, 6)
 
 # Generate graphs
 X=np.load('X.npy', False)
@@ -108,12 +109,12 @@ for time in times:
         Y_tot=np.zeros_like(Y)
     
     # Temperature contour
-    fig=pyplot.figure(figsize=(6, 6))
+    fig=pyplot.figure(figsize=fig_size)
     pyplot.contourf(X*1000, Y*1000, T, alpha=0.5, cmap=cm.viridis)#, vmin=270, vmax=2000)  
     pyplot.colorbar()
     pyplot.xlabel('$x$ (mm)')
     pyplot.ylabel('$y$ (mm)')
-#    pyplot.clim(300, 10000)
+#    pyplot.clim(300, 3500)
     pyplot.xlim([xmin,xmax])
     pyplot.ylim([ymin,ymax])
     pyplot.title('Temperature distribution t='+time+' ms');
@@ -122,7 +123,7 @@ for time in times:
     
     # 1D temperature profile at centreline
     # if OneD_graphs==1:
-        # fig=pyplot.figure(figsize=(6, 6))
+        # fig=pyplot.figure(figsize=fig_size)
         # pyplot.plot(Y[:,1], T[:,int(len(T[0,:])/2)])
         # pyplot.xlabel('$y$ (m)')
         # pyplot.ylabel('T (K)')
@@ -132,7 +133,7 @@ for time in times:
     
     if st.find(source,'True')>=0:
         # Progress contour
-        fig=pyplot.figure(figsize=(6, 6))
+        fig=pyplot.figure(figsize=fig_size)
         pyplot.contourf(X*1000, Y*1000, eta, alpha=0.5, cmap=cm.viridis)#, vmin=0.0, vmax=1.0)  
         pyplot.colorbar()
         pyplot.xlabel('$x$ (mm)')
@@ -146,7 +147,7 @@ for time in times:
         
         # Reaction rate contour
         phi=A0*(1-eta)*np.exp(-Ea/8.314/T)
-        fig=pyplot.figure(figsize=(6, 6))
+        fig=pyplot.figure(figsize=fig_size)
         pyplot.contourf(X*1000, Y*1000, phi, alpha=0.5, cmap=cm.viridis)#, vmin=0.0, vmax=1.0)  
         pyplot.colorbar(format='%.2e')
         pyplot.xlabel('$x$ (mm)')
@@ -160,7 +161,7 @@ for time in times:
         
         # 1D Reaction rate profile at centreline
         if OneD_graphs==1:
-            fig=pyplot.figure(figsize=(6, 6))
+            fig=pyplot.figure(figsize=fig_size)
             pyplot.plot(Y[:,1]*1000, phi[:,int(len(T[0,:])/2)])
             pyplot.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
             pyplot.xlabel('$y$ (mm)')
@@ -170,7 +171,7 @@ for time in times:
             pyplot.close(fig)
     try:
         P=np.load('P_'+time+'.npy', False)
-        fig=pyplot.figure(figsize=(6, 6))
+        fig=pyplot.figure(figsize=fig_size)
         pyplot.contourf(X*1000, Y*1000, P, alpha=0.5, cmap=cm.viridis)#, vmin=270, vmax=2000)  
         pyplot.colorbar()
         pyplot.xlabel('$x$ (mm)')
@@ -188,7 +189,7 @@ for time in times:
         # Mass fraction contours
     for i in range(len(titles)):
         Y_0=np.load('rho_'+titles[i]+'_'+time+'.npy', False)
-        fig=pyplot.figure(figsize=(6, 6))
+        fig=pyplot.figure(figsize=fig_size)
         pyplot.contourf(X*1000, Y*1000, Y_0, alpha=0.5, cmap=cm.viridis)#, vmin=0.0, vmax=1.0)  
         pyplot.colorbar()
         pyplot.xlabel('$x$ (mm)')
@@ -207,7 +208,7 @@ for time in times:
 
 if OneD_graphs==1:
     print 'Creating 1D plots'
-    fig=pyplot.figure(figsize=(6, 6))
+    fig=pyplot.figure(figsize=fig_size)
     for time in times:
         T=np.load('T_'+time+'.npy', False)
         # 1D temperature profile at centreline
@@ -220,7 +221,7 @@ if OneD_graphs==1:
     pyplot.close(fig)
     
     if st.find(source,'True')>=0:
-        fig=pyplot.figure(figsize=(6, 6))
+        fig=pyplot.figure(figsize=fig_size)
         for time in times:
             eta=np.load('eta_'+time+'.npy', False)
             T=np.load('T_'+time+'.npy', False)

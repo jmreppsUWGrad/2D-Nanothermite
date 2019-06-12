@@ -168,6 +168,7 @@ class TwoDimSolver():
         # Top boundary
         if self.Domain.proc_top>=0:
             self.BCs.BCs['bc_north_E']=['F', 0.0, (0, -1)]
+            self.BCs.BCs['bc_north_rad']='None'
         # Global boundary with multiple BCs
         elif len(BC_global['bc_north_E'])>3:
             i=len(BC_global['bc_north_E'])/3
