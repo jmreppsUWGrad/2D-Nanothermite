@@ -1,0 +1,175 @@
+######################################################
+#             2D Heat Conduction Solver              #
+#              Created by J. Mark Epps               #
+#          Part of Masters Thesis at UW 2018-2020    #
+######################################################
+
+############### INPUT FILE #########################
+#    Reference directions:
+#    left-smallest x coordinate
+#    right-largest x value
+#    north-largest y coordinate
+#    south-smallest y coordinate
+
+######################################################
+#			Settings
+#	Domain:Axisymmetric OR Planar
+#	Properties are in standard units J, kg, K, W, m
+#	k,Cp,rho: [value]
+#	k,Cp,rho: eta,[value when eta=0],[value when eta=1]
+#	rho,Cp: spec (calculate based on species mass fractions)
+#	Darcy_mu: viscosity in Darcy's law (if species are used)
+#	Darcy_perm: permeability in Darcy' law (if species are used)
+#	Porosity: volume percent of pores; used in pressure, density,
+######################################################
+
+Domain:Axisymmetric
+Length:1e-3
+Width:6e-3
+Nodes_x:100
+Nodes_y:600
+rho:2702
+#rho:1523
+#rho:eta,5643,7191
+#Cp:625
+#Cp:spec
+Cp:903
+k:237
+#k:eta,39,108
+
+Darcy_mu:1e-5
+Darcy_perm:0.0
+Porosity:0.6
+gas_constant:81.51
+
+######################################################
+#			Source terms
+#	Source_uniform: specify volumetric heating in W/m^3 or None
+#	Source_Kim: True or None
+#	Ea: J/mol, A0 [unit depends]
+#	dH: form [vol or rho],[value]; is volume or mass based enthalpy
+#	Ignition: Condition to remove flux BC in form [variable],[variable threshold]
+#		where [variable] can be eta or Temp
+######################################################
+
+Source_Uniform:None
+Source_Kim:True
+Ea:48000
+A0:4890000
+#dH:vol,63000000000
+dH:rho,2.78e6
+Ignition:eta,0.8
+#Ignition:Temp,1000
+
+#  Al/CuO: 4.07e6 [density], 2.38e6 [after Al,Alumina,Cu phase changes], 2.78e6 [after Al2O3,Cu phase changes]
+#  Al/MoO3- dH=4.7e6
+# A0= 2200000000, 4.89e6
+
+######################################################
+#			Species data
+#	Species: Indicate species chemical formula separated by commas
+#	Specie_IC: Initial masses of each species in order specified in 'Species'; value at domain interior
+#	Sepcie_Cp: Specific heats of each species in order specified in 'Species'; not implemented yet
+#	Commenting this section out will remove mass/momentum transfer from model
+######################################################
+
+#Species:Al,CuO,Al_2O_3,Cu
+#Species:g,s
+#Specie_IC:0,1.22e-7
+#Specie_rho:1.1,3065
+#Specie_Cp:1000,600
+
+######################################################
+#			Meshing details
+#	Currently not available
+#Biasing options:
+#    -'OneWayUp'   for linearly increasing element sizes with increasing x/y
+#    -'OneWayDown' for linearly decreasing element sizes with increasing x/y
+#    -'TwoWayEnd'  for linearly increasing sizes till middle, then decrease again
+#    -'TwoWayMid'  for linearly decreasing sizes till middle, then increase again
+#    -size         is the smallest element size based on above selection
+######################################################
+
+bias_type_x:None
+bias_size_x:0.003
+bias_type_y:None
+bias_size_y:1e-06
+
+######################################################
+#			Time advancement details
+#	'Fo' (in (0, 1.0)), 'CFL' in (0, 1.0) OR 'dt' must be specified; CFL only if species present
+#	'total_time_steps' OR 'total_time' must be specified; if both, then 'total_time_steps' will be used
+#	Time schemes: Explicit
+#	'Convergence' and 'Max_iterations' are for implicit solver
+#	Number_Data_Output: Number of T variable files to be output over the time/number of steps specified
+#	'Restart': None OR a number sequence in T data file name (will restart at this time)
+######################################################
+
+Fo:0.05
+CFL:0.01
+dt:None
+#dt:None
+total_time_steps:None
+total_time:10e-3
+#total_time:None
+#total_time:0.002
+Time_Scheme:Explicit
+Restart:9.000026
+
+Convergence:0.0001
+Max_iterations:100
+
+Number_Data_Output:30
+
+######################################################
+#			Boundary conditions
+# Format: [type of BC], [values for BC], [first node #], [last node #]
+#	[first node #]-first node number to apply BC; 0 based index; must be positive
+#	[last node #] -last node number to apply BC; must be positive; node-Nodes_x
+#		Mulitple BCs can be specified along a boundary; separate everything with commas;
+#	e.g. F, 1000, 0,10,C,10,300,10,20
+# Energy options:
+#	[type of BC]  -T or F for const. temp or flux; each requires one value for [values for BC]
+#	[type of BC]  -C for convective BC; requires conv. HT coeff AND T_infty for [values for BC]
+# Mass options:
+#	[type of BC]  -grad_P for mass flux based on Pressure; value of P_infty for [values for BC]
+# Pressure options:
+#	[type of BC]  -grad for pressure gradient; value of gradient for [values for BC]
+#  [IN PROGRESS] Profiles possible; must be same size as number of nodes on that boundary
+# [IN PROGRESS] Radiation options: None or [emissivity, surrounding_Temp]
+######################################################
+
+bc_left_E:F, 0, 0, 600
+bc_right_E:C, 30, 300, 0, 600
+# numpy.linspace(400, 900, settings['Nodes_y'])
+bc_south_E:F, 0, 0, 100
+#bc_north_E:C, 30, 300, 0, 600
+bc_north_E:F, 200e6, 0, 20,C, 30, 300, 20, 100
+#bc_north_E:C, 5, 300, 0, 100
+# numpy.linspace(400, 900, settings['Nodes_x'])
+
+bc_left_rad:None
+bc_right_rad:None
+bc_south_rad:None
+#bc_north_rad:0.9,3000
+bc_north_rad:None
+
+#bc_left_mom:
+#bc_right_mom:
+#bc_south_mom:
+#bc_north_mom:
+
+bc_left_P:grad,0,0,-1
+bc_right_P:grad,0,0,-1
+bc_south_P:grad,0,0,-1
+bc_north_P:grad,0,0,-1
+
+#bc_left_mass:grad_P,0,0,-1
+#bc_right_mass:grad_P,0,0,-1
+#bc_south_mass:grad_P,0,0,-1
+#bc_north_mass:grad_P,0,0,-1
+
+bc_left_mass:grad,0,0,-1
+bc_right_mass:grad,0,0,-1
+bc_south_mass:grad,0,0,-1
+bc_north_mass:grad,0,0,-1
