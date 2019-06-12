@@ -96,7 +96,7 @@ for time in times:
     pyplot.ylabel('$y$ (mm)')
     pyplot.xlim([0.8,1.0])
     pyplot.ylim([5.0,6.0])
-#    pyplot.clim(300, 1000)
+    pyplot.clim(300, 3000)
     pyplot.title('Temperature distribution t='+time);
     fig.savefig('T_'+time+'_corner.png',dpi=300)
     pyplot.close(fig)
