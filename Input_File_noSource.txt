@@ -30,6 +30,7 @@ rho:5000
 Darcy_mu:1e-5
 Darcy_perm:1e-11
 Porosity:0.6
+pore_gas:Air
 gas_constant:81.51
 
 ######################################################
