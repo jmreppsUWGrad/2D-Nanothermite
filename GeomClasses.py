@@ -28,7 +28,7 @@ of using with 2D Compressible Navier-Stokes solver.
 import numpy as np
 import string as st
 import copy
-from MatClasses import Diff_Coef
+import MatClasses
 
 class TwoDimDomain():
     def __init__(self, settings, Species, solver, rank):
@@ -38,6 +38,7 @@ class TwoDimDomain():
         self.Nx=settings['Nodes_x']
         self.Ny=settings['Nodes_y']
         self.porosity=settings['Porosity']
+        self.pore_gas=settings['pore_gas']
         self.type=solver
         self.x=np.zeros(self.Nx)
         self.y=np.zeros(self.Ny)
@@ -67,7 +68,9 @@ class TwoDimDomain():
         self.mu=settings['Darcy_mu']
         self.perm=settings['Darcy_perm']
         self.R=settings['gas_constant']
-        self.Diff=Diff_Coef()
+        self.Diff=MatClasses.Diff_Coef()
+        self.Cp_calc=MatClasses.Cp()
+        self.k_calc=MatClasses.therm_cond()
         
         # Biasing options       
         self.xbias=[settings['bias_type_x'], settings['bias_size_x']]
@@ -218,17 +221,25 @@ class TwoDimDomain():
         
         # Calculate properties based on eta or constant
         if (type(self.k) is str) and (st.find(self.k, 'eta')>=0):
-            k=(self.eta/self.k1+(1-self.eta)/self.k0)**(-1)
+#            k=(self.eta/self.k1+(1-self.eta)/self.k0)**(-1)
+            ks=(self.eta/self.k1+(1-self.eta)/self.k0)**(-1)
+            kf=self.k_calc.get_k(300, self.pore_gas)
+            k[:,:]=ks*(kf/ks)**(self.porosity)
         elif type(self.k) is float:
-            k[:,:]=self.k
+#            k[:,:]=self.k
+            kf=self.k_calc.get_k(300, self.pore_gas)
+            k[:,:]=self.k*(kf/self.k)**(self.porosity)
         if (type(self.Cv) is str) and (st.find(self.Cv, 'eta')>=0):
-            Cv=self.eta*self.Cv1+(1-self.eta)*self.Cv0
+#            Cv=self.eta*self.Cv1+(1-self.eta)*self.Cv0
+            Cv=(self.eta*self.Cv1+(1-self.eta)*self.Cv0)*(1-self.porosity)\
+                +self.Cp_calc.get_Cv(300, self.pore_gas)*self.porosity
         elif type(self.Cv) is float:
-            Cv[:,:]=self.Cv
-        if (type(self.rho) is str) and (st.find(self.rho, 'eta')>=0):
-            rho=self.eta*self.rho1+(1-self.eta)*self.rho0
-        elif type(self.rho) is float:
-            rho[:,:]=self.rho
+            Cv[:,:]=self.Cv*(1-self.porosity)\
+                +self.Cp_calc.get_Cv(300, self.pore_gas)*self.porosity
+#        if (type(self.rho) is str) and (st.find(self.rho, 'eta')>=0):
+#            rho=self.eta*self.rho1+(1-self.eta)*self.rho0
+        if type(self.rho) is float:
+            rho[:,:]=self.rho*(1-self.porosity)+self.Cp_calc.rho[self.pore_gas]*self.porosity
         
         return k, rho, Cv, Cp, D
     
