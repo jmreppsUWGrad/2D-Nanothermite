@@ -17,7 +17,7 @@ This file contains classes for reading and writing files in proper format:
 
 keys_Settings=['MPI_Processes','MPI_arrangment','Domain','Length','Width',\
                'Nodes_x','Nodes_y','k','Cp','rho','Darcy_mu', 'Darcy_perm',\
-               'Porosity', 'gas_constant']
+               'Porosity', 'pore_gas', 'gas_constant']
 
 keys_mesh=['bias_type_x','bias_size_x','bias_type_y','bias_size_y']
                
@@ -165,7 +165,8 @@ class FileIn():
                     if line[0]=='Nodes_x' or line[0]=='Nodes_y':
                         settings[line[0]]=int(line[1])
                     elif st.find(line[1], 'None')>=0 or st.find(line[1], ',')>=0\
-                        or line[0]=='Domain' or st.find(line[1], 'spec')>=0:
+                        or line[0]=='Domain' or st.find(line[1], 'spec')>=0 \
+                        or line[0]=='pore_gas':
                         settings[line[0]]=st.split(line[1], newline_check)[0]
                     else:
                         settings[line[0]]=float(line[1])
