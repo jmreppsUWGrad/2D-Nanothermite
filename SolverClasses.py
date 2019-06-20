@@ -293,10 +293,9 @@ class TwoDimSolver():
     def Advance_Soln_Cond(self, nt, t, hx, hy):
         max_Y,min_Y=0,1
         # Calculate properties
-        k, rho, Cv, Cp, D=self.Domain.calcProp()
+        T_c, k, rho, Cv, Cp, D=self.Domain.calcProp(self.Domain.T_guess)
         
         # Copy needed variables and set pointers to other variables
-        T_c=self.Domain.TempFromConserv()
         mu=self.Domain.mu
         perm=self.Domain.perm
         if bool(self.Domain.rho_species):
@@ -616,6 +615,8 @@ class TwoDimSolver():
         # Apply boundary conditions
         self.BCs.Energy(self.Domain.E, T_c, dt, rho, Cv, hx, hy)
         
+        # Save previous temp as initial guess for next time step
+        self.Domain.T_guess=T_c.copy()
         ###################################################################
         # Divergence/Convergence checks
         ###################################################################

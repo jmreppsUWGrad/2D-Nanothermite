@@ -48,6 +48,8 @@ class TwoDimDomain():
         
         # Variables for conservation equations
         self.E=np.zeros((self.Ny, self.Nx)) # Lumped energy
+        self.max_iter=settings['Max_iterations']
+        self.conv=settings['Convergence']
         
         # Thermal properties
         self.k=settings['k']
@@ -161,6 +163,7 @@ class TwoDimDomain():
     def create_var(self, Species):
         self.eta=np.zeros_like(self.E) # extent of reaction
         self.P=np.zeros_like(self.E) # pressure
+        self.T_guess=np.zeros_like(self.E)
         
         # Species
         self.rho_species={}
@@ -199,51 +202,63 @@ class TwoDimDomain():
         return hx,hy
     
     # Calculate temperature dependent properties
-    def calcProp(self):
+    def calcProp(self, T_guess=300, init=False):
         k=np.zeros_like(self.eta)
         rho=np.zeros_like(self.eta)
         Cv=np.zeros_like(self.eta)
         Cp=np.zeros_like(self.eta)
         D=copy.deepcopy(self.rho_species)
         
-        # Species properties and contribution to bulk properties
-        if bool(self.rho_species):
-            for i in range(len(self.species_keys)):
-#                D[self.species_keys[i]][:,;]=self.Diff.get_Diff(300,i)
-                D[self.species_keys[i]][:,:]=0
-#                self.rho_species[self.species_keys[i]]=\
-#                    self.rho_species[self.species_keys[i]]
-                Cv+=self.rho_species[self.species_keys[i]]*self.Cv_species[self.species_keys[i]]
-                Cp+=self.rho_species[self.species_keys[i]]*self.Cp_species[self.species_keys[i]]
-                rho+=self.rho_species[self.species_keys[i]]
-            Cv/=rho
-            Cp/=rho
+        por=[self.porosity,(1-self.porosity)]
         
-        # Calculate properties based on eta or constant
+        # Density
+        if (type(self.rho) is str) and (st.find(self.rho, 'spec')>=0):
+            for i in range(len(self.species_keys)):
+                rho+=por[i]*self.rho_species[self.species_keys[i]]
+        else:
+            rho[:,:]=self.rho*(1-self.porosity)+self.Cp_calc.rho[self.pore_gas]*self.porosity
+            
+        # Specific heat (Cv)
+        if (type(self.Cv) is str) and (st.find(self.Cv, 'eta')>=0):
+#            Cv=self.eta*self.Cv1+(1-self.eta)*(self.Cv0)
+#            Cv=(self.eta*self.Cv1+(1-self.eta)*self.Cv0)*(1-self.porosity)\
+#                +self.Cp_calc.get_Cv(300, self.pore_gas)*self.porosity
+            T_0=np.ones_like(self.eta)
+            T=np.ones_like(self.eta)*T_guess # Initial guess for temperature
+            i=0
+            while np.amax(np.abs(T_0-T)/T)>self.conv and i<self.max_iter:
+                T_0=T.copy()
+                try:
+                    Cv=(self.rho_species[self.species_keys[0]]*(self.eta*self.Cv1+(1-self.eta)*self.Cv0)*(1-self.porosity)\
+                    +self.rho_species[self.species_keys[1]]*self.Cp_calc.get_Cv(T_0, self.pore_gas)*self.porosity)\
+                        /rho
+                except:
+                    Cv=(self.rho*(self.eta*self.Cv1+(1-self.eta)*self.Cv0)*(1-self.porosity)\
+                    +self.Cp_calc.rho[self.pore_gas]*self.Cp_calc.get_Cv(T_0, self.pore_gas)*self.porosity)\
+                        /rho
+                
+                T=self.E/Cv/rho
+                i+=1
+                if init:
+                    break
+        else:
+            Cv[:]=self.Cv*(1-self.porosity)\
+                +self.Cp_calc.get_Cv(T_guess, self.pore_gas)*self.porosity
+            T=self.E/Cv/rho
+        
+        # Thermal conductivity
         if (type(self.k) is str) and (st.find(self.k, 'eta')>=0):
 #            k=(self.eta/self.k1+(1-self.eta)/self.k0)**(-1)
             ks=(self.eta/self.k1+(1-self.eta)/self.k0)**(-1)
-            kf=self.k_calc.get_k(300, self.pore_gas)
+            kf=self.k_calc.get_k(T, self.pore_gas)
             k[:,:]=ks*(kf/ks)**(self.porosity)
         elif type(self.k) is float:
 #            k[:,:]=self.k
-            kf=self.k_calc.get_k(300, self.pore_gas)
+            kf=self.k_calc.get_k(T, self.pore_gas)
             k[:,:]=self.k*(kf/self.k)**(self.porosity)
-        if (type(self.Cv) is str) and (st.find(self.Cv, 'eta')>=0):
-#            Cv=self.eta*self.Cv1+(1-self.eta)*self.Cv0
-            Cv=(self.eta*self.Cv1+(1-self.eta)*self.Cv0)*(1-self.porosity)\
-                +self.Cp_calc.get_Cv(300, self.pore_gas)*self.porosity
-        elif type(self.Cv) is float:
-            Cv[:,:]=self.Cv*(1-self.porosity)\
-                +self.Cp_calc.get_Cv(300, self.pore_gas)*self.porosity
-#        if (type(self.rho) is str) and (st.find(self.rho, 'eta')>=0):
-#            rho=self.eta*self.rho1+(1-self.eta)*self.rho0
-        if type(self.rho) is float:
-            rho[:,:]=self.rho*(1-self.porosity)+self.Cp_calc.rho[self.pore_gas]*self.porosity
         
-        return k, rho, Cv, Cp, D
+        if init:
+            return rho, Cv
+        else:
+            return T, k, rho, Cv, Cp, D
     
-    # Calculate temperature from energy
-    def TempFromConserv(self):
-        k,rho,Cv,Cp,D=self.calcProp()
-        return self.E/Cv/rho

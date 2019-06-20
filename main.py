@@ -187,9 +187,9 @@ if (bool(domain.rho_species)) and (st.find(settings['Restart'], 'None')>=0):
         if domain.proc_top<0:
             domain.rho_species[Species['Species'][i]][-1,:]*=0.5
         domain.m_0+=domain.rho_species[Species['Species'][i]] 
-k,rho,Cv,Cp,D=domain.calcProp()
+rho,Cv=domain.calcProp(T_guess=T, init=True)
 domain.E=rho*Cv*T
-del k,rho,Cv,Cp,D,T
+del rho,Cv,T
 ##########################################################################
 # ------------------------Write Input File settings to output directory
 ##########################################################################
@@ -246,7 +246,7 @@ while nt<settings['total_time_steps'] and t<settings['total_time']:
     
     # Temperature at beginning (heating rate)
     if domain.proc_top<0:
-        T_0=domain.TempFromConserv()
+        T_0=domain.calcProp()[0]
     # Update ghost nodes
     mpi.update_ghosts(domain)
     # Actual solve
@@ -277,7 +277,7 @@ while nt<settings['total_time_steps'] and t<settings['total_time']:
         t_inc+=1
         
     # Change boundary conditions
-    T=mpi.compile_var(domain.TempFromConserv(), domain)
+    T=mpi.compile_var(domain.calcProp(domain.T_guess)[0], domain)
 #    if domain.proc_top<0:
 #        if T[-1,:]
     eta=mpi.compile_var(domain.eta, domain)
