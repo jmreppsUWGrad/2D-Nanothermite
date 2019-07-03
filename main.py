@@ -241,7 +241,10 @@ while nt<settings['total_time_steps'] and t<settings['total_time']:
     if st.find(Sources['Source_Kim'],'True')>=0 and ign==1:
         eta=mpi.compile_var(domain.eta, domain)
         if rank==0:
-            v_0=np.sum(eta[:,int(len(eta[0,:])/2)]*dy[:,int(len(eta[0,:])/2)])#/len(eta[0,:])
+            if st.find(settings['Domain'], 'Axisymmetric')>=0:
+                v_0=np.sum(eta[:,0]*dy[:,0])
+            else:
+                v_0=np.sum(eta[:,int(len(eta[0,:])/2)]*dy[:,int(len(eta[0,:])/2)])
     
     # Update ghost nodes
     mpi.update_ghosts(domain)
@@ -293,8 +296,10 @@ while nt<settings['total_time_steps'] and t<settings['total_time']:
     if st.find(Sources['Source_Kim'],'True')>=0 and ign==1:
         eta=mpi.compile_var(domain.eta, domain)
         if rank==0:
-            v_1=np.sum(eta[:,int(len(eta[0,:])/2)]*dy[:,int(len(eta[0,:])/2)])#/len(eta[0,:])
-    #        v_1=np.sum(eta*dy)/len(eta[0,:])
+            if st.find(settings['Domain'], 'Axisymmetric')>=0:
+                v_1=np.sum(eta[:,0]*dy[:,0])
+            else:
+                v_1=np.sum(eta[:,int(len(eta[0,:])/2)]*dy[:,int(len(eta[0,:])/2)])
             if (v_1-v_0)/dt>0.001:
                 v+=(v_1-v_0)/dt
                 N+=1
