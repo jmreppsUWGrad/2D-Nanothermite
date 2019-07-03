@@ -85,6 +85,7 @@ if rank==0:
     print 'Reading input file...'
 fin=FileClasses.FileIn(input_file, 0)
 fin.Read_Input(settings, Sources, Species, BCs)
+
 err=rank
 err=comm.bcast(err, root=0) # Way of syncing processes
 try:
@@ -231,31 +232,32 @@ elif settings['total_time']=='None':
     t_inc=0
 
 # Ignition conditions
-Sources['Ignition']=st.split(Sources['Ignition'], ',')
-Sources['Ignition'][1]=float(Sources['Ignition'][1])
-BCs_changed=False
+ign,ign_0=0,0
 
 if rank==0:
     print 'Solving:'
 while nt<settings['total_time_steps'] and t<settings['total_time']:
     # First point in calculating combustion propagation speed
-    if st.find(Sources['Source_Kim'],'True')>=0 and BCs_changed:
+    if st.find(Sources['Source_Kim'],'True')>=0 and ign==1:
         eta=mpi.compile_var(domain.eta, domain)
         if rank==0:
             v_0=np.sum(eta[:,int(len(eta[0,:])/2)]*dy[:,int(len(eta[0,:])/2)])#/len(eta[0,:])
     
-    # Temperature at beginning (heating rate)
-    if domain.proc_top<0:
-        T_0=domain.calcProp()[0]
     # Update ghost nodes
     mpi.update_ghosts(domain)
     # Actual solve
-    err,dt=solver.Advance_Soln_Cond(nt, t, hx, hy)
+    err,dt,ign=solver.Advance_Soln_Cond(nt, t, hx, hy, ign)
     t+=dt
     nt+=1
     # Check all error codes and send the maximum code to all processes
     err=comm.reduce(err, op=MPI.MAX, root=0)
     err=comm.bcast(err, root=0)
+    ign_0=ign
+    # Check all ignition codes and send maximum
+    ign_0=comm.reduce(ign_0, op=MPI.MIN, root=0)
+    ign_0=comm.bcast(ign_0, root=0)
+    ign=comm.reduce(ign, op=MPI.MAX, root=0)
+    ign=comm.bcast(ign, root=0)
     
     if err>0:
         if rank==0:
@@ -276,14 +278,8 @@ while nt<settings['total_time_steps'] and t<settings['total_time']:
         mpi.save_data(domain, Sources, Species, '{:f}'.format(t*1000))
         t_inc+=1
         
-    # Change boundary conditions
-    T=mpi.compile_var(domain.calcProp(domain.T_guess)[0], domain)
-#    if domain.proc_top<0:
-#        if T[-1,:]
-    eta=mpi.compile_var(domain.eta, domain)
-    if ((Sources['Ignition'][0]=='eta' and np.amax(eta)>=Sources['Ignition'][1])\
-        or (Sources['Ignition'][0]=='Temp' and np.amax(T)>=Sources['Ignition'][1]))\
-        and not BCs_changed:
+    # Change boundary conditions if ignition occurs
+    if ign==1 and ign_0==0:
         if domain.proc_top<0:
             solver.BCs.BCs['bc_north_E']=BCs['bc_right_E']
         if rank==0:
@@ -292,18 +288,16 @@ while nt<settings['total_time_steps'] and t<settings['total_time']:
             input_file.fout.write('\n')
             tign=t
         mpi.save_data(domain, Sources, Species, '{:f}'.format(t*1000))
-        BCs_changed=True
-        BCs_changed=comm.bcast(BCs_changed, root=0)
         
     # Second point in calculating combustion propagation speed
-    if st.find(Sources['Source_Kim'],'True')>=0 and BCs_changed:
+    if st.find(Sources['Source_Kim'],'True')>=0 and ign==1:
+        eta=mpi.compile_var(domain.eta, domain)
         if rank==0:
             v_1=np.sum(eta[:,int(len(eta[0,:])/2)]*dy[:,int(len(eta[0,:])/2)])#/len(eta[0,:])
     #        v_1=np.sum(eta*dy)/len(eta[0,:])
             if (v_1-v_0)/dt>0.001:
                 v+=(v_1-v_0)/dt
                 N+=1
-
 if rank==0:
     time_end=time.time()
     input_file.Write_single_line('Final time step size: %f microseconds'%(dt*10**6))

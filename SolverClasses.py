@@ -24,6 +24,7 @@ Features/assumptions:
 
 import numpy as np
 import copy
+import string as st
 #import CoolProp.CoolProp as CP
 #import temporal_schemes
 import Source_Comb
@@ -47,6 +48,8 @@ class TwoDimSolver():
         self.get_source=Source_Comb.Source_terms(Sources['Ea'], Sources['A0'], Sources['dH'])
         self.source_unif=Sources['Source_Uniform']
         self.source_Kim=Sources['Source_Kim']
+        self.ign=st.split(Sources['Ignition'], ',')
+        self.ign[1]=float(self.ign[1])
         
         # BC class
         self.BCs=BCClasses.BCs(BCs, self.dx, self.dy, settings['Domain'])
@@ -290,7 +293,7 @@ class TwoDimSolver():
             return 2*k1*k2/(k1+k2)
         
     # Main solver (1 time step)
-    def Advance_Soln_Cond(self, nt, t, hx, hy):
+    def Advance_Soln_Cond(self, nt, t, hx, hy, ign):
         max_Y,min_Y=0,1
         # Calculate properties
         T_c, k, rho, Cv, Cp, D=self.Domain.calcProp(self.Domain.T_guess)
@@ -320,10 +323,10 @@ class TwoDimSolver():
             dt=self.comm.reduce(dt, op=MPI.MIN, root=0)
             dt=self.comm.bcast(dt, root=0)
         if (np.isnan(dt)) or (dt<=0):
-            return 1, dt
+            return 1, dt, ign
         if self.Domain.rank==0:
             print 'Time step %i, Step size=%.7f, Time elapsed=%f;'%(nt+1,dt, t+dt)
-        
+            
         ###################################################################
         # Calculate source and Porous medium terms
         ###################################################################
@@ -505,50 +508,55 @@ class TwoDimSolver():
         # Conservation of Energy
         ###################################################################
         # Heat diffusion
+        flex=np.zeros_like(self.Domain.E)
+        fley=np.zeros_like(self.Domain.E)
         # Axisymmetric domain flux in r
         if self.Domain.type=='Axisymmetric':
             #left faces
-            self.Domain.E[:,1:-1]   -= dt/hx[:,1:-1]/(self.Domain.X[:,1:-1])\
+            flex[:,1:-1]   -= dt/hx[:,1:-1]/(self.Domain.X[:,1:-1])\
                         *(self.Domain.X[:,1:-1]-self.dx[:,:-2]/2)\
                         *self.interpolate(k[:,:-2],k[:,1:-1], 'Harmonic')\
                         *(T_c[:,1:-1]-T_c[:,:-2])/self.dx[:,:-2]
-            self.Domain.E[:,-1]   -= dt/hx[:,-1]/(self.Domain.X[:,-1]-self.dx[:,-1]/2)\
+            flex[:,-1]   -= dt/hx[:,-1]/(self.Domain.X[:,-1]-self.dx[:,-1]/2)\
                         *(self.Domain.X[:,-1]-self.dx[:,-1]/2)\
                         *self.interpolate(k[:,-2],k[:,-1], 'Harmonic')\
                         *(T_c[:,-1]-T_c[:,-2])/self.dx[:,-1]
             
             # Right face
-            self.Domain.E[:,1:-1] += dt/hx[:,1:-1]/(self.Domain.X[:,1:-1])\
+            flex[:,1:-1] += dt/hx[:,1:-1]/(self.Domain.X[:,1:-1])\
                         *(self.Domain.X[:,1:-1]+self.dx[:,1:-1]/2)\
                         *self.interpolate(k[:,1:-1],k[:,2:], 'Harmonic')\
                         *(T_c[:,2:]-T_c[:,1:-1])/self.dx[:,1:-1]
-            self.Domain.E[:,0] += dt/hx[:,0]/(self.dx[:,0]/2)\
+            flex[:,0] += dt/hx[:,0]/(self.dx[:,0]/2)\
                         *(self.Domain.X[:,0]+self.dx[:,0]/2)\
                         *self.interpolate(k[:,0],k[:,1], 'Harmonic')\
                         *(T_c[:,1]-T_c[:,0])/self.dx[:,0]
         # Planar domain flux in r
         else:
             #left faces
-            self.Domain.E[:,1:]   -= dt/hx[:,1:]\
+            flex[:,1:]   -= dt/hx[:,1:]\
                         *self.interpolate(k[:,:-1],k[:,1:], 'Harmonic')\
                         *(T_c[:,1:]-T_c[:,:-1])/self.dx[:,:-1]
             # Right face
-            self.Domain.E[:,:-1] += dt/hx[:,:-1]\
+            flex[:,:-1] += dt/hx[:,:-1]\
                         *self.interpolate(k[:,:-1],k[:,1:], 'Harmonic')\
                         *(T_c[:,1:]-T_c[:,:-1])/self.dx[:,:-1]
         
         # South face
-        self.Domain.E[1:,:]   -= dt/hy[1:,:]\
+        fley[1:,:]   -= dt/hy[1:,:]\
                     *self.interpolate(k[1:,:],k[:-1,:], 'Harmonic')\
                     *(T_c[1:,:]-T_c[:-1,:])/self.dy[:-1,:]
         # North face
-        self.Domain.E[:-1,:]  += dt/hy[:-1,:]\
+        fley[:-1,:]  += dt/hy[:-1,:]\
                     *self.interpolate(k[:-1,:],k[1:,:], 'Harmonic')\
                     *(T_c[1:,:]-T_c[:-1,:])/self.dy[:-1,:]
         
         # Source terms
         self.Domain.E +=E_unif*dt
         self.Domain.E +=E_kim *dt
+        
+        # Add diffusion effects to energy
+        self.Domain.E += flex+fley
         
         # Porous medium advection
         if bool(self.Domain.rho_species):
@@ -615,6 +623,18 @@ class TwoDimSolver():
         # Apply boundary conditions
         self.BCs.Energy(self.Domain.E, T_c, dt, rho, Cv, hx, hy)
         
+        # Check for ignition
+        
+        if ign==0 and self.source_Kim=='True':
+            fl=flex+fley
+            self.BCs.Energy(fl, T_c, dt, rho, Cv, hx, hy)
+#            print 'Rank %i, below '%(self.Domain.rank)+str(len(np.where(E_kim*dt<fl)[0]))
+            mx=len(np.where((E_kim*dt>10*abs(fl)) & (fl<0) & (T_c>=600))[0])
+            if mx>1:
+#            if ((self.ign[0]=='eta' and np.amax(self.Domain.eta)>=self.ign[1])\
+#                or (self.ign[0]=='Temp' and np.amax(T_c)>=self.ign[1])):
+                ign=1
+        
         # Save previous temp as initial guess for next time step
         self.Domain.T_guess=T_c.copy()
         ###################################################################
@@ -622,11 +642,11 @@ class TwoDimSolver():
         ###################################################################
         if (np.isnan(np.amax(self.Domain.E))) \
         or (np.amin(self.Domain.E)<=0):
-            return 2, dt
+            return 2, dt, ign
         elif (np.amax(self.Domain.eta)>1.0) or (np.amin(self.Domain.eta)<-10**(-9)):
-            return 3, dt
+            return 3, dt, ign
         elif bool(self.Domain.rho_species) and ((min_Y<-10**(-9))\
                   or np.isnan(max_Y)):
-            return 4, dt
+            return 4, dt, ign
         else:
-            return 0, dt
+            return 0, dt, ign
