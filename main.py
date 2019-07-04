@@ -85,19 +85,12 @@ if rank==0:
     print 'Reading input file...'
 fin=FileClasses.FileIn(input_file, 0)
 fin.Read_Input(settings, Sources, Species, BCs)
-
-err=rank
-err=comm.bcast(err, root=0) # Way of syncing processes
-try:
-    os.chdir(settings['Output_directory'])
-except:
-    if rank==0:
+if rank==0:
+    try:
+        os.chdir(settings['Output_directory'])
+    except:
         os.makedirs(settings['Output_directory'])
-        err=0
-    else:
-        err=rank
-    err=comm.bcast(err, root=0) # Way of syncing processes
-    os.chdir(settings['Output_directory'])
+        os.chdir(settings['Output_directory'])
 
 ##########################################################################
 # -------------------------------------Initialize solver and domain
@@ -138,8 +131,6 @@ T=300*np.ones_like(domain.E)
 if st.find(settings['Restart'], 'None')<0:
     times=os.listdir('.')
     i=len(times)
-    if i<2:
-        sys.exit('Cannot find a file to restart a simulation with')
     j=0
     while i>j:
         if st.find(times[j],'T')==0 and st.find(times[j],'.npy')>0 \
@@ -152,6 +143,9 @@ if st.find(settings['Restart'], 'None')<0:
         else:
             del times[j]
             i-=1
+    if time_max=='0.000000':
+        sys.exit('Cannot find a file to restart a simulation with')
+    
     T=np.load('T_'+time_max+'.npy')
     T=mpi.split_var(T, domain)
     if st.find(Sources['Source_Kim'],'True')>=0:
