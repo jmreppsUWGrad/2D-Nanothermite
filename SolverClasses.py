@@ -49,7 +49,8 @@ class TwoDimSolver():
         self.source_unif=Sources['Source_Uniform']
         self.source_Kim=Sources['Source_Kim']
         self.ign=st.split(Sources['Ignition'], ',')
-        self.ign[1]=float(self.ign[1])
+        self.ign[0]=int(self.ign[0])
+        self.ign[1]=int(self.ign[1])
         
         # BC class
         self.BCs=BCClasses.BCs(BCs, self.dx, self.dy, settings['Domain'])
@@ -325,7 +326,7 @@ class TwoDimSolver():
         if (np.isnan(dt)) or (dt<=0):
             return 1, dt, ign
         if self.Domain.rank==0:
-            print 'Time step %i, Step size=%.7f, Time elapsed=%f;'%(nt+1,dt, t+dt)
+            print 'Time step %i, Step size=%.7fms, Time elapsed=%fs;'%(nt+1,dt*1000, t+dt)
             
         ###################################################################
         # Calculate source and Porous medium terms
@@ -624,17 +625,13 @@ class TwoDimSolver():
         self.BCs.Energy(self.Domain.E, T_c, dt, rho, Cv, hx, hy)
         
         # Check for ignition
-        
         if ign==0 and self.source_Kim=='True':
             fl=flex+fley
             self.BCs.Energy(fl, T_c, dt, rho, Cv, hx, hy)
-#            print 'Rank %i, below '%(self.Domain.rank)+str(len(np.where(E_kim*dt<fl)[0]))
-            mx=len(np.where((E_kim*dt>10*abs(fl)) & (fl<0) & (T_c>=600))[0])
-            if mx>1:
-#            if ((self.ign[0]=='eta' and np.amax(self.Domain.eta)>=self.ign[1])\
-#                or (self.ign[0]=='Temp' and np.amax(T_c)>=self.ign[1])):
+            mx=len(np.where((E_kim*dt>self.ign[0]*abs(fl)) & (T_c>=600))[0]) #(fl<0) & 
+            if mx>self.ign[1]:
                 ign=1
-        
+                
         # Save previous temp as initial guess for next time step
         self.Domain.T_guess=T_c.copy()
         ###################################################################

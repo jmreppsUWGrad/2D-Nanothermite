@@ -85,12 +85,14 @@ if rank==0:
     print 'Reading input file...'
 fin=FileClasses.FileIn(input_file, 0)
 fin.Read_Input(settings, Sources, Species, BCs)
-if rank==0:
-    try:
-        os.chdir(settings['Output_directory'])
-    except:
+comm.Barrier()
+try:
+    os.chdir(settings['Output_directory'])
+except:
+    if rank==0:
         os.makedirs(settings['Output_directory'])
-        os.chdir(settings['Output_directory'])
+    comm.Barrier()
+    os.chdir(settings['Output_directory'])
 
 ##########################################################################
 # -------------------------------------Initialize solver and domain
@@ -218,11 +220,11 @@ dy=mpi.compile_var(domain.dY, domain)
 output_data_t,output_data_nt=0,0
 if settings['total_time_steps']=='None':
     output_data_t=settings['total_time']/settings['Number_Data_Output']
-    settings['total_time_steps']=settings['total_time']*10**9
+    settings['total_time_steps']=settings['total_time']*10**12
     t_inc=int(t/output_data_t)+1
 elif settings['total_time']=='None':
     output_data_nt=int(settings['total_time_steps']/settings['Number_Data_Output'])
-    settings['total_time']=settings['total_time_steps']*10**9
+    settings['total_time']=settings['total_time_steps']*10**12
     t_inc=0
 
 # Ignition conditions
@@ -297,6 +299,7 @@ while nt<settings['total_time_steps'] and t<settings['total_time']:
             if (v_1-v_0)/dt>0.001:
                 v+=(v_1-v_0)/dt
                 N+=1
+            
 if rank==0:
     time_end=time.time()
     input_file.Write_single_line('Final time step size: %f microseconds'%(dt*10**6))
