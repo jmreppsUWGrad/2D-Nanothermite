@@ -44,7 +44,7 @@ Source_Kim:None
 Ea:48000
 A0:4890000
 dH:rho,63000000000
-Ignition:eta,0.8
+Ignition:10,1
 
 ######################################################
 #			Meshing details

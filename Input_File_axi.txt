@@ -28,18 +28,18 @@ Length:1e-3
 Width:6e-3
 Nodes_x:100
 Nodes_y:600
-rho:2702
+rho:5109
 #rho:1523
 #rho:eta,5643,7191
 #Cp:625
 #Cp:spec
-Cp:903
-k:237
+Cp:eta,601,998
+k:65
 #k:eta,39,108
 
 Darcy_mu:1e-5
 Darcy_perm:0.0
-Porosity:0.6
+Porosity:0.4
 pore_gas:Air
 gas_constant:81.51
 
@@ -49,8 +49,9 @@ gas_constant:81.51
 #	Source_Kim: True or None
 #	Ea: J/mol, A0 [unit depends]
 #	dH: form [vol or rho],[value]; is volume or mass based enthalpy
-#	Ignition: Condition to remove flux BC in form [variable],[variable threshold]
-#		where [variable] can be eta or Temp
+#	Ignition: Condition to remove flux BC in form [int1],[int2]
+#		where [int1] is the multiple of CV fluxes source term must exceed
+#		where [int2] is number of occurances of [int1] happening in whole domain
 ######################################################
 
 Source_Uniform:None
@@ -59,8 +60,7 @@ Ea:48000
 A0:4890000
 #dH:vol,63000000000
 dH:rho,2.78e6
-Ignition:eta,0.8
-#Ignition:Temp,1000
+Ignition:10,1
 
 #  Al/CuO: 4.07e6 [density], 2.38e6 [after Al,Alumina,Cu phase changes], 2.78e6 [after Al2O3,Cu phase changes]
 #  Al/MoO3- dH=4.7e6
@@ -110,17 +110,17 @@ Fo:0.01
 CFL:0.01
 dt:None
 #dt:None
-total_time_steps:None
-total_time:7e-3
-#total_time:None
+total_time_steps:1
+#total_time:3e-3
+total_time:None
 #total_time:0.002
 Time_Scheme:Explicit
-Restart:70000
+Restart:None
 
 Convergence:0.0001
 Max_iterations:100
 
-Number_Data_Output:14
+Number_Data_Output:3
 
 ######################################################
 #			Boundary conditions
@@ -145,7 +145,7 @@ bc_right_E:C, 30, 300, 0, 600
 # numpy.linspace(400, 900, settings['Nodes_y'])
 bc_south_E:F, 0, 0, 100
 #bc_north_E:C, 30, 300, 0, 600
-bc_north_E:F, 200e6, 0, 20,C, 30, 300, 20, 100
+bc_north_E:F, 100e6, 0, 20,C, 30, 300, 20, 100
 #bc_north_E:C, 5, 300, 0, 100
 # numpy.linspace(400, 900, settings['Nodes_x'])
 

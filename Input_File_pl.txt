@@ -49,8 +49,9 @@ gas_constant:81.51
 #	Source_Kim: True or None
 #	Ea: J/mol, A0 [unit depends]
 #	dH: form [vol or rho],[value]; is volume or mass based enthalpy
-#	Ignition: Condition to remove flux BC in form [variable],[variable threshold]
-#		where [variable] can be eta or Temp
+#	Ignition: Condition to remove flux BC in form [int1],[int2]
+#		where [int1] is the multiple of CV fluxes source term must exceed
+#		where [int2] is number of occurances of [int1] happening in whole domain
 ######################################################
 
 Source_Uniform:None
@@ -59,8 +60,7 @@ Ea:48000
 A0:4890000
 #dH:vol,63000000000
 dH:rho,4070000
-Ignition:eta,0.8
-#Ignition:Temp,1200
+Ignition:10,1
 
 #Ea=40000 # [J/mol] Approx value from Kim's paper
 #        A0=1e8 # [1/s] Fudged value
