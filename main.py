@@ -89,6 +89,7 @@ comm.Barrier()
 try:
     os.chdir(settings['Output_directory'])
 except:
+    comm.Barrier()
     if rank==0:
         os.makedirs(settings['Output_directory'])
     comm.Barrier()
