@@ -40,37 +40,73 @@ print('#          Part of Masters Thesis at UW 2018-2020    #')
 print('######################################################\n')
 
 inputargs=sys.argv
-if len(inputargs)>2:
-    dir_files=inputargs[1]
-    OneD_graphs=int(inputargs[2])
+if len(inputargs)>1:
+    inp_file=inputargs[1]
 else:
-    print 'Usage is: python Post.py [Output directory] [1D graphs]\n'
+    print 'Usage is: python Post.py [Input File]\n'
     print 'where\n'
-    print '[Output directory] is the directory where the data is located'
-    print '[1D graphs] indicates whether 1D graphs should be output (1 or 0); default is 0'
+    print '[Input File] is the Post-processing input file'
     print '***********************************'
     sys.exit('Post-processing halted')
+
+##############################################################
+#               Read post-processing file
+##############################################################
+try:
+    fin=open(inp_file, 'r')
+except:
+    sys.exit('Cannot find post-processing input file')
+    
+for line in fin:
+    if st.find(line, ':')>0 and st.find(line, '#')!=0:
+        line=st.split(line, ':')
+        if line[0]=='Directory':
+            dir_files=st.split(line[1], '\n')[0]
+        elif line[0]=='Times':
+            if st.find(line[1], ',')>0:
+                times=st.split(line[1], ',')
+                times[-1]=st.split(times[-1], '\n')[0]
+            else:
+                times=line[1]
+        elif line[0]=='x_min':
+            xmin=float(line[1])
+        elif line[0]=='y_min':
+            ymin=float(line[1])
+        elif line[0]=='x_max':
+            try:
+                xmax=float(line[1])
+            except:
+                xmax=line[1]
+        elif line[0]=='y_max':
+            try:
+                ymax=float(line[1])
+            except:
+                ymax=line[1]
+        elif line[0]=='1D_Plots':
+            OneD_graphs=line[1]
+
+fin.close()
 
 try:
     os.chdir(dir_files)
 except:
     sys.exit('Directory "'+dir_files+'" not found')
-# Get Arrhenius parameters
+
+# Get parameters from solver file
 A0=-1.0
 Ea=-1.0
 source='False'
 try:
     input_file=open('Input_file.txt')
 except:
-    try:
-        input_file=open('Input_file_stats.txt')
-    except:
-        sys.exit('Input file missing')
+    sys.exit('Input file missing')
 
 titles=[]
 while A0<0 or Ea<0 or source=='False':
     line=input_file.readline()
-    if st.find(line, 'Ea')==0:
+    if st.find(line, 'Domain')==0:
+        domain=st.split(st.split(line, ':')[1], '\n')[0]
+    elif st.find(line, 'Ea')==0:
         Ea=float(st.split(line, ':')[1])
     elif st.find(line, 'A0')==0:
         A0=float(st.split(line, ':')[1])
@@ -78,26 +114,30 @@ while A0<0 or Ea<0 or source=='False':
         source=st.split(line, ':')[1]
     elif st.find(line, 'Species')==0:
         titles=st.split(st.split(st.split(line, ':')[1], '\n')[0], ',')
+    elif st.find(line, 'Length')==0 and type(xmax) is str:
+        xmax=float(st.split(line, ':')[1])*1000
+    elif st.find(line, 'Width')==0 and type(ymax) is str:
+        ymax=float(st.split(line, ':')[1])*1000
 input_file.close()
 
 # Get times to process
-times=os.listdir('.')
-i=len(times)
-j=0
-while i>j:
-    if st.find(times[j],'T')==0 and st.find(times[j],'.npy')>0:
-        times[j]=st.split(st.split(times[j],'_')[1],'.npy')[0]
-        j+=1
-    else:
-        del times[j]
-        i-=1
+if type(times) is str:
+    times=os.listdir('.')
+    i=len(times)
+    j=0
+    while i>j:
+        if st.find(times[j],'T')==0 and st.find(times[j],'.npy')>0:
+            times[j]=st.split(st.split(times[j],'_')[1],'.npy')[0]
+            j+=1
+        else:
+            del times[j]
+            i-=1
 
-# Graph spacial limits
-#xmin,xmax=0,1
-#ymin,ymax=0,1
-xmin,xmax=0,1
-ymin,ymax=0,6
-fig_size=(6, 6)
+# Figure size
+if xmax>ymax:
+    fig_size=(6, 2)
+else:
+    fig_size=(6, 6)
 
 # Generate graphs
 X=np.load('X.npy', False)
@@ -114,7 +154,7 @@ for time in times:
     pyplot.colorbar()
     pyplot.xlabel('$x$ (mm)')
     pyplot.ylabel('$y$ (mm)')
-#    pyplot.clim(300, 3500)
+#    pyplot.clim(300, 3000)
     pyplot.xlim([xmin,xmax])
     pyplot.ylim([ymin,ymax])
     pyplot.title('Temperature distribution t='+time+' ms');
@@ -122,7 +162,7 @@ for time in times:
     pyplot.close(fig)
     
     # 1D temperature profile at centreline
-    # if OneD_graphs==1:
+    # if st.find(OneD_graphs,'True')>=0:
         # fig=pyplot.figure(figsize=fig_size)
         # pyplot.plot(Y[:,1], T[:,int(len(T[0,:])/2)])
         # pyplot.xlabel('$y$ (m)')
@@ -160,7 +200,7 @@ for time in times:
         pyplot.close(fig)
         
         # 1D Reaction rate profile at centreline
-        if OneD_graphs==1:
+        if st.find(OneD_graphs,'True')>=0:
             fig=pyplot.figure(figsize=fig_size)
             pyplot.plot(Y[:,1]*1000, phi[:,int(len(T[0,:])/2)])
             pyplot.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
@@ -206,7 +246,7 @@ for time in times:
     print 'Processed '+time
     print '     Mass balance residual: %8f'%(np.amin(Y_tot)*10**6)
 
-if OneD_graphs==1:
+if st.find(OneD_graphs,'True')>=0:
     print 'Creating 1D plots'
     fig=pyplot.figure(figsize=fig_size)
     for time in times:

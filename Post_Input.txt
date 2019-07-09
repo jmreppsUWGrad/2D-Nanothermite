@@ -1,0 +1,29 @@
+######################################################
+#            2D Conduction Post-processing           #
+#              Created by J. Mark Epps               #
+#          Part of Masters Thesis at UW 2018-2020    #
+######################################################
+
+######################################################
+#			Location and files
+#	Directory:Relative path to data
+#	Times: Times in file names separated by commas OR ALL for all files
+######################################################
+
+Directory:Tests\Axi\geom\4a
+Times:ALL
+#Times:2.000053,6.000046
+
+######################################################
+#			Plots
+#	Indicate coordinates to focus plots on; None for max if end of domain
+#	Units are mm
+#	1D_Plots: True OR None; output 1D plots along centre
+######################################################
+
+x_min:0
+x_max:ALL
+y_min:0
+y_max:ALL
+
+1D_Plots:None
