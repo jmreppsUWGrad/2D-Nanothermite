@@ -637,10 +637,9 @@ class TwoDimSolver():
         ###################################################################
         # Divergence/Convergence checks
         ###################################################################
-        if (np.isnan(np.amax(self.Domain.E))) \
-        or (np.amin(self.Domain.E)<=0):
+        if (np.isnan(np.amax(T_c))) or (np.amin(T_c)<=0):
             return 2, dt, ign
-        elif (np.amax(self.Domain.eta)>1.0) or (np.amin(self.Domain.eta)<-10**(-9)):
+        if (np.amax(self.Domain.eta)>1.0) or (np.amin(self.Domain.eta)<-10**(-9)):
             return 3, dt, ign
         elif bool(self.Domain.rho_species) and ((min_Y<-10**(-9))\
                   or np.isnan(max_Y)):
