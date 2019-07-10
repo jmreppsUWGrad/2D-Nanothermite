@@ -10,7 +10,7 @@
 #	Times: Times in file names separated by commas OR ALL for all files
 ######################################################
 
-Directory:Tests\Axi\geom\4a
+Directory:Tests\Axi\geom\5
 Times:ALL
 #Times:2.000053,6.000046
 
@@ -25,5 +25,11 @@ x_min:0
 x_max:ALL
 y_min:0
 y_max:ALL
+
+Temp_min:300
+Temp_max:3000
+Temp_pts:10
+
+eta_pts:2
 
 1D_Plots:None
