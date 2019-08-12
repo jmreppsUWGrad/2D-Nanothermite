@@ -143,8 +143,13 @@ class MPI_comms():
             if self.rank in ranks[i] and maxDim==1:
                 domain.proc_left=-1
                 domain.proc_right=-1
+                # Only one process (serial)
+                if len(ranks)==1:
+                    domain.proc_bottom=-1
+                    domain.proc_top=-1
+                    
                 # Process at y=0
-                if i==0:
+                elif i==0:
                     domain.proc_bottom=-1
                     domain.proc_top=ranks[i+1,0]
                     
@@ -494,15 +499,27 @@ class MPI_comms():
     
     # Function to save data to npy files
     def save_data(self, Domain, Sources, Species, time):
-        T=self.compile_var(Domain.calcProp(Domain.T_guess)[0], Domain)
-        np.save('T_'+time, T, False)
-        # Kim source term
-        if st.find(self.Sources['Source_Kim'],'True')>=0:
-            eta=self.compile_var(Domain.eta, Domain)
-            np.save('eta_'+time, eta, False)
-        if bool(self.Species):
-            P=self.compile_var(Domain.P, Domain)
-            np.save('P_'+time, P, False)
-            for i in self.Species['keys']:
-                m_i=self.compile_var(Domain.rho_species[i], Domain)
-                np.save('rho_'+i+'_'+time, m_i, False)
+        # 1 process (serial)
+        if self.size==1:
+            np.save('T_'+time, Domain.calcProp(Domain.T_guess)[0], False)
+            # Kim source term
+            if st.find(self.Sources['Source_Kim'],'True')>=0:
+                np.save('eta_'+time, Domain.eta, False)
+            if bool(self.Species):
+                np.save('P_'+time, Domain.P, False)
+                for i in self.Species['keys']:
+                    np.save('rho_'+i+'_'+time, Domain.rho_species[i], False)
+        # More than 1 process
+        else:
+            T=self.compile_var(Domain.calcProp(Domain.T_guess)[0], Domain)
+            np.save('T_'+time, T, False)
+            # Kim source term
+            if st.find(self.Sources['Source_Kim'],'True')>=0:
+                eta=self.compile_var(Domain.eta, Domain)
+                np.save('eta_'+time, eta, False)
+            if bool(self.Species):
+                P=self.compile_var(Domain.P, Domain)
+                np.save('P_'+time, P, False)
+                for i in self.Species['keys']:
+                    m_i=self.compile_var(Domain.rho_species[i], Domain)
+                    np.save('rho_'+i+'_'+time, m_i, False)
