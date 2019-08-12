@@ -220,27 +220,28 @@ class TwoDimDomain():
             
         # Specific heat (Cv)
         if (type(self.Cv) is str) and (st.find(self.Cv, 'eta')>=0):
-#            Cv=self.eta*self.Cv1+(1-self.eta)*(self.Cv0)
+            Cv=self.eta*self.Cv1+(1-self.eta)*(self.Cv0)
+            T=self.E/Cv/rho
 #            Cv=(self.eta*self.Cv1+(1-self.eta)*self.Cv0)*(1-self.porosity)\
 #                +self.Cp_calc.get_Cv(300, self.pore_gas)*self.porosity
-            T_0=np.ones_like(self.eta)
-            T=np.ones_like(self.eta)*T_guess # Initial guess for temperature
-            i=0
-            while np.amax(np.abs(T_0-T)/T)>self.conv and i<self.max_iter:
-                T_0=T.copy()
-                try:
-                    Cv=(self.rho_species[self.species_keys[0]]*(self.eta*self.Cv1+(1-self.eta)*self.Cv0)*(1-self.porosity)\
-                    +self.rho_species[self.species_keys[1]]*self.Cp_calc.get_Cv(T_0, self.pore_gas)*self.porosity)\
-                        /rho
-                except:
-                    Cv=(self.rho*(self.eta*self.Cv1+(1-self.eta)*self.Cv0)*(1-self.porosity)\
-                    +self.Cp_calc.rho[self.pore_gas]*self.Cp_calc.get_Cv(T_0, self.pore_gas)*self.porosity)\
-                        /rho
-                
-                T=self.E/Cv/rho
-                i+=1
-                if init:
-                    break
+#            T_0=np.ones_like(self.eta)
+#            T=np.ones_like(self.eta)*T_guess # Initial guess for temperature
+#            i=0
+#            while np.amax(np.abs(T_0-T)/T)>self.conv and i<self.max_iter:
+#                T_0=T.copy()
+#                try:
+#                    Cv=(self.rho_species[self.species_keys[0]]*(self.eta*self.Cv1+(1-self.eta)*self.Cv0)*(1-self.porosity)\
+#                    +self.rho_species[self.species_keys[1]]*self.Cp_calc.get_Cv(T_0, self.pore_gas)*self.porosity)\
+#                        /rho
+#                except:
+#                    Cv=(self.rho*(self.eta*self.Cv1+(1-self.eta)*self.Cv0)*(1-self.porosity)\
+#                    +self.Cp_calc.rho[self.pore_gas]*self.Cp_calc.get_Cv(T_0, self.pore_gas)*self.porosity)\
+#                        /rho
+#                
+#                T=self.E/Cv/rho
+#                i+=1
+#                if init:
+#                    break
         else:
             Cv[:]=self.Cv*(1-self.porosity)\
                 +self.Cp_calc.get_Cv(T_guess, self.pore_gas)*self.porosity
@@ -249,13 +250,14 @@ class TwoDimDomain():
         # Thermal conductivity
         if (type(self.k) is str) and (st.find(self.k, 'eta')>=0):
 #            k=(self.eta/self.k1+(1-self.eta)/self.k0)**(-1)
-            ks=(self.eta/self.k1+(1-self.eta)/self.k0)**(-1)
-            kf=self.k_calc.get_k(T, self.pore_gas)
-            k[:,:]=ks*(kf/ks)**(self.porosity)
+            k=self.eta*self.k1+(1-self.eta)*self.k0
+#            ks=(self.eta/self.k1+(1-self.eta)/self.k0)**(-1)
+#            kf=self.k_calc.get_k(T, self.pore_gas)
+#            k[:,:]=ks*(kf/ks)**(self.porosity)
         elif type(self.k) is float:
-#            k[:,:]=self.k
-            kf=self.k_calc.get_k(T, self.pore_gas)
-            k[:,:]=self.k*(kf/self.k)**(self.porosity)
+            k[:,:]=self.k
+#            kf=self.k_calc.get_k(T, self.pore_gas)
+#            k[:,:]=self.k*(kf/self.k)**(self.porosity)
         
         if init:
             return rho, Cv
