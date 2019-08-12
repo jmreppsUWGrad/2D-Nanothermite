@@ -28,6 +28,17 @@ class BCs():
         self.X=np.empty_like(dx)
         self.domain=domain
         
+    # Ablation considerations (basic)
+    def flux_abl(self, T, E, dt, h, q):
+        T_high=800.0
+        E_c=E.copy()
+        h_c=h.copy()
+        T_c=T.copy()
+        E_c[T_c>T_high]-=q*dt/h_c[T_c>T_high]*1.1
+        
+#        E[T>T_high]-=q*dt/h[T>T_high]*1.1
+#        return E
+    
     # Energy BCs
     def Energy(self, E, T_prev, dt, rho, Cv, hx, hy):
         # Left face
@@ -47,6 +58,7 @@ class BCs():
                     Bi=-self.BCs['bc_left_E'][1+3*i][0]*T_prev[st:en,0] # h*Tij
                 
                 E[st:en,0]+=(Bi+q)*dt/hx[st:en,0]
+                
                 
         # Right face
         for i in range(len(self.BCs['bc_right_E'])/3):
@@ -105,6 +117,9 @@ class BCs():
                     Bi=-self.BCs['bc_north_E'][1+3*i][0]*T_prev[-1,st:en] # h*Tij
                 
                 E[-1,st:en]+=(Bi+q)*dt/hy[-1,st:en]
+#                E[T_prev>800]-=(Bi+q)*dt/hy[T_prev>800]*1.1
+#                E[-1,st:en]=self.flux_abl(T_prev[-1,st:en], E[-1,st:en], dt, hy[-1,st:en], Bi+q)
+#                self.flux_abl(T_prev[-1,st:en], E[-1,st:en], dt, hy[-1,st:en], Bi+q)
                 
         # Apply radiation BCs
         if self.BCs['bc_left_rad']!='None' and self.domain!='Axisymmetric':
