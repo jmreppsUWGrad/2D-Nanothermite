@@ -92,36 +92,10 @@ class Source_terms():
         else:
             return rho*self.dH[1]*detadt, detadt
     
-    # Calculate source term for combustion (NEEDS MODIFYING)
-    def Source_Comb(self, T, y_species, dx, dy):
-        # Terms to include after modelling combustion:
-            #resulting expression should have dimensions of W/m
-            #Be sure to account for area of CV properly
-        at=np.zeros_like(dx)
-        q_source=np.zeros_like(dx)
-        
-        # CV dimensions
-        at[1:-1,1:-1]=0.25*(dx[1:-1,1:-1]+dx[1:-1,:-2])*(dy[1:-1,1:-1]+dy[:-2,1:-1])
-        at[0,0]      =0.25*(dx[0,0])*(dy[0,0])
-        at[0,1:-1]   =0.25*(dx[0,1:-1]+dx[0,:-2])*(dy[0,1:-1])
-        at[1:-1,0]   =0.25*(dx[1:-1,0])*(dy[1:-1,0]+dy[:-2,0])
-        at[0,-1]     =0.25*(dx[0,-1])*(dy[0,-1])
-        at[-1,0]     =0.25*(dx[-1,0])*(dy[-1,0])
-        at[-1,1:-1]  =0.25*(dx[-1,1:-1]+dx[-1,:-2])*(dy[-1,1:-1])
-        at[1:-1,-1]  =0.25*(dx[1:-1,-1])*(dy[1:-1,-1]+dy[:-2,-1])
-        at[-1,-1]    =0.25*(dx[-1,-1])*(dy[-1,-1])
-        
-        # Calculate heat generated at each node
-#        sol=ct.Solution('')
-#        states=ct.SolutionArray(sol, numpy.shape(dx))
-#        Y_species={}
-#        for i in range(len(self.species)):
-#            Y_species[self.species[i]]=y_species[:,:,i]
-#        states.TPY=T,101325,Y_species
-        
-        
-        q_vol=0 # Volumetric heat generation rate
-        
-        q_source=q_vol*at
-        
-        return q_source
+    # Calculate mass source term
+    def Source_mass(self, deta, por, m_0):
+#        dm0=np.zeros_like(deta)
+        dm0=deta*(m_0)/por
+        dm1=deta*(m_0)/(1-por)
+#        dm[dm<10**(-9)]=0
+        return dm0,dm1
