@@ -180,8 +180,8 @@ class TwoDimDomain():
 #                self.mu_species[key]=np.zeros_like(self.E)
 #                self.mv_species[key]=np.zeros_like(self.E)
                 self.rho_species[key]=np.ones_like(self.E)*Species['Specie_IC'][i]
-                self.Cp_species[key]=np.ones_like(self.E)*Species['Specie_Cp'][i]
-                self.Cv_species[key]=np.ones_like(self.E)*Species['Specie_Cv'][i]
+#                self.Cp_species[key]=np.ones_like(self.E)*Species['Specie_Cp'][i]
+#                self.Cv_species[key]=np.ones_like(self.E)*Species['Specie_Cv'][i]
                 self.rho_0+=por[i]*self.rho_species[key]
                 i+=1
         
@@ -246,7 +246,27 @@ class TwoDimDomain():
             Cv[:]=self.Cv*(1-self.porosity)\
                 +self.Cp_calc.get_Cv(T_guess, self.pore_gas)*self.porosity
             T=self.E/Cv/rho
-        
+
+        # Specific heat (Cp) and diffusion coefficients (Dij)
+        if bool(self.rho_species):
+#            for i in range(len(self.species_keys)):
+##                Cp+=self.rho_species[self.species_keys[i]]*por[i]*self.Cp_species[self.species_keys[i]]/rho
+#                D[self.species_keys[i]][:]=self.Diff.get_Diff(T,self.species_keys[i])
+            # Products (only these have gas phases)
+            if self.species_keys[0]=='Ar':
+                # Argon as only gas specie
+                Cp=self.Cp_calc.get_Cp(T, 'Ar')
+            else:
+                # Special mix of products, no argon or air present
+#                Cv_Al2O3=self.Cp_calc.get_Cp(T,'Al2O3')
+                Cv_Al2O3=self.Cp_calc.get_Cp(np.ones_like(T)*2327,'Al2O3')
+#                Cv_Cu=self.Cp_calc.get_Cp(T,'Cu')
+                Cv_Cu=self.Cp_calc.get_Cp(np.ones_like(T)*2843,'Cu')
+                
+#                Cp=self.rho_species[self.species_keys[0]]*por[0]*(0.351*Cv_Al2O3+0.649*Cv_Cu)/rho
+                Cp=(0.351*Cv_Al2O3+0.649*Cv_Cu)
+#                Cp=Cv
+                
         # Thermal conductivity
         if (type(self.k) is str) and (st.find(self.k, 'eta')>=0):
 #            k=(self.eta/self.k1+(1-self.eta)/self.k0)**(-1)
