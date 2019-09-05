@@ -29,9 +29,10 @@ import os
 import sys
 import string as st
 import matplotlib as mtplt
+from matplotlib import pyplot as plt
 #from mpl_toolkits.mplot3d import Axes3D
 
-mtplt.pyplot.ioff()
+plt.ioff()
 
 print('######################################################')
 print('#            2D Conduction Post-processing           #')
@@ -165,86 +166,86 @@ for time in times:
         Y_tot=np.zeros_like(Y)
     
     # Temperature contour
-    fig=mtplt.pyplot.figure(figsize=fig_size)
-    mtplt.pyplot.contourf(X*1000, Y*1000, T, alpha=0.5, cmap=cmap_choice, extend='both',levels=lvl_temp)#, vmin=270, vmax=2000)  
-    cb=mtplt.pyplot.colorbar()
+    fig=plt.figure(figsize=fig_size)
+    plt.contourf(X*1000, Y*1000, T, alpha=0.5, cmap=cmap_choice, extend='both',levels=lvl_temp)#, vmin=270, vmax=2000)  
+    cb=plt.colorbar()
     cb.locator=mtplt.ticker.MaxNLocator(nbins=temp_pts)
     cb.update_ticks()
-    mtplt.pyplot.xlabel('$x$ (mm)')
-    mtplt.pyplot.ylabel('$y$ (mm)')
-#    mtplt.pyplot.clim(300, 3000)
-    mtplt.pyplot.xlim([xmin,xmax])
-    mtplt.pyplot.ylim([ymin,ymax])
-    mtplt.pyplot.title('Temperature distribution t='+time+' ms');
+    plt.xlabel('$x$ (mm)')
+    plt.ylabel('$y$ (mm)')
+#    plt.clim(300, 3000)
+    plt.xlim([xmin,xmax])
+    plt.ylim([ymin,ymax])
+    plt.title('Temperature distribution t='+time+' ms');
     fig.savefig('T_'+time+'.png',dpi=300)
-    mtplt.pyplot.close(fig)
+    plt.close(fig)
     
     # 1D temperature profile at centreline
     # if st.find(OneD_graphs,'True')>=0:
-        # fig=mtplt.pyplot.figure(figsize=fig_size)
-        # mtplt.pyplot.plot(Y[:,1], T[:,int(len(T[0,:])/2)])
-        # mtplt.pyplot.xlabel('$y$ (m)')
-        # mtplt.pyplot.ylabel('T (K)')
-#        mtplt.pyplot.xlim([xmin,xmax])
-#        mtplt.pyplot.ylim([temp_min,temp_max])
-        # mtplt.pyplot.title('Centreline Temperature distribution t='+time)
+        # fig=plt.figure(figsize=fig_size)
+        # plt.plot(Y[:,1], T[:,int(len(T[0,:])/2)])
+        # plt.xlabel('$y$ (m)')
+        # plt.ylabel('T (K)')
+#        plt.xlim([xmin,xmax])
+#        plt.ylim([temp_min,temp_max])
+        # plt.title('Centreline Temperature distribution t='+time)
         # fig.savefig('T_1D_'+time+'.png',dpi=300)
-        # mtplt.pyplot.close(fig)
+        # plt.close(fig)
     
     if st.find(source,'True')>=0:
         # Progress contour
-        fig=mtplt.pyplot.figure(figsize=fig_size)
-        mtplt.pyplot.contourf(X*1000, Y*1000, eta, alpha=0.5, cmap=cmap_choice, levels=lvl_eta)#, vmin=0.0, vmax=1.0)  
-        cb=mtplt.pyplot.colorbar()
+        fig=plt.figure(figsize=fig_size)
+        plt.contourf(X*1000, Y*1000, eta, alpha=0.5, cmap=cmap_choice, levels=lvl_eta)#, vmin=0.0, vmax=1.0)  
+        cb=plt.colorbar()
         cb.locator=mtplt.ticker.MaxNLocator(nbins=eta_pts)
         cb.update_ticks()
-        mtplt.pyplot.xlabel('$x$ (mm)')
-        mtplt.pyplot.ylabel('$y$ (mm)')
-    #    mtplt.pyplot.clim(0.0, 1.0)
-        mtplt.pyplot.xlim([xmin,xmax])
-        mtplt.pyplot.ylim([ymin,ymax])
-        mtplt.pyplot.title('Progress distribution t='+time+' ms');
+        plt.xlabel('$x$ (mm)')
+        plt.ylabel('$y$ (mm)')
+    #    plt.clim(0.0, 1.0)
+        plt.xlim([xmin,xmax])
+        plt.ylim([ymin,ymax])
+        plt.title('Progress distribution t='+time+' ms');
         fig.savefig('eta_'+time+'.png',dpi=300)
-        mtplt.pyplot.close(fig)
+        plt.close(fig)
         
         # Reaction rate contour
         phi=A0*(1-eta)*np.exp(-Ea/8.314/T)
-        fig=mtplt.pyplot.figure(figsize=fig_size)
-        mtplt.pyplot.contourf(X*1000, Y*1000, phi, alpha=0.5, cmap=cmap_choice)#, vmin=0.0, vmax=1.0)  
-        mtplt.pyplot.colorbar(format='%.2e')
-        mtplt.pyplot.xlabel('$x$ (mm)')
-        mtplt.pyplot.ylabel('$y$ (mm)')
-    #    mtplt.pyplot.clim(0.0, 1.0)
-        mtplt.pyplot.xlim([xmin,xmax])
-        mtplt.pyplot.ylim([ymin,ymax])
-        mtplt.pyplot.title('Reaction rate t='+time+' ms');
+        fig=plt.figure(figsize=fig_size)
+        plt.contourf(X*1000, Y*1000, phi, alpha=0.5, cmap=cmap_choice)#, vmin=0.0, vmax=1.0)  
+        plt.colorbar(format='%.2e')
+        plt.xlabel('$x$ (mm)')
+        plt.ylabel('$y$ (mm)')
+    #    plt.clim(0.0, 1.0)
+        plt.xlim([xmin,xmax])
+        plt.ylim([ymin,ymax])
+        plt.title('Reaction rate t='+time+' ms');
         fig.savefig('Phi_'+time+'.png',dpi=300)
-        mtplt.pyplot.close(fig)
+        plt.close(fig)
         
         # 1D Reaction rate profile at centreline
         if st.find(OneD_graphs,'True')>=0:
-            fig=mtplt.pyplot.figure(figsize=fig_size)
-            mtplt.pyplot.plot(Y[:,1]*1000, phi[:,int(len(T[0,:])/2)])
-            mtplt.pyplot.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
-            mtplt.pyplot.xlabel('$y$ (mm)')
-            mtplt.pyplot.ylabel('$d\eta/dt$ ($s^{-1}$)')
-            mtplt.pyplot.xlim([xmin,xmax])
-            mtplt.pyplot.title('Centreline Reaction rate t='+time+' ms')
+            fig=plt.figure(figsize=fig_size)
+            plt.plot(Y[:,1]*1000, phi[:,int(len(T[0,:])/2)])
+            plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+            plt.xlabel('$y$ (mm)')
+            plt.ylabel('$d\eta/dt$ ($s^{-1}$)')
+            plt.xlim([xmin,xmax])
+            plt.title('Centreline Reaction rate t='+time+' ms')
             fig.savefig('Phi_1D_'+time+'.png',dpi=300)
-            mtplt.pyplot.close(fig)
+            plt.close(fig)
     try:
         P=np.load('P_'+time+'.npy', False)
-        fig=mtplt.pyplot.figure(figsize=fig_size)
-        mtplt.pyplot.contourf(X*1000, Y*1000, P, alpha=0.5, cmap=cmap_choice)#, vmin=270, vmax=2000)  
-        mtplt.pyplot.colorbar()
-        mtplt.pyplot.xlabel('$x$ (mm)')
-        mtplt.pyplot.ylabel('$y$ (mm)')
-    #    mtplt.pyplot.clim(300, 10000)
-        mtplt.pyplot.xlim([xmin,xmax])
-        mtplt.pyplot.ylim([ymin,ymax])
-        mtplt.pyplot.title('Pressure t='+time+' ms');
+        fig=plt.figure(figsize=fig_size)
+        plt.contourf(X*1000, Y*1000, P, alpha=0.5, cmap=cmap_choice)#, vmin=270, vmax=2000)  
+        plt.colorbar()
+        plt.xlabel('$x$ (mm)')
+        plt.ylabel('$y$ (mm)')
+    #    plt.clim(300, 10000)
+        plt.xlim([xmin,xmax])
+        plt.ylim([ymin,ymax])
+        plt.title('Pressure t='+time+' ms');
         fig.savefig('P_'+time+'.png',dpi=300)
-        mtplt.pyplot.close(fig)
+        plt.close(fig)
     except:
         print 'Processed '+time
         continue
@@ -252,17 +253,17 @@ for time in times:
         # Mass fraction contours
     for i in range(len(titles)):
         Y_0=np.load('rho_'+titles[i]+'_'+time+'.npy', False)
-        fig=mtplt.pyplot.figure(figsize=fig_size)
-        mtplt.pyplot.contourf(X*1000, Y*1000, Y_0, alpha=0.5, cmap=cmap_choice)#, vmin=0.0, vmax=1.0)  
-        mtplt.pyplot.colorbar()
-        mtplt.pyplot.xlabel('$x$ (mm)')
-        mtplt.pyplot.ylabel('$y$ (mm)')
-    #    mtplt.pyplot.clim(0.0, 1.0)
-        mtplt.pyplot.xlim([xmin,xmax])
-        mtplt.pyplot.ylim([ymin,ymax])
-        mtplt.pyplot.title('Density; $'+titles[i]+'$, t='+time+' ms');
+        fig=plt.figure(figsize=fig_size)
+        plt.contourf(X*1000, Y*1000, Y_0, alpha=0.5, cmap=cmap_choice)#, vmin=0.0, vmax=1.0)  
+        plt.colorbar()
+        plt.xlabel('$x$ (mm)')
+        plt.ylabel('$y$ (mm)')
+    #    plt.clim(0.0, 1.0)
+        plt.xlim([xmin,xmax])
+        plt.ylim([ymin,ymax])
+        plt.title('Density; $'+titles[i]+'$, t='+time+' ms');
         fig.savefig('rho_'+titles[i]+'_'+time+'.png',dpi=300)
-        mtplt.pyplot.close(fig)
+        plt.close(fig)
         Y_tot+=Y_0
             
         
@@ -271,35 +272,35 @@ for time in times:
 
 if st.find(OneD_graphs,'True')>=0:
     print 'Creating 1D plots'
-    fig=mtplt.pyplot.figure(figsize=fig_size)
+    fig=plt.figure(figsize=fig_size)
     for time in times:
         T=np.load('T_'+time+'.npy', False)
         # 1D temperature profile at centreline
-        mtplt.pyplot.plot(Y[:,1]*1000, T[:,int(len(T[0,:])/2)], label='t='+time)
-    mtplt.pyplot.xlabel('$y$ (mm)')
-    mtplt.pyplot.ylabel('T (K)')
-    mtplt.pyplot.xlim([xmin,xmax])
-    mtplt.pyplot.ylim([temp_min,temp_max])
-    mtplt.pyplot.legend()
-    mtplt.pyplot.title('Centreline Temperature Evolution')
+        plt.plot(Y[:,1]*1000, T[:,int(len(T[0,:])/2)], label='t='+time)
+    plt.xlabel('$y$ (mm)')
+    plt.ylabel('T (K)')
+    plt.xlim([xmin,xmax])
+    plt.ylim([temp_min,temp_max])
+    plt.legend()
+    plt.title('Centreline Temperature Evolution')
     fig.savefig('T_1D.png',dpi=300)
-    mtplt.pyplot.close(fig)
+    plt.close(fig)
     
     if st.find(source,'True')>=0:
-        fig=mtplt.pyplot.figure(figsize=fig_size)
+        fig=plt.figure(figsize=fig_size)
         for time in times:
             eta=np.load('eta_'+time+'.npy', False)
             T=np.load('T_'+time+'.npy', False)
             phi=A0*(1-eta)*np.exp(-Ea/8.314/T)
             # 1D Reaction rate profile at centreline
-            mtplt.pyplot.plot(Y[:,1]*1000, phi[:,int(len(T[0,:])/2)], label='t='+time)
-        mtplt.pyplot.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
-        mtplt.pyplot.xlabel('$y$ (mm)')
-        mtplt.pyplot.ylabel('$d\eta/dt$ ($s^{-1}$)')
-        mtplt.pyplot.xlim([xmin,xmax])
-        mtplt.pyplot.legend()
-        mtplt.pyplot.title('Centreline Reaction rate Evolution')
+            plt.plot(Y[:,1]*1000, phi[:,int(len(T[0,:])/2)], label='t='+time)
+        plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+        plt.xlabel('$y$ (mm)')
+        plt.ylabel('$d\eta/dt$ ($s^{-1}$)')
+        plt.xlim([xmin,xmax])
+        plt.legend()
+        plt.title('Centreline Reaction rate Evolution')
         fig.savefig('Phi_1D.png',dpi=300)
-        mtplt.pyplot.close(fig)
+        plt.close(fig)
 
 print '\nPost-processing complete'
