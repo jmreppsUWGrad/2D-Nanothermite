@@ -10,7 +10,7 @@
 #	Times: Times in file names separated by commas OR ALL for all files
 ######################################################
 
-Directory:Tests\Axi\geom\5
+Directory:Tests\Axi\noSource\4
 Times:ALL
 #Times:2.000053,6.000046
 
@@ -21,13 +21,13 @@ Times:ALL
 #	1D_Plots: True OR None; output 1D plots along centre
 ######################################################
 
-x_min:0
-x_max:ALL
-y_min:0
-y_max:ALL
+x_min:2
+x_max:3
+y_min:0.8
+y_max:1
 
 Temp_min:300
-Temp_max:3000
+Temp_max:900
 Temp_pts:10
 
 eta_pts:2
