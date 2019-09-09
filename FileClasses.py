@@ -23,7 +23,7 @@ keys_mesh=['bias_type_x','bias_size_x','bias_type_y','bias_size_y']
                
 keys_Sources=['Source_Uniform','Source_Kim','Ea','A0','dH', 'Ignition']
 
-keys_Species=['Species','Specie_rho','Specie_IC','Specie_Cp']
+keys_Species=['Species','Specie_IC']
 
 keys_Time_adv=['Fo','CFL','dt','total_time_steps', 'total_time','Restart',\
                'Time_Scheme','Convergence','Max_iterations','Number_Data_Output']
