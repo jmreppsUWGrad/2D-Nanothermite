@@ -175,16 +175,9 @@ class TwoDimDomain():
         por=[self.porosity, 1-self.porosity]
         if bool(Species):
             self.species_keys=Species['keys']
-            i=0
-            for key in self.species_keys:
-#                self.mu_species[key]=np.zeros_like(self.E)
-#                self.mv_species[key]=np.zeros_like(self.E)
-                self.rho_species[key]=np.ones_like(self.E)*Species['Specie_IC'][i]
-#                self.Cp_species[key]=np.ones_like(self.E)*Species['Specie_Cp'][i]
-#                self.Cv_species[key]=np.ones_like(self.E)*Species['Specie_Cv'][i]
-                self.rho_0+=por[i]*self.rho_species[key]
-                i+=1
-        
+            for i in range(len(self.species_keys)):
+                self.rho_species[self.species_keys[i]]=np.ones_like(self.E)*Species['Specie_IC'][i]
+                self.rho_0+=por[i]*self.rho_species[self.species_keys[i]]
         
     # Calculate and return the dimensions of control volumes
     def CV_dim(self):
