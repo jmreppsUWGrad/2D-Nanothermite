@@ -161,30 +161,14 @@ if st.find(settings['Restart'], 'None')<0:
         for i in range(len(Species['Species'])):
             rho_species=np.load('rho_'+Species['Species'][i]+'_'+time_max+'.npy')
             domain.rho_species[Species['Species'][i]]=mpi.split_var(rho_species, domain)
-            domain.m_0[:,:]+=Species['Specie_IC'][i]
-        if domain.proc_left<0:
-            domain.m_0[:,0] *=0.5
-        if domain.proc_right<0:
-            domain.m_0[:,-1]*=0.5
-        if domain.proc_bottom<0:
-            domain.m_0[0,:] *=0.5
-        if domain.proc_top<0:
-            domain.m_0[-1,:]*=0.5
+            domain.rho_0[:,:]+=Species['Specie_IC'][i]
         del rho_species, P
             
 if (bool(domain.rho_species)) and (st.find(settings['Restart'], 'None')>=0):
     for i in range(len(Species['Species'])):
 #        domain.rho_species[Species['Species'][i]][:,:]=Species['Specie_IC'][i]
         domain.rho_species[Species['Species'][i]][:,:]=Species['Specie_IC'][i]
-        if domain.proc_left<0:
-            domain.rho_species[Species['Species'][i]][:,0] *=0.5
-        if domain.proc_right<0:
-            domain.rho_species[Species['Species'][i]][:,-1]*=0.5
-        if domain.proc_bottom<0:
-            domain.rho_species[Species['Species'][i]][0,:] *=0.5
-        if domain.proc_top<0:
-            domain.rho_species[Species['Species'][i]][-1,:]*=0.5
-        domain.m_0+=domain.rho_species[Species['Species'][i]] 
+        domain.rho_0+=domain.rho_species[Species['Species'][i]] 
 rho,Cv=domain.calcProp(T_guess=T, init=True)
 domain.E=rho*Cv*T
 del rho,Cv,T
