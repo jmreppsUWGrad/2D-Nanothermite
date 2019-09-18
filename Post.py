@@ -93,6 +93,8 @@ for line in fin:
             temp_pts=int(line[1])
         elif line[0]=='eta_pts':
             eta_pts=int(line[1])
+        elif line[0]=='Phi_Plots':
+            Phi_graphs=line[1]
 
 fin.close()
 
@@ -209,18 +211,18 @@ for time in times:
         plt.close(fig)
         
         # Reaction rate contour
-        phi=A0*(1-eta)*np.exp(-Ea/8.314/T)
-        fig=plt.figure(figsize=fig_size)
-        plt.contourf(X*1000, Y*1000, phi, alpha=0.5, cmap=cmap_choice)#, vmin=0.0, vmax=1.0)  
-        plt.colorbar(format='%.2e')
-        plt.xlabel('$x$ (mm)')
-        plt.ylabel('$y$ (mm)')
-    #    plt.clim(0.0, 1.0)
-        plt.xlim([xmin,xmax])
-        plt.ylim([ymin,ymax])
-        plt.title('Reaction rate t='+time+' ms');
-        fig.savefig('Phi_'+time+'.png',dpi=300)
-        plt.close(fig)
+        if st.find(Phi_graphs,'True')>=0:
+            phi=A0*(1-eta)*np.exp(-Ea/8.314/T)
+            fig=plt.figure(figsize=fig_size)
+            plt.contourf(X*1000, Y*1000, phi, alpha=0.5, cmap=cmap_choice)#, vmin=0.0, vmax=1.0)  
+            plt.colorbar(format='%.2e')
+            plt.xlabel('$x$ (mm)')
+            plt.ylabel('$y$ (mm)')
+            plt.xlim([xmin,xmax])
+            plt.ylim([ymin,ymax])
+            plt.title('Reaction rate t='+time+' ms');
+            fig.savefig('Phi_'+time+'.png',dpi=300)
+            plt.close(fig)
         
         # 1D Reaction rate profile at centreline
         if st.find(OneD_graphs,'True')>=0:

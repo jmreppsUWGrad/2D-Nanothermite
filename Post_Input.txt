@@ -10,26 +10,28 @@
 #	Times: Times in file names separated by commas OR ALL for all files
 ######################################################
 
-Directory:Tests\Axi\noSource\4
+Directory:Tests\Axi\lambda\2
 Times:ALL
-#Times:2.000053,6.000046
+#Times:0.366674,0.375012,0.383351,0.391671,0.400009
 
 ######################################################
 #			Plots
 #	Indicate coordinates to focus plots on; None for max if end of domain
 #	Units are mm
 #	1D_Plots: True OR None; output 1D plots along centre
+#	Phi_Plots: True OR None; output reaction rate contours
 ######################################################
 
-x_min:2
-x_max:3
-y_min:0.8
-y_max:1
+x_min:0
+x_max:ALL
+y_min:0
+y_max:ALL
 
-Temp_min:300
-Temp_max:900
+Temp_min:400
+Temp_max:4000
 Temp_pts:10
 
 eta_pts:2
 
 1D_Plots:None
+Phi_Plots:None
