@@ -268,7 +268,9 @@ class TwoDimDomain():
 #            kf=self.k_calc.get_k(T, self.pore_gas)
 #            k[:,:]=ks*(kf/ks)**(self.porosity)
         elif type(self.k) is float:
-            k[:,:]=self.k
+            k[:,:]=20
+            k[:,-10:]=80 # Right side
+            k[-10:,:]=150 # Top surface
 #            kf=self.k_calc.get_k(T, self.pore_gas)
 #            k[:,:]=self.k*(kf/self.k)**(self.porosity)
         
