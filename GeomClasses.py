@@ -176,8 +176,8 @@ class TwoDimDomain():
         if bool(Species):
             self.species_keys=Species['keys']
             for i in range(len(self.species_keys)):
-                self.rho_species[self.species_keys[i]]=np.ones_like(self.E)*Species['Specie_IC'][i]
-            self.rho_0+=por[1]*self.rho_species[self.species_keys[1]]
+                self.rho_species[self.species_keys[i]]=por[i]*np.ones_like(self.E)*Species['Specie_IC'][i]
+            self.rho_0+=self.rho_species[self.species_keys[1]]
         
     # Calculate and return the dimensions of control volumes
     def CV_dim(self):
@@ -207,8 +207,8 @@ class TwoDimDomain():
                 Cv=self.eta*self.Cv1+(1-self.eta)*(self.Cv0)
             else:
                 Cv=self.Cv
-            rhoC=(1-self.porosity)*self.rho_species[self.species_keys[1]]*Cv
-            rhoC+=self.porosity*self.rho_species[self.species_keys[0]]*self.Cp_calc.get_Cv(T_guess, self.pore_gas)
+            rhoC=self.rho_species[self.species_keys[1]]*Cv
+            rhoC+=self.rho_species[self.species_keys[0]]*self.Cp_calc.get_Cv(T_guess, self.pore_gas)
             rho=self.rho_species[self.species_keys[1]]
             T=self.E/rhoC
             # Iteratively solve temperature (temperature dependent properties)

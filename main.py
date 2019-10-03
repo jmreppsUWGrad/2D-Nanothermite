@@ -164,11 +164,11 @@ if st.find(settings['Restart'], 'None')<0:
             domain.rho_0[:,:]+=Species['Specie_IC'][i]
         del rho_species, P
             
-if (bool(domain.rho_species)) and (st.find(settings['Restart'], 'None')>=0):
-    for i in range(len(Species['Species'])):
+#if (bool(domain.rho_species)) and (st.find(settings['Restart'], 'None')>=0):
+#    for i in range(len(Species['Species'])):
+##        domain.rho_species[Species['Species'][i]][:,:]=Species['Specie_IC'][i]
 #        domain.rho_species[Species['Species'][i]][:,:]=Species['Specie_IC'][i]
-        domain.rho_species[Species['Species'][i]][:,:]=Species['Specie_IC'][i]
-        domain.rho_0+=domain.rho_species[Species['Species'][i]] 
+#        domain.rho_0+=domain.rho_species[Species['Species'][i]] 
 rhoC=domain.calcProp(T_guess=T, init=True)
 domain.E=rhoC*T
 del rhoC,T
