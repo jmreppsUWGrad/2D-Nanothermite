@@ -21,7 +21,7 @@ keys_Settings=['MPI_Processes','MPI_arrangment','Domain','Length','Width',\
 
 keys_mesh=['bias_type_x','bias_size_x','bias_type_y','bias_size_y']
                
-keys_Sources=['Source_Uniform','Source_Kim','Ea','A0','dH', 'Ignition']
+keys_Sources=['Source_Uniform','Source_Kim','Ea','A0','dH', 'Ignition', 'gas_gen']
 
 keys_Species=['Species','Specie_IC']
 

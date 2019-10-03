@@ -45,7 +45,7 @@ class TwoDimSolver():
         self.comm=comm
         
         # Define source terms and pointer to source object here
-        self.get_source=Source_Comb.Source_terms(Sources['Ea'], Sources['A0'], Sources['dH'])
+        self.get_source=Source_Comb.Source_terms(Sources['Ea'], Sources['A0'], Sources['dH'], Sources['gas_gen'])
         self.source_unif=Sources['Source_Uniform']
         self.source_Kim=Sources['Source_Kim']
         self.ign=st.split(Sources['Ignition'], ',')
