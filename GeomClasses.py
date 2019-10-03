@@ -177,7 +177,7 @@ class TwoDimDomain():
             self.species_keys=Species['keys']
             for i in range(len(self.species_keys)):
                 self.rho_species[self.species_keys[i]]=np.ones_like(self.E)*Species['Specie_IC'][i]
-                self.rho_0+=por[i]*self.rho_species[self.species_keys[i]]
+            self.rho_0+=por[1]*self.rho_species[self.species_keys[1]]
         
     # Calculate and return the dimensions of control volumes
     def CV_dim(self):
