@@ -169,9 +169,9 @@ if (bool(domain.rho_species)) and (st.find(settings['Restart'], 'None')>=0):
 #        domain.rho_species[Species['Species'][i]][:,:]=Species['Specie_IC'][i]
         domain.rho_species[Species['Species'][i]][:,:]=Species['Specie_IC'][i]
         domain.rho_0+=domain.rho_species[Species['Species'][i]] 
-rho,Cv=domain.calcProp(T_guess=T, init=True)
-domain.E=rho*Cv*T
-del rho,Cv,T
+rhoC=domain.calcProp(T_guess=T, init=True)
+domain.E=rhoC*T
+del rhoC,T
 ##########################################################################
 # ------------------------Write Input File settings to output directory
 ##########################################################################

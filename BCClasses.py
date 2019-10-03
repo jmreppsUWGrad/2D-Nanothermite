@@ -40,13 +40,13 @@ class BCs():
 #        return E
     
     # Energy BCs
-    def Energy(self, E, T_prev, dt, rho, Cv, hx, hy):
+    def Energy(self, E, T_prev, dt, rhoC, hx, hy):
         # Left face
         for i in range(len(self.BCs['bc_left_E'])/3):
             st=self.BCs['bc_left_E'][2+3*i][0]
             en=self.BCs['bc_left_E'][2+3*i][1]
             if self.BCs['bc_left_E'][3*i]=='T':
-                E[st:en,0]=self.BCs['bc_left_E'][1+3*i]*rho[st:en,0]*Cv[st:en,0]
+                E[st:en,0]=self.BCs['bc_left_E'][1+3*i]*rhoC[st:en,0]
                 
             elif self.domain!='Axisymmetric':
                 if self.BCs['bc_left_E'][3*i]=='F':
@@ -65,7 +65,7 @@ class BCs():
             st=self.BCs['bc_right_E'][2+3*i][0]
             en=self.BCs['bc_right_E'][2+3*i][1]
             if self.BCs['bc_right_E'][3*i]=='T':
-                E[st:en,-1]=self.BCs['bc_right_E'][1+3*i]*rho[st:en,-1]*Cv[st:en,-1]
+                E[st:en,-1]=self.BCs['bc_right_E'][1+3*i]*rhoC[st:en,-1]
                 
             else:
                 if self.BCs['bc_right_E'][3*i]=='F':
@@ -87,7 +87,7 @@ class BCs():
             st=self.BCs['bc_south_E'][2+3*i][0]
             en=self.BCs['bc_south_E'][2+3*i][1]
             if self.BCs['bc_south_E'][3*i]=='T':
-                E[0,st:en]=self.BCs['bc_south_E'][1+3*i]*rho[0,st:en]*Cv[0,st:en]
+                E[0,st:en]=self.BCs['bc_south_E'][1+3*i]*rhoC[0,st:en]
             
             else:
                 if self.BCs['bc_south_E'][3*i]=='F':
@@ -105,7 +105,7 @@ class BCs():
             st=self.BCs['bc_north_E'][2+3*i][0]
             en=self.BCs['bc_north_E'][2+3*i][1]
             if self.BCs['bc_north_E'][3*i]=='T':
-                E[-1,st:en]=self.BCs['bc_north_E'][1+3*i]*rho[-1,st:en]*Cv[-1,st:en]
+                E[-1,st:en]=self.BCs['bc_north_E'][1+3*i]*rhoC[-1,st:en]
             
             else:
                 if self.BCs['bc_north_E'][3*i]=='F':

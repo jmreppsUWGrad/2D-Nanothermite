@@ -271,10 +271,10 @@ class TwoDimSolver():
                     i-=1
         
     # Time step check with dx, dy, Fo number
-    def getdt(self, k, rho, Cv, T):
+    def getdt(self, k, rhoC, T):
         # Time steps depending on Fo
-        dt_1=np.amin(self.Fo*rho*Cv/k*(self.dx)**2)
-        dt_2=np.amin(self.Fo*rho*Cv/k*(self.dy)**2)
+        dt_1=np.amin(self.Fo*rhoC/k*(self.dx)**2)
+        dt_2=np.amin(self.Fo*rhoC/k*(self.dy)**2)
         
         # Time steps depending on CFL (if flow model used)
         if bool(self.Domain.rho_species):
@@ -297,7 +297,7 @@ class TwoDimSolver():
     def Advance_Soln_Cond(self, nt, t, hx, hy, ign):
         max_Y,min_Y=0,1
         # Calculate properties
-        T_c, k, rho, Cv, Cp, D=self.Domain.calcProp(self.Domain.T_guess)
+        T_c, k, rho, rhoC, Cp=self.Domain.calcProp(self.Domain.T_guess)
         
         # Copy needed variables and set pointers to other variables
         mu=self.Domain.mu
@@ -306,20 +306,14 @@ class TwoDimSolver():
             rho_spec=copy.deepcopy(self.Domain.rho_species)
             species=self.Domain.species_keys
 #            Cp_spec=self.Domain.Cp_species
-#            mu_c=copy.deepcopy(self.Domain.mu_species)
-#            mv_c=copy.deepcopy(self.Domain.mv_species)
-            
-            # Velocity
-#            u=mu_c[species[0]]/m_c[species[0]]
-#            v=mv_c[species[0]]/m_c[species[0]]
         
         if self.dt=='None':
-            dt=self.getdt(k, rho, Cv, T_c)
+            dt=self.getdt(k, rhoC, T_c)
             # Collect all dt from other processes and send minimum
             dt=self.comm.reduce(dt, op=MPI.MIN, root=0)
             dt=self.comm.bcast(dt, root=0)
         else:
-            dt=min(self.dt,self.getdt(k, rho, Cv, T_c))
+            dt=min(self.dt,self.getdt(k, rhoC, T_c))
             # Collect all dt from other processes and send minimum
             dt=self.comm.reduce(dt, op=MPI.MIN, root=0)
             dt=self.comm.bcast(dt, root=0)
@@ -336,23 +330,16 @@ class TwoDimSolver():
         if self.source_unif!='None':
             E_unif      = self.source_unif
         if self.source_Kim=='True':
-#            self.Domain.eta=self.Domain.rho_species[:,:,2]/0.25
             E_kim, deta =self.get_source.Source_Comb_Kim(rho, T_c, self.Domain.eta, dt)
-#            E_kim, deta =self.get_source.Source_Comb_Umbrajkar(rho, T_c, self.Domain.eta, dt)
-        
         ###################################################################
         # Conservation of Mass
         ###################################################################
         if bool(self.Domain.rho_species):
             # Adjust pressure
-#            print '     Gas mass: %f, %f'%(np.amax(self.Domain.rho_species['g'])*10**6,np.amin(self.Domain.rho_species['g'])*10**6)
-#            print '     Gas density: %f, %f'%(np.amax(rho_spec['g']),np.amin(rho_spec['g']))
-            self.Domain.P=self.Domain.rho_species[species[0]]*self.Domain.R*T_c
+            self.Domain.P=self.Domain.rho_species[species[0]]/self.Domain.porosity*self.Domain.R*T_c
     #        self.BCs.P(self.Domain.P)
-#            print '     Pressure: %f, %f'%(np.amax(self.Domain.P),np.amin(self.Domain.P))
             
             # Use Darcy's law to directly calculate the velocities at the faces
-            # Ingoing fluxes
             flx=np.zeros_like(self.Domain.P)
             fly=np.zeros_like(self.Domain.P)
             
@@ -399,18 +386,10 @@ class TwoDimSolver():
                 *self.interpolate(rho_spec[species[0]][1:,:], rho_spec[species[0]][:-1,:], 'Linear')\
                 *(-perm/mu*(self.Domain.P[1:,:]-self.Domain.P[:-1,:])/self.dy[:-1,:])
                 
-#            print '    Gas fluxes in x: %f, %f'%(np.amax(flx)*10**(9),np.amin(flx)*10**(9))
-#            print '    Gas fluxes in y: %f, %f'%(np.amax(fly)*10**(9),np.amin(fly)*10**(9))
-            
             self.Domain.rho_species[species[0]]+=flx+fly
             
             # Source terms
-    #        dm=deta*dt*(m_c[species[0]]+m_c[species[1]])
-#            dm=np.zeros_like(deta)
             dm0,dm1=self.get_source.Source_mass(deta, self.Domain.porosity, self.Domain.rho_0)
-#            dm[dm<10**(-9)]=0
-#            print '     Mass generated: %f, %f'%(np.amax(dm)*10**(9),np.amin(dm)*10**(9))
-    #        (m_c[species[0]]+m_c[species[1]])
             self.Domain.rho_species[species[0]]+=dm0*dt
             self.Domain.rho_species[species[1]]-=dm1*dt
                     
@@ -422,89 +401,6 @@ class TwoDimSolver():
             # Apply BCs
 #            self.BCs.mass(self.Domain.rho_species[species[0]], self.Domain.P, Ax, Ay, vol)
         
-        ###################################################################
-        # Conservation of Momentum (x direction; gas)
-        ###################################################################
-        # Fluxes
-#        self.Domain.mu_species[species[0]][:,1:]+=Ax[:,1:]*dt\
-#            *0.5*(mu_c[species[0]][:,1:]+mu_c[species[0]][:,:-1])*self.interpolate(u[:,1:], u[:,:-1], 'Linear')
-#        self.Domain.mu_species[species[0]][1:,:]+=Ay[1:,:]*dt\
-#            *0.5*(mu_c[species[0]][1:,:]+mu_c[species[0]][:-1,:])*self.interpolate(v[1:,:], v[:-1,:], 'Linear')
-#        self.Domain.mu_species[species[0]][:,:-1]-=Ax[:,:-1]*dt\
-#            *0.5*(mu_c[species[0]][:,1:]+mu_c[species[0]][:,:-1])*self.interpolate(u[:,1:], u[:,:-1], 'Linear')
-#        self.Domain.mu_species[species[0]][:-1,:]-=Ay[:-1,:]*dt\
-#            *0.5*(mu_c[species[0]][1:,:]+mu_c[species[0]][:-1,:])*self.interpolate(v[1:,:], v[:-1,:], 'Linear')
-#        
-#        # Pressure
-#        self.Domain.mu_species[species[0]][:,1:]+=Ax[:,1:]*dt\
-#            *0.5*(self.Domain.P[:,1:]+self.Domain.P[:,:-1])
-#        self.Domain.mu_species[species[0]][:,:-1]-=Ax[:,:-1]*dt\
-#            *0.5*(self.Domain.P[:,1:]+self.Domain.P[:,:-1])
-#                
-#        # Porous medium losses
-#        self.Domain.mu_species[species[0]]-=mu/perm*u*vol*dt
-#        
-#        ###################################################################
-#        # Conservation of Momentum (y direction; gas)
-#        ###################################################################
-#        # Fluxes
-#        self.Domain.mv_species[species[0]][:,1:]+=Ax[:,1:]*dt\
-#            *0.5*(mv_c[species[0]][:,1:]+mv_c[species[0]][:,:-1])*0.5*(u[:,1:]+u[:,:-1])
-#        self.Domain.mv_species[species[0]][1:,:]+=Ay[1:,:]*dt\
-#            *0.5*(mv_c[species[0]][1:,:]+mv_c[species[0]][:-1,:])*0.5*(v[1:,:]+v[:-1,:])
-#        self.Domain.mv_species[species[0]][:,:-1]-=Ax[:,:-1]*dt\
-#            *0.5*(mv_c[species[0]][:,1:]+mv_c[species[0]][:,:-1])*0.5*(u[:,1:]+u[:,:-1])
-#        self.Domain.mv_species[species[0]][:-1,:]-=Ay[:-1,:]*dt\
-#            *0.5*(mv_c[species[0]][1:,:]+mv_c[species[0]][:-1,:])*0.5*(v[1:,:]+v[:-1,:])
-#        
-#        # Pressure
-#        self.Domain.mv_species[species[0]][1:,:]+=Ay[1:,:]*dt\
-#            *0.5*(self.Domain.P[1:,:]+self.Domain.P[:-1,:])
-#        self.Domain.mv_species[species[0]][:-1,:]-=Ay[:-1,:]*dt\
-#            *0.5*(self.Domain.P[1:,:]+self.Domain.P[:-1,:])
-#                
-#        # Porous medium losses
-#        self.Domain.mu_species[species[0]]-=mu/perm*v*vol*dt
-        
-        
-        ###################################################################
-        # Conservation of species
-        ###################################################################
-#        if bool(self.Domain.m_species):
-#            # Mole ratios
-#            mole_ratio={}
-#            mole_ratio[species[0]]=-2.0/5 # Al
-#            mole_ratio[species[1]]=-3.0/5 # CuO
-#            mole_ratio[species[2]]=1.0/4  # Al2O3
-#            mole_ratio[species[3]]=3.0/4  # Cu
-#            
-#            for i in species:
-#                # Calculate flux coefficients
-#                aW,aE,aS,aN=self.get_Coeff(self.dx,self.dy, dt, rho*D[i], 'Linear')
-#                
-#                # Diffusion contribution (2nd order central schemes)
-#                self.Domain.m_species[i][:,1:]    = aW[:,1:]    * m_c[i][:,:-1]
-#                self.Domain.m_species[i][:,0]     = aE[:,0]     * m_c[i][:,1]
-#                
-#                self.Domain.m_species[i][:,1:-1] += aE[:,1:-1]  * m_c[i][:,2:]
-#                self.Domain.m_species[i][1:,:]   += aS[1:,:]    * m_c[i][:-1,:]
-#                self.Domain.m_species[i][:-1,:]  += aN[:-1,:]   * m_c[i][1:,:]
-#                self.Domain.m_species[i]         -= (aW+aE+aS+aN)*m_c[i]
-#            
-#                # Species generated/destroyed during reaction
-#                self.Domain.m_species[i]+=mole_ratio[i]*deta
-#                
-#                # Species advected from Porous medium equations [TO BE CONTINUED]
-#                
-#                
-#                # Apply data from previous time step
-#                self.Domain.m_species[i]*= dt
-#                self.Domain.m_species[i]+= m_c[i]
-##                print(self.Domain.m_species[i])
-#                # IMPLICITLY MAKING SPECIES FLUX 0 AT BOUNDARIES
-#                max_Y=max(np.amax(self.Domain.m_species[i]), max_Y)
-#                min_Y=min(np.amin(self.Domain.m_species[i]), min_Y)
-#        print(self.Domain.m_species)
         ###################################################################
         # Conservation of Energy
         ###################################################################
@@ -622,12 +518,12 @@ class TwoDimSolver():
 #        self.Domain.T[1:-1,1:-1]+=0.8*5.67*10**(-8)*(T_c[:-2,1:-1]**4+T_c[2:,1:-1]**4+T_c[1:-1,:-2]**4+T_c[1:-1,2:]**4)
         
         # Apply boundary conditions
-        self.BCs.Energy(self.Domain.E, T_c, dt, rho, Cv, hx, hy)
+        self.BCs.Energy(self.Domain.E, T_c, dt, rhoC, hx, hy)
         
         # Check for ignition
         if ign==0 and self.source_Kim=='True':
             fl=flex+fley
-            self.BCs.Energy(fl, T_c, dt, rho, Cv, hx, hy)
+            self.BCs.Energy(fl, T_c, dt, rhoC, hx, hy)
             mx=len(np.where((E_kim*dt>self.ign[0]*abs(fl)) & (T_c>=600))[0]) #(fl<0) & 
             if mx>self.ign[1]:
                 ign=1
