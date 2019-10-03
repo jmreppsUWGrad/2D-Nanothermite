@@ -129,7 +129,7 @@ if rank==0:
     print 'Initializing domain...'
 
 time_max='0.000000'
-T=300*np.ones_like(domain.E)
+T=settings['Temperature_IC']*np.ones_like(domain.E)
 # Restart from previous data
 if st.find(settings['Restart'], 'None')<0:
     times=os.listdir('.')

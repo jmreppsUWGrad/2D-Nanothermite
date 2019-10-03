@@ -28,8 +28,8 @@ Length:1e-3
 Width:6e-3
 Nodes_x:100
 Nodes_y:600
-rho:5109
-#rho:1523
+#rho:5109
+rho:spec
 #rho:eta,5643,7191
 #Cp:625
 #Cp:spec
@@ -38,7 +38,7 @@ k:65
 #k:eta,39,108
 
 Darcy_mu:1e-5
-Darcy_perm:0.0
+Darcy_perm:1e-18
 Porosity:0.4
 pore_gas:Air
 gas_constant:81.51
@@ -60,7 +60,7 @@ Ea:48000
 A0:4890000
 #dH:vol,63000000000
 dH:rho,2.78e6
-Ignition:10,1
+Ignition:10,15
 
 #  Al/CuO: 4.07e6 [density], 2.38e6 [after Al,Alumina,Cu phase changes], 2.78e6 [after Al2O3,Cu phase changes]
 #  Al/MoO3- dH=4.7e6
@@ -74,11 +74,8 @@ Ignition:10,1
 #	Commenting this section out will remove mass/momentum transfer from model
 ######################################################
 
-#Species:Al,CuO,Al_2O_3,Cu
-#Species:g,s
-#Specie_IC:0,1.22e-7
-#Specie_rho:1.1,3065
-#Specie_Cp:1000,600
+Species:g,s
+Specie_IC:0,5109
 
 ######################################################
 #			Meshing details
@@ -108,11 +105,11 @@ bias_size_y:1e-06
 
 Fo:0.01
 CFL:0.01
-dt:None
 #dt:None
+dt:1e-9
 total_time_steps:1
-#total_time:3e-3
-total_time:None
+total_time:2e-4
+#total_time:None
 #total_time:0.002
 Time_Scheme:Explicit
 Restart:None
@@ -120,7 +117,7 @@ Restart:None
 Convergence:0.0001
 Max_iterations:100
 
-Number_Data_Output:3
+Number_Data_Output:120
 
 ######################################################
 #			Boundary conditions
@@ -145,7 +142,7 @@ bc_right_E:C, 30, 300, 0, 600
 # numpy.linspace(400, 900, settings['Nodes_y'])
 bc_south_E:F, 0, 0, 100
 #bc_north_E:C, 30, 300, 0, 600
-bc_north_E:F, 100e6, 0, 20,C, 30, 300, 20, 100
+bc_north_E:F, 400e6, 0, 20,C, 30, 300, 20, 100
 #bc_north_E:C, 5, 300, 0, 100
 # numpy.linspace(400, 900, settings['Nodes_x'])
 
@@ -174,3 +171,5 @@ bc_left_mass:grad,0,0,-1
 bc_right_mass:grad,0,0,-1
 bc_south_mass:grad,0,0,-1
 bc_north_mass:grad,0,0,-1
+
+Temperature_IC:293
