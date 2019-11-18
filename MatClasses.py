@@ -180,6 +180,25 @@ class Cp():
         else:
             return Cp-8.314*1000/molar_mass
     
+    def O2(self, T, typ):
+        molar_mass=15.99*2
+        Cp=np.zeros_like(T)
+        
+        # Coefficicents for polynomial fit (298 to 6000 K)
+        # Excel regression of JANAF data
+        a0=2.6506e1
+        a1=1.1162e-2
+        a2=-3.8592e-6
+        a3=6.6386e-10
+        a4=-4.1567e-14
+        
+        Cp=(a0+a1*T+a2*T**2+a3*T**3+a4*T**4)*1000/molar_mass
+        
+        if typ=='Cp':
+            return Cp
+        else:
+            return Cp-8.314*1000/molar_mass
+        
     # Main function to calculate specific heat at constant pressure
     # Points to correct function based on specie
     def get_Cp(self,T,species):
@@ -193,6 +212,8 @@ class Cp():
             return self.CuO(T,'Cp')
         elif species=='Air':
             return self.Air(T,'Cp')
+        elif species=='O2':
+            return self.O2(T,'Cp')
         else:
             return self.Ar(T,'Cp')
         
@@ -209,6 +230,8 @@ class Cp():
             return self.CuO(T,'Cv')
         elif species=='Air':
             return self.Air(T,'Cv')
+        elif species=='O2':
+            return self.O2(T,'Cv')
         else:
             return self.Ar(T,'Cv')
 
