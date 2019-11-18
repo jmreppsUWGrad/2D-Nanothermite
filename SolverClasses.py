@@ -43,6 +43,8 @@ class TwoDimSolver():
         self.conv=settings['Convergence']
         self.countmax=settings['Max_iterations']
         self.comm=comm
+        self.diff_inter=settings['diff_interpolation']
+        self.conv_inter=settings['conv_interpolation']
         
         # Define source terms and pointer to source object here
         self.get_source=Source_Comb.Source_terms(Sources['Ea'], Sources['A0'], Sources['dH'], Sources['gas_gen'])
@@ -297,15 +299,7 @@ class TwoDimSolver():
     def Advance_Soln_Cond(self, nt, t, hx, hy, ign):
         max_Y,min_Y=0,1
         # Calculate properties
-        T_c, k, rho, rhoC, Cp=self.Domain.calcProp(self.Domain.T_guess)
-        
-        # Copy needed variables and set pointers to other variables
-        mu=self.Domain.mu
-        perm=self.Domain.perm
-        if bool(self.Domain.rho_species):
-            rho_spec=copy.deepcopy(self.Domain.rho_species)
-            species=self.Domain.species_keys
-#            Cp_spec=self.Domain.Cp_species
+        T_c, k, rhoC, Cp=self.Domain.calcProp(self.Domain.T_guess)
         
         if self.dt=='None':
             dt=self.getdt(k, rhoC, T_c)
@@ -321,6 +315,13 @@ class TwoDimSolver():
             return 1, dt, ign
         if self.Domain.rank==0:
             print 'Time step %i, Step size=%.7fms, Time elapsed=%fs;'%(nt+1,dt*1000, t+dt)
+        
+        # Copy needed variables and set pointers to other variables
+        if self.Domain.model=='Species':
+            rho_spec=copy.deepcopy(self.Domain.rho_species)
+            species=self.Domain.species_keys
+            mu=self.Domain.mu
+            perm=self.Domain.perm
             
         ###################################################################
         # Calculate source and Porous medium terms
@@ -329,14 +330,15 @@ class TwoDimSolver():
         E_unif,E_kim=0,0
         if self.source_unif!='None':
             E_unif      = self.source_unif
-        if self.source_Kim=='True':
-            E_kim, deta =self.get_source.Source_Comb_Kim(rho, T_c, self.Domain.eta, dt)
+        if self.source_Kim=='True' or self.Domain.model=='Species':
+            E_kim, deta =self.get_source.Source_Comb_Kim(self.Domain.rho_0, T_c, self.Domain.eta, dt)
+        
         ###################################################################
         # Conservation of Mass
         ###################################################################
-        if bool(self.Domain.rho_species):
+        if self.Domain.model=='Species':
             # Adjust pressure
-            self.Domain.P=self.Domain.rho_species[species[0]]/self.Domain.porosity*self.Domain.R*T_c
+            self.Domain.P=rho_spec[species[0]]/self.Domain.porosity*self.Domain.R*T_c
     #        self.BCs.P(self.Domain.P)
             
             # Use Darcy's law to directly calculate the velocities at the faces
@@ -348,43 +350,51 @@ class TwoDimSolver():
                 # Left faces
                 flx[:,1:-1]+=dt/hx[:,1:-1]/(self.Domain.X[:,1:-1])\
                     *(self.Domain.X[:,1:-1]-self.dx[:,:-2]/2)\
-                    *self.interpolate(rho_spec[species[0]][:,1:-1],rho_spec[species[0]][:,:-2],'Linear')\
-                    *(-perm/mu*(self.Domain.P[:,1:-1]-self.Domain.P[:,:-2])/self.dx[:,:-2])
+                    *self.interpolate(rho_spec[species[0]][:,1:-1],rho_spec[species[0]][:,:-2],self.conv_inter)\
+                    *(-self.interpolate(perm[:,1:-1],perm[:,:-2],self.diff_inter)/mu\
+                    *(self.Domain.P[:,1:-1]-self.Domain.P[:,:-2])/self.dx[:,:-2])
                 flx[:,-1]+=dt/hx[:,-1]/(self.Domain.X[:,-1]-self.dx[:,-1]/2)\
                     *(self.Domain.X[:,-1]-self.dx[:,-1]/2)\
-                    *self.interpolate(rho_spec[species[0]][:,-1],rho_spec[species[0]][:,-2],'Linear')\
-                    *(-perm/mu*(self.Domain.P[:,-1]-self.Domain.P[:,-2])/self.dx[:,-2])
+                    *self.interpolate(rho_spec[species[0]][:,-1],rho_spec[species[0]][:,-2],self.conv_inter)\
+                    *(-self.interpolate(perm[:,-1],perm[:,-2],self.diff_inter)/mu\
+                    *(self.Domain.P[:,-1]-self.Domain.P[:,-2])/self.dx[:,-2])
                     
                 # Right faces
                 flx[:,1:-1]-=dt/hx[:,1:-1]/(self.Domain.X[:,1:-1])\
                     *(self.Domain.X[:,1:-1]+self.dx[:,1:-1]/2)\
-                    *self.interpolate(rho_spec[species[0]][:,2:],rho_spec[species[0]][:,1:-1], 'Linear')\
-                    *(-perm/mu*(self.Domain.P[:,2:]-self.Domain.P[:,1:-1])/self.dx[:,1:-1])
+                    *self.interpolate(rho_spec[species[0]][:,2:],rho_spec[species[0]][:,1:-1], self.conv_inter)\
+                    *(-self.interpolate(perm[:,2:],perm[:,1:-1], self.diff_inter)/mu\
+                    *(self.Domain.P[:,2:]-self.Domain.P[:,1:-1])/self.dx[:,1:-1])
                 flx[:,0]-=dt/hx[:,0]/(self.dx[:,0]/2)\
                     *(self.Domain.X[:,0]+self.dx[:,0]/2)\
-                    *self.interpolate(rho_spec[species[0]][:,1],rho_spec[species[0]][:,0], 'Linear')\
-                    *(-perm/mu*(self.Domain.P[:,1]-self.Domain.P[:,0])/self.dx[:,0])
+                    *self.interpolate(rho_spec[species[0]][:,1],rho_spec[species[0]][:,0], self.conv_inter)\
+                    *(-self.interpolate(perm[:,1],perm[:,0], self.diff_inter)/mu\
+                    *(self.Domain.P[:,1]-self.Domain.P[:,0])/self.dx[:,0])
             
             # Planar domain flux in x
             else:
                 flx[:,1:]+=dt/hx[:,1:]\
-                    *self.interpolate(rho_spec[species[0]][:,1:],rho_spec[species[0]][:,:-1],'Linear')\
-                    *(-perm/mu*(self.Domain.P[:,1:]-self.Domain.P[:,:-1])/self.dx[:,:-1])
+                    *self.interpolate(rho_spec[species[0]][:,1:],rho_spec[species[0]][:,:-1],self.conv_inter)\
+                    *(-self.interpolate(perm[:,1:],perm[:,:-1],self.diff_inter)/mu\
+                    *(self.Domain.P[:,1:]-self.Domain.P[:,:-1])/self.dx[:,:-1])
                     
                 # Right face
                 flx[:,:-1]-=dt/hx[:,:-1]\
-                    *self.interpolate(rho_spec[species[0]][:,1:],rho_spec[species[0]][:,:-1], 'Linear')\
-                    *(-perm/mu*(self.Domain.P[:,1:]-self.Domain.P[:,:-1])/self.dx[:,:-1])
+                    *self.interpolate(rho_spec[species[0]][:,1:],rho_spec[species[0]][:,:-1], self.conv_inter)\
+                    *(-self.interpolate(perm[:,1:],perm[:,:-1], self.diff_inter)/mu\
+                    *(self.Domain.P[:,1:]-self.Domain.P[:,:-1])/self.dx[:,:-1])
                     
             # South face
             fly[1:,:]+=dt/hy[1:,:]\
-                *self.interpolate(rho_spec[species[0]][1:,:],rho_spec[species[0]][:-1,:],'Linear')\
-                *(-perm/mu*(self.Domain.P[1:,:]-self.Domain.P[:-1,:])/self.dy[:-1,:])
+                *self.interpolate(rho_spec[species[0]][1:,:],rho_spec[species[0]][:-1,:],self.conv_inter)\
+                *(-self.interpolate(perm[1:,:],perm[:-1,:],self.diff_inter)/mu\
+                *(self.Domain.P[1:,:]-self.Domain.P[:-1,:])/self.dy[:-1,:])
                 
             # North face
             fly[:-1,:]-=dt/hy[:-1,:]\
-                *self.interpolate(rho_spec[species[0]][1:,:], rho_spec[species[0]][:-1,:], 'Linear')\
-                *(-perm/mu*(self.Domain.P[1:,:]-self.Domain.P[:-1,:])/self.dy[:-1,:])
+                *self.interpolate(rho_spec[species[0]][1:,:], rho_spec[species[0]][:-1,:], self.conv_inter)\
+                *(-self.interpolate(perm[1:,:], perm[:-1,:], self.diff_inter)/mu\
+                *(self.Domain.P[1:,:]-self.Domain.P[:-1,:])/self.dy[:-1,:])
                 
             self.Domain.rho_species[species[0]]+=flx+fly
             
@@ -412,40 +422,40 @@ class TwoDimSolver():
             #left faces
             flex[:,1:-1]   -= dt/hx[:,1:-1]/(self.Domain.X[:,1:-1])\
                         *(self.Domain.X[:,1:-1]-self.dx[:,:-2]/2)\
-                        *self.interpolate(k[:,:-2],k[:,1:-1], 'Harmonic')\
+                        *self.interpolate(k[:,:-2],k[:,1:-1], self.diff_inter)\
                         *(T_c[:,1:-1]-T_c[:,:-2])/self.dx[:,:-2]
             flex[:,-1]   -= dt/hx[:,-1]/(self.Domain.X[:,-1]-self.dx[:,-1]/2)\
                         *(self.Domain.X[:,-1]-self.dx[:,-1]/2)\
-                        *self.interpolate(k[:,-2],k[:,-1], 'Harmonic')\
+                        *self.interpolate(k[:,-2],k[:,-1], self.diff_inter)\
                         *(T_c[:,-1]-T_c[:,-2])/self.dx[:,-1]
             
             # Right face
             flex[:,1:-1] += dt/hx[:,1:-1]/(self.Domain.X[:,1:-1])\
                         *(self.Domain.X[:,1:-1]+self.dx[:,1:-1]/2)\
-                        *self.interpolate(k[:,1:-1],k[:,2:], 'Harmonic')\
+                        *self.interpolate(k[:,1:-1],k[:,2:], self.diff_inter)\
                         *(T_c[:,2:]-T_c[:,1:-1])/self.dx[:,1:-1]
             flex[:,0] += dt/hx[:,0]/(self.dx[:,0]/2)\
                         *(self.Domain.X[:,0]+self.dx[:,0]/2)\
-                        *self.interpolate(k[:,0],k[:,1], 'Harmonic')\
+                        *self.interpolate(k[:,0],k[:,1], self.diff_inter)\
                         *(T_c[:,1]-T_c[:,0])/self.dx[:,0]
         # Planar domain flux in r
         else:
             #left faces
             flex[:,1:]   -= dt/hx[:,1:]\
-                        *self.interpolate(k[:,:-1],k[:,1:], 'Harmonic')\
+                        *self.interpolate(k[:,:-1],k[:,1:], self.diff_inter)\
                         *(T_c[:,1:]-T_c[:,:-1])/self.dx[:,:-1]
             # Right face
             flex[:,:-1] += dt/hx[:,:-1]\
-                        *self.interpolate(k[:,:-1],k[:,1:], 'Harmonic')\
+                        *self.interpolate(k[:,:-1],k[:,1:], self.diff_inter)\
                         *(T_c[:,1:]-T_c[:,:-1])/self.dx[:,:-1]
         
         # South face
         fley[1:,:]   -= dt/hy[1:,:]\
-                    *self.interpolate(k[1:,:],k[:-1,:], 'Harmonic')\
+                    *self.interpolate(k[1:,:],k[:-1,:], self.diff_inter)\
                     *(T_c[1:,:]-T_c[:-1,:])/self.dy[:-1,:]
         # North face
         fley[:-1,:]  += dt/hy[:-1,:]\
-                    *self.interpolate(k[:-1,:],k[1:,:], 'Harmonic')\
+                    *self.interpolate(k[:-1,:],k[1:,:], self.diff_inter)\
                     *(T_c[1:,:]-T_c[:-1,:])/self.dy[:-1,:]
         
         # Source terms
@@ -454,62 +464,70 @@ class TwoDimSolver():
         
         
         # Porous medium advection
-        if bool(self.Domain.rho_species):
+        if self.Domain.model=='Species':
             # Axisymmetric domain flux in r
             if self.Domain.type=='Axisymmetric':
                 # Left face
                 flex[:,1:-1]+=dt/hx[:,1:-1]/(self.Domain.X[:,1:-1])\
                     *(self.Domain.X[:,1:-1]-self.dx[:,:-2]/2)\
-                    *self.interpolate(rho_spec[species[0]][:,1:-1],rho_spec[species[0]][:,:-2],'Linear')\
-                    *(-perm/mu*(self.Domain.P[:,1:-1]-self.Domain.P[:,:-2])/self.dx[:,:-2])\
-                    *self.interpolate(Cp[:,1:-1],Cp[:,:-2],'Linear')\
-                    *self.interpolate(T_c[:,1:-1],T_c[:,:-2],'Linear')
+                    *self.interpolate(rho_spec[species[0]][:,1:-1],rho_spec[species[0]][:,:-2],self.conv_inter)\
+                    *(-self.interpolate(perm[:,1:-1],perm[:,:-2],self.diff_inter)/mu\
+                    *(self.Domain.P[:,1:-1]-self.Domain.P[:,:-2])/self.dx[:,:-2])\
+                    *self.interpolate(Cp[:,1:-1],Cp[:,:-2],self.conv_inter)\
+                    *self.interpolate(T_c[:,1:-1],T_c[:,:-2],self.conv_inter)
                 flex[:,-1]+=dt/hx[:,-1]/(self.Domain.X[:,-1]-self.dx[:,-1]/2)\
                     *(self.Domain.X[:,-1]-self.dx[:,-2]/2)\
-                    *self.interpolate(rho_spec[species[0]][:,-1],rho_spec[species[0]][:,-2],'Linear')\
-                    *(-perm/mu*(self.Domain.P[:,-1]-self.Domain.P[:,-2])/self.dx[:,-2])\
-                    *self.interpolate(Cp[:,-1],Cp[:,-2],'Linear')\
-                    *self.interpolate(T_c[:,-1],T_c[:,-2],'Linear')
+                    *self.interpolate(rho_spec[species[0]][:,-1],rho_spec[species[0]][:,-2],self.conv_inter)\
+                    *(-self.interpolate(perm[:,-1],perm[:,-2],self.diff_inter)/mu\
+                    *(self.Domain.P[:,-1]-self.Domain.P[:,-2])/self.dx[:,-2])\
+                    *self.interpolate(Cp[:,-1],Cp[:,-2],self.conv_inter)\
+                    *self.interpolate(T_c[:,-1],T_c[:,-2],self.conv_inter)
                 # Right face
                 flex[:,1:-1]-=dt/hx[:,1:-1]/(self.Domain.X[:,1:-1])\
                     *(self.Domain.X[:,1:-1]+self.dx[:,1:-1]/2)\
-                    *self.interpolate(rho_spec[species[0]][:,2:],rho_spec[species[0]][:,1:-1],'Linear')\
-                    *(-perm/mu*(self.Domain.P[:,2:]-self.Domain.P[:,1:-1])/self.dx[:,1:-1])\
-                    *self.interpolate(Cp[:,2:],Cp[:,1:-1],'Linear')\
-                    *self.interpolate(T_c[:,2:],T_c[:,1:-1],'Linear')
+                    *self.interpolate(rho_spec[species[0]][:,2:],rho_spec[species[0]][:,1:-1],self.conv_inter)\
+                    *(-self.interpolate(perm[:,2:],perm[:,1:-1],self.diff_inter)/mu\
+                    *(self.Domain.P[:,2:]-self.Domain.P[:,1:-1])/self.dx[:,1:-1])\
+                    *self.interpolate(Cp[:,2:],Cp[:,1:-1],self.conv_inter)\
+                    *self.interpolate(T_c[:,2:],T_c[:,1:-1],self.conv_inter)
                 flex[:,0]-=dt/hx[:,0]/(self.dx[:,0]/2)\
                     *(self.Domain.X[:,0]+self.dx[:,0]/2)\
-                    *self.interpolate(rho_spec[species[0]][:,1],rho_spec[species[0]][:,0],'Linear')\
-                    *(-perm/mu*(self.Domain.P[:,1]-self.Domain.P[:,0])/self.dx[:,0])\
-                    *self.interpolate(Cp[:,1],Cp[:,0],'Linear')\
-                    *self.interpolate(T_c[:,1],T_c[:,0],'Linear')
+                    *self.interpolate(rho_spec[species[0]][:,1],rho_spec[species[0]][:,0],self.conv_inter)\
+                    *(-self.interpolate(perm[:,1],perm[:,0],self.diff_inter)/mu\
+                    *(self.Domain.P[:,1]-self.Domain.P[:,0])/self.dx[:,0])\
+                    *self.interpolate(Cp[:,1],Cp[:,0],self.conv_inter)\
+                    *self.interpolate(T_c[:,1],T_c[:,0],self.conv_inter)
             # Planar domain flux in r
             else:
                 # Left face
                 flex[:,1:]+=dt/hx[:,1:]\
-                    *self.interpolate(rho_spec[species[0]][:,1:],rho_spec[species[0]][:,:-1],'Linear')\
-                    *(-perm/mu*(self.Domain.P[:,1:]-self.Domain.P[:,:-1])/self.dx[:,:-1])\
-                    *self.interpolate(Cp[:,1:],Cp[:,:-1],'Linear')\
-                    *self.interpolate(T_c[:,1:],T_c[:,:-1],'Linear')
+                    *self.interpolate(rho_spec[species[0]][:,1:],rho_spec[species[0]][:,:-1],self.conv_inter)\
+                    *(-self.interpolate(perm[:,1:],perm[:,:-1],self.diff_inter)/mu\
+                    *(self.Domain.P[:,1:]-self.Domain.P[:,:-1])/self.dx[:,:-1])\
+                    *self.interpolate(Cp[:,1:],Cp[:,:-1],self.conv_inter)\
+                    *self.interpolate(T_c[:,1:],T_c[:,:-1],self.conv_inter)
                 # Right face
                 flex[:,:-1]-=dt/hx[:,:-1]\
-                    *self.interpolate(rho_spec[species[0]][:,1:],rho_spec[species[0]][:,:-1],'Linear')\
-                    *(-perm/mu*(self.Domain.P[:,1:]-self.Domain.P[:,:-1])/self.dx[:,:-1])\
-                    *self.interpolate(Cp[:,1:],Cp[:,:-1],'Linear')\
-                    *self.interpolate(T_c[:,1:],T_c[:,:-1],'Linear')
+                    *self.interpolate(rho_spec[species[0]][:,1:],rho_spec[species[0]][:,:-1],self.conv_inter)\
+                    *(-self.interpolate(perm[:,1:],perm[:,:-1],self.diff_inter)/mu\
+                    *(self.Domain.P[:,1:]-self.Domain.P[:,:-1])/self.dx[:,:-1])\
+                    *self.interpolate(Cp[:,1:],Cp[:,:-1],self.conv_inter)\
+                    *self.interpolate(T_c[:,1:],T_c[:,:-1],self.conv_inter)
             
             # South face
             fley[1:,:]+=dt/hy[1:,:]\
-                *self.interpolate(rho_spec[species[0]][1:,:],rho_spec[species[0]][:-1,:],'Linear')*\
-                (-perm/mu*(self.Domain.P[1:,:]-self.Domain.P[:-1,:])/self.dy[:-1,:])\
-                *self.interpolate(Cp[1:,:],Cp[:-1,:],'Linear')\
-                *self.interpolate(T_c[1:,:],T_c[:-1,:],'Linear')
+                *self.interpolate(rho_spec[species[0]][1:,:],rho_spec[species[0]][:-1,:],self.conv_inter)\
+                *(-self.interpolate(perm[1:,:],perm[:-1,:],self.diff_inter)/mu\
+                *(self.Domain.P[1:,:]-self.Domain.P[:-1,:])/self.dy[:-1,:])\
+                *self.interpolate(Cp[1:,:],Cp[:-1,:],self.conv_inter)\
+                *self.interpolate(T_c[1:,:],T_c[:-1,:],self.conv_inter)
             # North face
             fley[:-1,:]-=dt/hy[:-1,:]\
-                *self.interpolate(rho_spec[species[0]][1:,:],rho_spec[species[0]][:-1,:],'Linear')*\
-                (-perm/mu*(self.Domain.P[1:,:]-self.Domain.P[:-1,:])/self.dy[:-1,:])\
-                *self.interpolate(Cp[1:,:],Cp[:-1,:],'Linear')\
-                *self.interpolate(T_c[1:,:],T_c[:-1,:],'Linear')
+                *self.interpolate(rho_spec[species[0]][1:,:],rho_spec[species[0]][:-1,:],self.conv_inter)\
+                *(-self.interpolate(perm[1:,:],perm[:-1,:],self.diff_inter)/mu\
+                *(self.Domain.P[1:,:]-self.Domain.P[:-1,:])/self.dy[:-1,:])\
+                *self.interpolate(Cp[1:,:],Cp[:-1,:],self.conv_inter)\
+                *self.interpolate(T_c[1:,:],T_c[:-1,:],self.conv_inter)
 
         # Add diffusion and convective effects to energy
         self.Domain.E += flex+fley
@@ -537,8 +555,8 @@ class TwoDimSolver():
             return 2, dt, ign
         if (np.amax(self.Domain.eta)>1.0) or (np.amin(self.Domain.eta)<-10**(-9)):
             return 3, dt, ign
-#        elif bool(self.Domain.rho_species) and ((min_Y<-10**(-9))\
-#                  or np.isnan(max_Y)):
-#            return 4, dt, ign
+        elif self.Domain.model=='Species' and ((min_Y<-10)\
+                  or np.isnan(max_Y)):
+            return 4, dt, ign
         else:
             return 0, dt, ign

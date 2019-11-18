@@ -16,14 +16,15 @@ This file contains classes for reading and writing files in proper format:
 # Dictionaries containing expected input file data; organized by type
 
 keys_Settings=['MPI_Processes','MPI_arrangment','Domain','Length','Width',\
-               'Nodes_x','Nodes_y','k','Cp','rho','Darcy_mu', 'Darcy_perm',\
-               'Porosity', 'pore_gas', 'gas_constant','Temperature_IC']
+               'Nodes_x','Nodes_y','Model','k_s','k_model','Cv_s','rho_IC',\
+               'Darcy_mu', 'Carmen_diam','Porosity', 'gas_constant',\
+               'diff_interpolation', 'conv_interpolation','Temperature_IC']
 
 keys_mesh=['bias_type_x','bias_size_x','bias_type_y','bias_size_y']
                
 keys_Sources=['Source_Uniform','Source_Kim','Ea','A0','dH', 'Ignition', 'gas_gen']
 
-keys_Species=['Species','Specie_IC']
+keys_Species=['Cv_g','Cp_g','k_g']
 
 keys_Time_adv=['Fo','CFL','dt','total_time_steps', 'total_time','Restart',\
                'Time_Scheme','Convergence','Max_iterations','Number_Data_Output']
@@ -65,9 +66,12 @@ class FileOut():
     def input_writer_cond(self, settings, Sources, Species, BCs):
         self.Write_single_line('Settings:')
         for i in keys_Settings:
-            self.fout.write(i)
-            self.fout.write(':')
-            self.Write_single_line(str(settings[i]))
+            try:
+                self.fout.write(i)
+                self.fout.write(':')
+                self.Write_single_line(str(settings[i]))
+            except:
+                continue
 #            self.fout.write('\n')
         
         self.Write_single_line('\nMeshing details:')
@@ -77,17 +81,12 @@ class FileOut():
             self.Write_single_line(str(settings[i]))
 #            self.fout.write('\n')
         
-        if bool(Species):
+        if settings['Model']=='Species':
             self.Write_single_line('\nSpecies info:')
             for i in keys_Species:
                 self.fout.write(i)
                 self.fout.write(':')
-                for j in range(len(Species[i])):
-                    self.fout.write(str(Species[i][j]))
-                    if j==len(Species[i])-1:
-                        self.fout.write('\n')
-                    else:
-                        self.fout.write(',')
+                self.Write_single_line(str(Species[i]))
             
         self.Write_single_line('\nSource Terms:')
         for i in keys_Sources:
@@ -164,12 +163,12 @@ class FileIn():
                 if line[0] in keys_Settings:
                     if line[0]=='Nodes_x' or line[0]=='Nodes_y':
                         settings[line[0]]=int(line[1])
-                    elif st.find(line[1], 'None')>=0 or st.find(line[1], ',')>=0\
-                        or line[0]=='Domain' or st.find(line[1], 'spec')>=0 \
-                        or line[0]=='pore_gas':
-                        settings[line[0]]=st.split(line[1], newline_check)[0]
                     else:
-                        settings[line[0]]=float(line[1])
+                        try:
+                            settings[line[0]]=float(line[1])
+                        # Remove \n or \r
+                        except:
+                            settings[line[0]]=st.split(line[1], newline_check)[0]
                 # Mesh settings
                 if line[0] in keys_mesh:
                     if st.find(line[0], 'type')>=0:
@@ -178,20 +177,16 @@ class FileIn():
                         settings[line[0]]=float(line[1])
                 # Source term info
                 elif line[0] in keys_Sources:
-                    if st.find(line[1], 'None')>=0 or st.find(line[1], 'True')>=0\
-                        or st.find(line[1], ',')>=0:
-                        Sources[line[0]]=st.split(line[1], newline_check)[0]
-                    else:
+                    try:
                         Sources[line[0]]=float(line[1])
+                    except:
+                        Sources[line[0]]=st.split(line[1], newline_check)[0]
                 # Species info
                 elif line[0] in keys_Species:
-                    if line[0]=='Species':
-                        Species[line[0]]=st.split(st.split(line[1], newline_check)[0], ',')
-                        Species['keys']=Species[line[0]]
-                    else:
-                        Species[line[0]]=st.split(st.split(line[1], newline_check)[0], ',')
-                        for i in range(len(Species[line[0]])):
-                            Species[line[0]][i]=float(Species[line[0]][i])
+                    try:
+                        Species[line[0]]=float(line[1])
+                    except:
+                        Species[line[0]]=st.split(line[1], newline_check)[0]
                             
                 # Time advancement details
                 elif line[0] in keys_Time_adv:
@@ -224,7 +219,7 @@ class FileIn():
                         del BC_info[0]
                         # Constant value/flux of variable BCs
                         if BCs[line[0]][3*i]=='T' or BCs[line[0]][3*i]=='F'\
-                            or BCs[line[0]][3*i]=='grad':
+                            or BCs[line[0]][3*i]=='grad' or BCs[line[0]][3*i]=='P':
                             # Value into a float
                             BCs[line[0]]+=[float(BC_info[0])]
                             del BC_info[0]

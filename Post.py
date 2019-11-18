@@ -114,7 +114,7 @@ try:
 except:
     sys.exit('Input file missing')
 
-titles=[]
+titles=['g','s']
 while A0<0 or Ea<0 or source=='False':
     line=input_file.readline()
     if st.find(line, 'Domain')==0:
@@ -125,8 +125,8 @@ while A0<0 or Ea<0 or source=='False':
         A0=float(st.split(line, ':')[1])
     elif st.find(line, 'Source_Kim')==0:
         source=st.split(line, ':')[1]
-    elif st.find(line, 'Species')==0:
-        titles=st.split(st.split(st.split(line, ':')[1], '\n')[0], ',')
+#    elif st.find(line, 'Species')==0:
+#        titles=st.split(st.split(st.split(line, ':')[1], '\n')[0], ',')
     elif st.find(line, 'Length')==0 and type(xmax) is str:
         xmax=float(st.split(line, ':')[1])*1000
     elif st.find(line, 'Width')==0 and type(ymax) is str:
@@ -270,7 +270,7 @@ for time in times:
             
         
     print 'Processed '+time
-    print '     Mass balance residual: %8f'%(np.amin(Y_tot)*10**6)
+    print '     Mass balance residual: %.1f'%(np.amin(Y_tot))
 
 if st.find(OneD_graphs,'True')>=0:
     print 'Creating 1D plots'
