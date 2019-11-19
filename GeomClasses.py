@@ -189,7 +189,7 @@ class TwoDimDomain():
                     *float(self.rho[i])*por[i]
             self.rho_0=self.rho_species[self.species_keys[1]]
             self.perm=self.porosity**3*self.part_diam**2\
-                /(72*(1-self.porosity)**2)
+                /(180*(1-self.porosity)**2)
         
     # Calculate and return the dimensions of control volumes
     def CV_dim(self):
