@@ -155,13 +155,13 @@ if st.find(settings['Restart'], 'None')<0:
         eta=np.load('eta_'+time_max+'.npy')
         domain.eta=mpi.split_var(eta, domain)
         del eta
-    if bool(domain.rho_species):
+    if domain.model=='Species':
         P=np.load('P_'+time_max+'.npy')
         domain.P=mpi.split_var(P, domain)
-        for i in range(len(Species['Species'])):
-            rho_species=np.load('rho_'+Species['Species'][i]+'_'+time_max+'.npy')
-            domain.rho_species[Species['Species'][i]]=mpi.split_var(rho_species, domain)
-            domain.rho_0[:,:]+=Species['Specie_IC'][i]
+        species=['g','s']
+        for i in range(len(species)):
+            rho_species=np.load('rho_'+species[i]+'_'+time_max+'.npy')
+            domain.rho_species[species[i]]=mpi.split_var(rho_species, domain)
         del rho_species, P
             
 #if (bool(domain.rho_species)) and (st.find(settings['Restart'], 'None')>=0):
