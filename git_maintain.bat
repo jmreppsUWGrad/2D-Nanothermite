@@ -33,10 +33,14 @@ set /p msg=Commit message (Use " "):
 git commit -m %msg%
 echo.
 
-set /p Push=Upload to remote database?
-IF /I %Push%==y (git push -u origin %branch%)
+set /p Push=Upload to remote databases?
+IF /I %Push%==n (GOTO StillWork)
+git push -u origin %branch%
+git push -u CFDcodes %branch%
+git push -u Github %branch%
 echo.
 echo.
+:StillWork
 set /p cont=Still working?
 IF /I %cont%==y (GOTO Tracking)
 
