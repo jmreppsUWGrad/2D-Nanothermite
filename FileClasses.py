@@ -217,18 +217,17 @@ class FileIn():
                     while len(BC_info)>1:
                         BCs[line[0]]+=[BC_info[0]]
                         del BC_info[0]
+                        # Convective BC
+                        if BCs[line[0]][3*i]=='C':
+                            BCs[line[0]]+=[(float(BC_info[0]),float(BC_info[1]))]
+                            del BC_info[1], BC_info[0]
+                            BCs[line[0]]+=[(int(BC_info[0]),int(BC_info[1]))]
+                            del BC_info[1], BC_info[0]
                         # Constant value/flux of variable BCs
-                        if BCs[line[0]][3*i]=='T' or BCs[line[0]][3*i]=='F'\
-                            or BCs[line[0]][3*i]=='grad' or BCs[line[0]][3*i]=='P':
+                        else:
                             # Value into a float
                             BCs[line[0]]+=[float(BC_info[0])]
                             del BC_info[0]
-                            BCs[line[0]]+=[(int(BC_info[0]),int(BC_info[1]))]
-                            del BC_info[1], BC_info[0]
-                        # Convective BC
-                        else:
-                            BCs[line[0]]+=[(float(BC_info[0]),float(BC_info[1]))]
-                            del BC_info[1], BC_info[0]
                             BCs[line[0]]+=[(int(BC_info[0]),int(BC_info[1]))]
                             del BC_info[1], BC_info[0]
                         
