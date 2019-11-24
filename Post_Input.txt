@@ -10,7 +10,7 @@
 #	Times: Times in file names separated by commas OR ALL for all files
 ######################################################
 
-Directory:Tests\Axi\lambda\2
+Directory:Tests\Axi\Stacy\5
 Times:ALL
 #Times:0.366674,0.375012,0.383351,0.391671,0.400009
 
@@ -20,6 +20,7 @@ Times:ALL
 #	Units are mm
 #	1D_Plots: True OR None; output 1D plots along centre
 #	Phi_Plots: True OR None; output reaction rate contours
+#	Time_Temp_Pos: Position in array to extract data for Post_timeEvolv.py script ONLY
 ######################################################
 
 x_min:0
@@ -35,3 +36,4 @@ eta_pts:2
 
 1D_Plots:None
 Phi_Plots:None
+Time_Temp_Pos:0,0
