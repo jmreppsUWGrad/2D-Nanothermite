@@ -68,6 +68,7 @@ class TwoDimDomain():
             self.rho=st.split(self.rho, ',')
             self.mu=settings['Darcy_mu']
             self.part_diam=settings['Carmen_diam']
+            self.kozeny=settings['Kozeny_const']
             self.R=settings['gas_constant']
             self.Cv_g=Species['Cv_g']
             self.Cp_g=Species['Cp_g']
@@ -189,7 +190,7 @@ class TwoDimDomain():
                     *float(self.rho[i])*por[i]
             self.rho_0=self.rho_species[self.species_keys[1]]
             self.perm=self.porosity**3*self.part_diam**2\
-                /(180*(1-self.porosity)**2)
+                /(self.kozeny*(1-self.porosity)**2)
         
     # Calculate and return the dimensions of control volumes
     def CV_dim(self):
@@ -254,7 +255,7 @@ class TwoDimDomain():
             self.porosity=self.porosity_0+\
                 self.rho_species[self.species_keys[0]]/self.rho_0*(1-self.porosity_0)
             self.perm=self.porosity**3*self.part_diam**2\
-                /(72*(1-self.porosity)**2)
+                /(self.kozeny*(1-self.porosity)**2)
             
             # Heat capacity of Solid phase
             rhoC=self.rho_species[self.species_keys[1]]*Cv

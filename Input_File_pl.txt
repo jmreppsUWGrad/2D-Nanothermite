@@ -67,6 +67,7 @@ k_model:Parallel
 Porosity:0.6
 Darcy_mu:1e-5
 Carmen_diam:40e-9
+Kozeny_const:180
 gas_constant:81.51
 diff_interpolation:Harmonic
 conv_interpolation:Linear
