@@ -253,7 +253,7 @@ class TwoDimDomain():
             k_g=np.zeros_like(self.eta)
             # Changing porosity/permeability
             self.porosity=self.porosity_0+\
-                self.rho_species[self.species_keys[0]]/self.rho_0*(1-self.porosity_0)
+                (1-self.rho_species[self.species_keys[1]]/self.rho_0)*(1-self.porosity_0)
             self.perm=self.porosity**3*self.part_diam**2\
                 /(self.kozeny*(1-self.porosity)**2)
             
