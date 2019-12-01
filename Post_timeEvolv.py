@@ -77,6 +77,8 @@ for line in fin:
             Phi_graphs=st.split(line[1], ',')
             Phi_graphs=[int(Phi_graphs[0]),int(Phi_graphs[1])]
             Phi_graphs=tuple(Phi_graphs)
+        elif line[0]=='Variable':
+            var=st.split(line[1], '\n')[0]
 
 fin.close()
 
@@ -105,6 +107,10 @@ if type(times) is str:
 ##############################################################
 fig_size=(6, 6)
 cmap_choice=mtplt.cm.viridis
+y_label={'Temperature': 'T (K)', 'Pressure': 'P (Pa gage)',\
+         'eta': '$\eta$ (-)'}
+var_name={'Temperature': 'T', 'Pressure': 'P',\
+         'eta': 'eta'}
 ##############################################################
 #               Generate graphs
 ##############################################################
@@ -112,16 +118,16 @@ X=np.load('X.npy', False)
 Y=np.load('Y.npy', False)
 fig=plt.figure(figsize=fig_size)
 for time in times:
-    T=np.load('T_'+time+'.npy', False)
+    T=np.load(var_name[var]+'_'+time+'.npy', False)
     # 1D temperature profile at centreline
     plt.plot(float(time), T[Phi_graphs], marker='o',color='black')
 plt.xlabel('$t$ (ms)')
-plt.ylabel('T (K)')
+plt.ylabel(y_label[var])
 #plt.xlim([xmin,xmax])
 #plt.ylim([temp_min,temp_max])
 plt.legend()
-plt.title('Backface Temperature Evolution')
-fig.savefig('Temp_time.png',dpi=300)
+plt.title(var+' Evolution with Time at '+str(Phi_graphs))
+fig.savefig(var+'_time.png',dpi=300)
 plt.close(fig)
 
 print '\nPost-processing complete'

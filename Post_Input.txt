@@ -21,6 +21,7 @@ Times:ALL
 #	1D_Plots: True OR None; output 1D plots along centre
 #	Phi_Plots: True OR None; output reaction rate contours
 #	Time_Temp_Pos: Position in array to extract data for Post_timeEvolv.py script ONLY
+#	Variable: Variable to plot for Post_timeEvolv (Temperature, Pressure, eta)
 ######################################################
 
 x_min:0
@@ -36,4 +37,6 @@ eta_pts:2
 
 1D_Plots:None
 Phi_Plots:None
+
 Time_Temp_Pos:0,0
+Variable:Temperature
