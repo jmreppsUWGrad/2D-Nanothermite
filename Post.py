@@ -24,13 +24,19 @@ Desired:
 """
 
 import numpy as np
-#import CoolProp.CoolProp as CP
 import os
 import sys
 import string as st
 import matplotlib as mtplt
 from matplotlib import pyplot as plt
-#from mpl_toolkits.mplot3d import Axes3D
+from FileClasses import FileIn
+
+# Interpolation function for Darcy u calculations
+def interpolate(k1, k2, func):
+    if func=='Linear':
+        return 0.5*k1+0.5*k2
+    else:
+        return 2*k1*k2/(k1+k2)
 
 plt.ioff()
 
@@ -85,6 +91,8 @@ for line in fin:
                 ymax=line[1]
         elif line[0]=='1D_Plots':
             OneD_graphs=line[1]
+        elif line[0]=='Darcy_vel':
+            darcy=line[1]
         elif line[0]=='Temp_min':
             temp_min=float(line[1])
         elif line[0]=='Temp_max':
@@ -106,32 +114,41 @@ except:
 ##############################################################
 #               Read Solver file
 ##############################################################
-A0=-1.0
-Ea=-1.0
-source='False'
 try:
-    input_file=open('Input_file.txt')
+    input_file=FileIn('Input_file.txt', False)
 except:
     sys.exit('Input file missing')
 
 titles=['g','s']
-while A0<0 or Ea<0 or source=='False':
-    line=input_file.readline()
-    if st.find(line, 'Domain')==0:
-        domain=st.split(st.split(line, ':')[1], '\n')[0]
-    elif st.find(line, 'Ea')==0:
-        Ea=float(st.split(line, ':')[1])
-    elif st.find(line, 'A0')==0:
-        A0=float(st.split(line, ':')[1])
-    elif st.find(line, 'Source_Kim')==0:
-        source=st.split(line, ':')[1]
-#    elif st.find(line, 'Species')==0:
-#        titles=st.split(st.split(st.split(line, ':')[1], '\n')[0], ',')
-    elif st.find(line, 'Length')==0 and type(xmax) is str:
-        xmax=float(st.split(line, ':')[1])*1000
-    elif st.find(line, 'Width')==0 and type(ymax) is str:
-        ymax=float(st.split(line, ':')[1])*1000
-input_file.close()
+settings={}
+sources={}
+Species={}
+BCs={}
+
+input_file.Read_Input(settings, sources, Species, BCs)
+xmax=float(settings['Length'])*1000
+ymax=float(settings['Width'])*1000
+try:
+    settings['rho_IC']=st.split(settings['rho_IC'], ',')
+except:
+    settings['rho_IC']=float(settings['rho_IC'])
+#while A0<0 or Ea<0 or source=='False':
+#    line=input_file.readline()
+#    if st.find(line, 'Domain')==0:
+#        domain=st.split(st.split(line, ':')[1], '\n')[0]
+#    elif st.find(line, 'Ea')==0:
+#        Ea=float(st.split(line, ':')[1])
+#    elif st.find(line, 'A0')==0:
+#        A0=float(st.split(line, ':')[1])
+#    elif st.find(line, 'Source_Kim')==0:
+#        source=st.split(line, ':')[1]
+##    elif st.find(line, 'Species')==0:
+##        titles=st.split(st.split(st.split(line, ':')[1], '\n')[0], ',')
+#    elif st.find(line, 'Length')==0 and type(xmax) is str:
+#        xmax=float(st.split(line, ':')[1])*1000
+#    elif st.find(line, 'Width')==0 and type(ymax) is str:
+#        ymax=float(st.split(line, ':')[1])*1000
+#input_file.close()
 
 ##############################################################
 #               Times to process (if ALL is selected)
@@ -163,9 +180,9 @@ X=np.load('X.npy', False)
 Y=np.load('Y.npy', False)
 for time in times:
     T=np.load('T_'+time+'.npy', False)
-    if st.find(source,'True')>=0:
+    if st.find(sources['Source_Kim'],'True')>=0:
         eta=np.load('eta_'+time+'.npy', False)
-        Y_tot=np.zeros_like(Y)
+        Y_tot=0
     
     # Temperature contour
     fig=plt.figure(figsize=fig_size)
@@ -194,7 +211,7 @@ for time in times:
         # fig.savefig('T_1D_'+time+'.png',dpi=300)
         # plt.close(fig)
     
-    if st.find(source,'True')>=0:
+    if st.find(sources['Source_Kim'],'True')>=0:
         # Progress contour
         fig=plt.figure(figsize=fig_size)
         plt.contourf(X*1000, Y*1000, eta, alpha=0.5, cmap=cmap_choice, levels=lvl_eta)#, vmin=0.0, vmax=1.0)  
@@ -212,7 +229,7 @@ for time in times:
         
         # Reaction rate contour
         if st.find(Phi_graphs,'True')>=0:
-            phi=A0*(1-eta)*np.exp(-Ea/8.314/T)
+            phi=sources['A0']*(1-eta)*np.exp(-sources['Ea']/8.314/T)
             fig=plt.figure(figsize=fig_size)
             plt.contourf(X*1000, Y*1000, phi, alpha=0.5, cmap=cmap_choice)#, vmin=0.0, vmax=1.0)  
             plt.colorbar(format='%.2e')
@@ -236,41 +253,80 @@ for time in times:
             fig.savefig('Phi_1D_'+time+'.png',dpi=300)
             plt.close(fig)
     try:
-        P=np.load('P_'+time+'.npy', False)
+            # Mass fraction contours
+        for i in range(len(titles)):
+            Y_0=np.load('rho_'+titles[i]+'_'+time+'.npy', False)
+            fig=plt.figure(figsize=fig_size)
+            plt.contourf(X*1000, Y*1000, Y_0, alpha=0.5, cmap=cmap_choice)#, vmin=0.0, vmax=1.0)  
+            plt.colorbar()
+            plt.xlabel('$x$ (mm)')
+            plt.ylabel('$y$ (mm)')
+        #    plt.clim(0.0, 1.0)
+            plt.xlim([xmin,xmax])
+            plt.ylim([ymin,ymax])
+            plt.title('Density; $'+titles[i]+'$, t='+time+' ms');
+            fig.savefig('rho_'+titles[i]+'_'+time+'.png',dpi=300)
+            plt.close(fig)
+            Y_tot+=np.sum(Y_0)/np.size(Y_0)
+    except:
+        print 'Processed '+time
+        continue
+    
+    # Darcy velocities and pressure contours
+    P=np.load('P_'+time+'.npy', False)
+    u=np.zeros_like(P)
+    v=np.zeros_like(P)
+    por=settings['Porosity']+\
+        (1-Y_0/(float(settings['rho_IC'][1])*settings['Porosity']))\
+        *(1-settings['Porosity'])
+    perm=por**3*settings['Carmen_diam']**2/(settings['Kozeny_const']*(1-por)**2)
+    u[:,1:]=-interpolate(perm[:,1:], perm[:,:-1], settings['diff_interpolation'])\
+        /settings['Darcy_mu']*(P[:,1:]-P[:,:-1])/(X[:,1:]-X[:,:-1])
+    v[1:,:]=-interpolate(perm[1:,:], perm[:-1,:], settings['diff_interpolation'])\
+        /settings['Darcy_mu']*(P[1:,:]-P[:-1,:])/(Y[1:,:]-Y[:-1,:])
+#    pl=25
+    fig=plt.figure(figsize=fig_size)
+#    plt.quiver(X[::pl, ::pl]*1000, Y[::pl, ::pl]*1000, \
+#                  u[::pl, ::pl], v[::pl, ::pl])
+    plt.contourf(X*1000, Y*1000, P, alpha=0.5, cmap=cmap_choice)#, vmin=270, vmax=2000)  
+    plt.colorbar()
+    plt.xlabel('$x$ (mm)')
+    plt.ylabel('$y$ (mm)')
+#    plt.clim(300, 10000)
+    plt.xlim([xmin,xmax])
+    plt.ylim([ymin,ymax])
+    plt.title('Pressure t='+time+' ms');
+    fig.savefig('P_'+time+'.png',dpi=300)
+    plt.close(fig)
+    
+    # Darcy Velocity contours
+    if st.find(darcy, 'True')>=0:
         fig=plt.figure(figsize=fig_size)
-        plt.contourf(X*1000, Y*1000, P, alpha=0.5, cmap=cmap_choice)#, vmin=270, vmax=2000)  
+        plt.contourf(X*1000, Y*1000, u, alpha=0.5, cmap=cmap_choice)#, vmin=270, vmax=2000)  
         plt.colorbar()
         plt.xlabel('$x$ (mm)')
         plt.ylabel('$y$ (mm)')
     #    plt.clim(300, 10000)
         plt.xlim([xmin,xmax])
         plt.ylim([ymin,ymax])
-        plt.title('Pressure t='+time+' ms');
-        fig.savefig('P_'+time+'.png',dpi=300)
+        plt.title('Darcy Velocity u t='+time+' ms');
+        fig.savefig('u_'+time+'.png',dpi=300)
         plt.close(fig)
-    except:
-        print 'Processed '+time
-        continue
-    
-        # Mass fraction contours
-    for i in range(len(titles)):
-        Y_0=np.load('rho_'+titles[i]+'_'+time+'.npy', False)
+        
         fig=plt.figure(figsize=fig_size)
-        plt.contourf(X*1000, Y*1000, Y_0, alpha=0.5, cmap=cmap_choice)#, vmin=0.0, vmax=1.0)  
+        plt.contourf(X*1000, Y*1000, v, alpha=0.5, cmap=cmap_choice)#, vmin=270, vmax=2000)  
         plt.colorbar()
         plt.xlabel('$x$ (mm)')
         plt.ylabel('$y$ (mm)')
-    #    plt.clim(0.0, 1.0)
+    #    plt.clim(300, 10000)
         plt.xlim([xmin,xmax])
         plt.ylim([ymin,ymax])
-        plt.title('Density; $'+titles[i]+'$, t='+time+' ms');
-        fig.savefig('rho_'+titles[i]+'_'+time+'.png',dpi=300)
+        plt.title('Darcy Velocity v t='+time+' ms');
+        fig.savefig('v_'+time+'.png',dpi=300)
         plt.close(fig)
-        Y_tot+=Y_0
-            
-        
+    
     print 'Processed '+time
-    print '     Mass balance residual: %.1f'%(np.amin(Y_tot))
+    print '     Mass balance residual: %.1f'%(Y_tot)
 
 if st.find(OneD_graphs,'True')>=0:
     print 'Creating 1D plots'
@@ -288,12 +344,12 @@ if st.find(OneD_graphs,'True')>=0:
     fig.savefig('T_1D.png',dpi=300)
     plt.close(fig)
     
-    if st.find(source,'True')>=0:
+    if st.find(sources['Source_Kim'],'True')>=0:
         fig=plt.figure(figsize=fig_size)
         for time in times:
             eta=np.load('eta_'+time+'.npy', False)
             T=np.load('T_'+time+'.npy', False)
-            phi=A0*(1-eta)*np.exp(-Ea/8.314/T)
+            phi=sources['A0']*(1-eta)*np.exp(-sources['Ea']/8.314/T)
             # 1D Reaction rate profile at centreline
             plt.plot(Y[:,1]*1000, phi[:,int(len(T[0,:])/2)], label='t='+time)
         plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))

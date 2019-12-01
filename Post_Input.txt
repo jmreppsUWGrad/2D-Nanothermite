@@ -20,6 +20,7 @@ Times:ALL
 #	Units are mm
 #	1D_Plots: True OR None; output 1D plots along centre
 #	Phi_Plots: True OR None; output reaction rate contours
+#	Darcy_vel: True OR None; output darcy velocity contours (1 per direction)
 #	Time_Temp_Pos: Position in array to extract data for Post_timeEvolv.py script ONLY
 #	Variable: Variable to plot for Post_timeEvolv (Temperature, Pressure, eta)
 ######################################################
@@ -37,6 +38,7 @@ eta_pts:2
 
 1D_Plots:None
 Phi_Plots:None
+Darcy_vel:None
 
 Time_Temp_Pos:0,0
 Variable:Temperature
