@@ -1,0 +1,143 @@
+######################################################
+#             2D Heat Conduction Solver              #
+#              Created by J. Mark Epps               #
+#          Part of Masters Thesis at UW 2018-2020    #
+######################################################
+
+############### INPUT FILE #########################
+#    Reference directions:
+#    left-smallest x coordinate
+#    right-largest x value
+#    north-largest y coordinate
+#    south-smallest y coordinate
+
+#    Properties are in standard units J, kg, K, W, m
+#    Lines in Input file with '#' at beginning will NOT be read by solver
+
+######################################################
+#			Domain and Mesh Settings
+#	Domain:Axisymmetric OR Planar
+#	Currently not available
+#Biasing options:
+#    -'OneWayUp'   for linearly increasing element sizes with increasing x/y
+#    -'OneWayDown' for linearly decreasing element sizes with increasing x/y
+#    -'TwoWayEnd'  for linearly increasing sizes till middle, then decrease again
+#    -'TwoWayMid'  for linearly decreasing sizes till middle, then increase again
+#    -size         is the smallest element size based on above selection
+######################################################
+
+Domain:Axisymmetric
+Length:1.0
+Width:1.0
+Nodes_x:120
+Nodes_y:120
+bias_type_x:None
+bias_size_x:0.003
+bias_type_y:None
+bias_size_y:1e-06
+
+######################################################
+#			Model Settings
+#	Model: 'Species' for 2 species model or 'Heat' for conduction model
+#	rho_IC: Initial densities of each species in order specified in 'Species'; density of phase, not per continuum vol
+#	Cv_s or k_s: Specific heat or thermal conductivity settings for solid phase
+#	Cv_g or k_g: Specific heat or thermal conductivity settings for gas phase
+#	Cv_g or Cv_s: [chemical],Temp; [chemical] is chemical formula of species, must be in MatClasses to be valid
+#	Cv_g or Cv_s: [chemical],Temp,[Temperature value]
+#	Cv_g or Cv_s: eta,[value at eta=0],[value at eta=1]
+#	k_s or k_g:
+#	Porosity: percentage of domain that is porous
+#	Darcy_mu: Viscosity used in Darcy's law
+#	Carmen_diam: Particle diameter used in permeability calculation (Carmen-Kozeny)
+#	pore_gas: Air or Ar; gas that is present in pores
+#	gas_constant: specific gas constant for that species (for ideal gas law); J/kg/K
+######################################################
+
+Model:Heat
+Species:g,s
+Temperature_IC:293
+rho_IC:5000
+Cv_s:800
+Cv_g:Air,Temp,1000
+Cp_g:Air,Temp
+k_s:70
+k_g:65
+k_model:Parallel
+Porosity:0.0
+Darcy_mu:1e-5
+Carmen_diam:40e-9
+gas_constant:81.51
+diff_interpolation:Harmonic
+conv_interpolation:Linear
+
+######################################################
+#			Source terms
+#	Source_uniform: specify volumetric heating in W/m^3 or None
+#	Source_Kim: True or None
+######################################################
+
+Source_Uniform:100000
+Source_Kim:None
+Ea:48000
+A0:4890000
+dH:rho,63000000000
+Ignition:10,1
+gas_gen:0.343
+
+######################################################
+#			Time advancement details
+#	'Fo' (in (0, 1.0)) OR 'dt' must be specified; if both are, then smallest will be used; Fo stability check to 1.0
+#	'Fo' in (0,1.0) for planar, (0, 50.0) for axisymmetric (experimentally determined for this code)
+#	'total_time_steps' OR 'total_time' must be specified; if both, then smallest will be used
+#	Time schemes: Explicit
+#	'Convergence' and 'Max_iterations' are for implicit solver
+#	Number_Data_Output: Number of T variable files to be output over the time/number of steps specified assuming no restart
+#	'Restart': None OR a number sequence in T data file name  (will restart at this time)
+######################################################
+
+Fo:0.2
+CFL:None
+dt:1.0
+total_time_steps:80000
+total_time:None
+Time_Scheme:Explicit
+Restart:None
+
+Convergence:0.0001
+Max_iterations:100
+
+Number_Data_Output:10
+
+######################################################
+#			Boundary conditions
+# Format: [type of BC], [values for BC], [first node #], [last node #]
+#	[type of BC]  -T or F for const. temp or flux; each requires one value for [values for BC]
+#	[type of BC]  -C for convective BC; requires conv. HT coeff AND T_infty for [values for BC]
+#	[first node #]-first node number to apply BC; 0 based index; must be positive
+#	[last node #] -last node number to apply BC; must be positive
+#		Mulitple BCs can be specified along a boundary; separate everything with commas;
+#	e.g. F, 1000, 0,10,C,10,300,10,20
+#  [IN PROGRESS] Profiles possible; must be same size as number of nodes on that boundary
+######################################################
+#T, 600, 0, 60,T, 400, 60, 120
+#T, 600, 0, 120
+#T,400.0,0,20,T,600.0,20,40,T,400.0,40,60,T,600.0,60,80,T,400.0,80,100,T,600.0,100,120
+
+bc_left_E:F, 0, 0, 120
+bc_left_rad:None
+bc_right_E:T, 300, 0, 120
+bc_right_rad:None
+bc_south_E:F, 0, 0, 120
+bc_south_rad:None
+bc_north_E:F, 0, 0, 120
+bc_north_rad:None
+
+bc_left_P:grad,0,0,-1
+bc_right_P:grad,0,0,-1
+bc_south_P:grad,0,0,-1
+bc_north_P:grad,0,0,-1
+
+bc_left_mass:grad,0,0,-1
+bc_right_mass:grad,0,0,-1
+bc_south_mass:grad,0,0,-1
+bc_north_mass:grad,0,0,-1
