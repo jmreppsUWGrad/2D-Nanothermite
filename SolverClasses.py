@@ -25,8 +25,6 @@ Features/assumptions:
 import numpy as np
 import copy
 import string as st
-#import CoolProp.CoolProp as CP
-#import temporal_schemes
 import Source_Comb
 import BCClasses
 from mpi4py import MPI
@@ -66,6 +64,8 @@ class TwoDimSolver():
         # Left boundary
         if self.Domain.proc_left>=0:
             self.BCs.BCs['bc_left_E']=['F', 0.0, (0, -1)]
+            self.BCs.BCs['bc_left_rad']='None'
+            self.BCs.BCs['bc_left_P']=['none', 0.0, (0, -1)]
         # Global boundary with multiple BCs
         elif len(BC_global['bc_left_E'])>3:
             i=len(BC_global['bc_left_E'])/3
@@ -116,6 +116,8 @@ class TwoDimSolver():
         # Right boundary
         if self.Domain.proc_right>=0:
             self.BCs.BCs['bc_right_E']=['F', 0.0, (0, -1)]
+            self.BCs.BCs['bc_right_rad']='None'
+            self.BCs.BCs['bc_right_P']=['none', 0.0, (0, -1)]
         # Global boundary with multiple BCs
         elif len(BC_global['bc_right_E'])>3:
             i=len(BC_global['bc_right_E'])/3
@@ -175,6 +177,7 @@ class TwoDimSolver():
         if self.Domain.proc_top>=0:
             self.BCs.BCs['bc_north_E']=['F', 0.0, (0, -1)]
             self.BCs.BCs['bc_north_rad']='None'
+            self.BCs.BCs['bc_north_P']=['none', 0.0, (0, -1)]
         # Global boundary with multiple BCs
         elif len(BC_global['bc_north_E'])>3:
             i=len(BC_global['bc_north_E'])/3
@@ -225,6 +228,8 @@ class TwoDimSolver():
         # Bottom boundary
         if self.Domain.proc_bottom>=0:
             self.BCs.BCs['bc_south_E']=['F', 0.0, (0, -1)]
+            self.BCs.BCs['bc_south_rad']='None'
+            self.BCs.BCs['bc_south_P']=['none', 0.0, (0, -1)]
         # Global boundary with multiple BCs
         elif len(BC_global['bc_south_E'])>3:
             i=len(BC_global['bc_south_E'])/3
@@ -336,10 +341,11 @@ class TwoDimSolver():
         ###################################################################
         # Conservation of Mass
         ###################################################################
+        flex=np.zeros_like(T_c)
+        fley=np.zeros_like(T_c)
         if self.Domain.model=='Species':
-            # Adjust pressure
+            # Calculate pressure
             self.Domain.P=rho_spec[species[0]]/self.Domain.porosity*self.Domain.R*T_c
-    #        self.BCs.P(self.Domain.P)
             
             # Use Darcy's law to directly calculate the velocities at the faces
             flx=np.zeros_like(self.Domain.P)
@@ -403,6 +409,10 @@ class TwoDimSolver():
             self.Domain.rho_species[species[0]]+=dm0*dt
             self.Domain.rho_species[species[1]]-=dm1*dt
                     
+            # Apply pressure BCs
+            flex,fley=self.BCs.P(self.Domain.P, self.Domain.R, T_c)
+            self.Domain.rho_species[species[0]]+=(flex+fley)*self.Domain.porosity
+            
             max_Y=max(np.amax(self.Domain.rho_species[species[0]]),\
                       np.amax(self.Domain.rho_species[species[1]]))
             min_Y=min(np.amin(self.Domain.rho_species[species[0]]),\
@@ -415,8 +425,8 @@ class TwoDimSolver():
         # Conservation of Energy
         ###################################################################
         # Heat diffusion
-        flex=np.zeros_like(self.Domain.E)
-        fley=np.zeros_like(self.Domain.E)
+        flex*=Cp*T_c
+        fley*=Cp*T_c
         # Axisymmetric domain flux in r
         if self.Domain.type=='Axisymmetric':
             #left faces
@@ -555,8 +565,8 @@ class TwoDimSolver():
             return 2, dt, ign
         if (np.amax(self.Domain.eta)>1.0) or (np.amin(self.Domain.eta)<-10**(-9)):
             return 3, dt, ign
-        elif self.Domain.model=='Species' and ((min_Y<-10)\
-                  or np.isnan(max_Y)):
-            return 4, dt, ign
+#        elif self.Domain.model=='Species' and ((min_Y<-10)\
+#                  or np.isnan(max_Y)):
+#            return 4, dt, ign
         else:
             return 0, dt, ign
