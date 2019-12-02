@@ -1,5 +1,6 @@
 @echo OFF
 
+call conda activate base
 set proc=6
 set fold=Tests\Conserv\AlMoO3\16\NoClipping
 REM set fold=Tests\Axisymmetric\AlMoO3\2
@@ -11,3 +12,5 @@ python Post.py %fold% 0
 cd C:\Users\mepps\Documents\Research\2D_Conduction
 
 REM Run_batch.bat
+
+call conda deactivate
