@@ -327,6 +327,9 @@ for time in times:
     
     print 'Processed '+time
     print '     Mass balance residual: %.1f'%(Y_tot)
+    if st.find(darcy, 'True')>=0:
+        print '     Max velocity u: %.1f'%(np.amax(abs(u)))
+        print '     Max velocity v: %.1f'%(np.amax(abs(v)))
 
 if st.find(OneD_graphs,'True')>=0:
     print 'Creating 1D plots'
