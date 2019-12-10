@@ -247,6 +247,7 @@ while nt<settings['total_time_steps'] and t<settings['total_time']:
         if rank==0:
             print '#################### Solver aborted #######################'
             print '################### Error code %i'%(err)
+            print 'Error codes: 1-time step, 2-Energy, 3-reaction progress, 4-Species balance'
             print 'Saving data to numpy array files...'
             input_file.Write_single_line('#################### Solver aborted #######################')
             input_file.Write_single_line('Time step %i, Time elapsed=%f, error code=%i;'%(nt,t,err))
