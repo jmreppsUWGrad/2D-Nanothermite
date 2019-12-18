@@ -110,15 +110,15 @@ gas_gen:0.343
 Fo:0.01
 CFL:0.01
 dt:1e-9
-total_time_steps:1
-total_time:2e-4
+total_time_steps:10000
+total_time:None
 Time_Scheme:Explicit
 Restart:None
 
 Convergence:0.0001
 Max_iterations:100
 
-Number_Data_Output:120
+Number_Data_Output:2
 
 ######################################################
 #			Boundary conditions
