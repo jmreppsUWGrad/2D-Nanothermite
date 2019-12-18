@@ -278,20 +278,17 @@ class TwoDimSolver():
                     i-=1
         
     # Time step check with dx, dy, Fo number
-    def getdt(self, k, rhoC, T):
+    def getdt(self, k, rhoC, u, v):
         # Time steps depending on Fo
-        dt_1=np.amin(self.Fo*rhoC/k*(self.dx)**2)
-        dt_2=np.amin(self.Fo*rhoC/k*(self.dy)**2)
+        dt_1=np.amin(self.Fo*rhoC/k*((self.dx)**2*(self.dy)**2)/\
+                     ((self.dx)**2+(self.dy)**2))
         
         # Time steps depending on CFL (if flow model used)
-        if bool(self.Domain.rho_species):
-            dt_3=np.amin(self.CFL*self.dx/np.sqrt(1.4*8.314/102*T))
-            dt_4=np.amin(self.CFL*self.dy/np.sqrt(1.4*8.314/102*T))
-        else:
-            dt_3=10**9
-            dt_4=10**9
+        u[u==0]=10**(-9)
+        v[v==0]=10**(-9)
+        dt_2=np.amin(self.CFL*(self.dx/np.abs(u)+self.dy/np.abs(v)))
         
-        return min(dt_1,dt_2,dt_3,dt_4)
+        return min(dt_1,dt_2)
     
     # Interpolation function
     def interpolate(self, k1, k2, func):
@@ -303,16 +300,33 @@ class TwoDimSolver():
     # Main solver (1 time step)
     def Advance_Soln_Cond(self, nt, t, hx, hy, ign):
         max_Y,min_Y=0,1
+        u=np.zeros_like(hx)# Darcy velocity u for time step calculations
+        v=np.zeros_like(hx)# Darcy velocity v for time step calculations
         # Calculate properties
         T_c, k, rhoC, Cp=self.Domain.calcProp(self.Domain.T_guess)
         
+        # Copy needed variables and set pointers to other variables
+        if self.Domain.model=='Species':
+            rho_spec=copy.deepcopy(self.Domain.rho_species)
+            species=self.Domain.species_keys
+            mu=self.Domain.mu
+            perm=self.Domain.perm
+            # Calculate pressure
+            self.Domain.P=rho_spec[species[0]]/self.Domain.porosity*self.Domain.R*T_c
+            # Darcy velocities right/north faces
+            u[:,:-1]=(-self.interpolate(perm[:,1:],perm[:,:-1], self.diff_inter)/mu\
+                    *(self.Domain.P[:,1:]-self.Domain.P[:,:-1])/self.dx[:,:-1])
+            v[:-1,:]=(-self.interpolate(perm[1:,:], perm[:-1,:], self.diff_inter)/mu\
+                    *(self.Domain.P[1:,:]-self.Domain.P[:-1,:])/self.dy[:-1,:])
+        
+        # Get time step
         if self.dt=='None':
-            dt=self.getdt(k, rhoC, T_c)
+            dt=self.getdt(k, rhoC, u, v)
             # Collect all dt from other processes and send minimum
             dt=self.comm.reduce(dt, op=MPI.MIN, root=0)
             dt=self.comm.bcast(dt, root=0)
         else:
-            dt=min(self.dt,self.getdt(k, rhoC, T_c))
+            dt=min(self.dt,self.getdt(k, rhoC, u, v))
             # Collect all dt from other processes and send minimum
             dt=self.comm.reduce(dt, op=MPI.MIN, root=0)
             dt=self.comm.bcast(dt, root=0)
@@ -321,13 +335,6 @@ class TwoDimSolver():
         if self.Domain.rank==0:
             print 'Time step %i, Step size=%.7fms, Time elapsed=%fs;'%(nt+1,dt*1000, t+dt)
         
-        # Copy needed variables and set pointers to other variables
-        if self.Domain.model=='Species':
-            rho_spec=copy.deepcopy(self.Domain.rho_species)
-            species=self.Domain.species_keys
-            mu=self.Domain.mu
-            perm=self.Domain.perm
-            
         ###################################################################
         # Calculate source and Porous medium terms
         ###################################################################
@@ -344,34 +351,28 @@ class TwoDimSolver():
         flex=np.zeros_like(T_c)
         fley=np.zeros_like(T_c)
         if self.Domain.model=='Species':
-            # Calculate pressure
-            self.Domain.P=rho_spec[species[0]]/self.Domain.porosity*self.Domain.R*T_c
-            
             # Use Darcy's law to directly calculate the velocities at the faces
-            flx=np.zeros_like(self.Domain.P)
-            fly=np.zeros_like(self.Domain.P)
-            
             # Axisymmetric domain flux in r
             if self.Domain.type=='Axisymmetric':
                 # Left faces
-                flx[:,1:-1]+=dt/hx[:,1:-1]/(self.Domain.X[:,1:-1])\
+                flex[:,1:-1]+=dt/hx[:,1:-1]/(self.Domain.X[:,1:-1])\
                     *(self.Domain.X[:,1:-1]-self.dx[:,:-2]/2)\
                     *self.interpolate(rho_spec[species[0]][:,1:-1],rho_spec[species[0]][:,:-2],self.conv_inter)\
                     *(-self.interpolate(perm[:,1:-1],perm[:,:-2],self.diff_inter)/mu\
                     *(self.Domain.P[:,1:-1]-self.Domain.P[:,:-2])/self.dx[:,:-2])
-                flx[:,-1]+=dt/hx[:,-1]/(self.Domain.X[:,-1]-self.dx[:,-1]/2)\
+                flex[:,-1]+=dt/hx[:,-1]/(self.Domain.X[:,-1]-self.dx[:,-1]/2)\
                     *(self.Domain.X[:,-1]-self.dx[:,-1]/2)\
                     *self.interpolate(rho_spec[species[0]][:,-1],rho_spec[species[0]][:,-2],self.conv_inter)\
                     *(-self.interpolate(perm[:,-1],perm[:,-2],self.diff_inter)/mu\
                     *(self.Domain.P[:,-1]-self.Domain.P[:,-2])/self.dx[:,-2])
                     
                 # Right faces
-                flx[:,1:-1]-=dt/hx[:,1:-1]/(self.Domain.X[:,1:-1])\
+                flex[:,1:-1]-=dt/hx[:,1:-1]/(self.Domain.X[:,1:-1])\
                     *(self.Domain.X[:,1:-1]+self.dx[:,1:-1]/2)\
                     *self.interpolate(rho_spec[species[0]][:,2:],rho_spec[species[0]][:,1:-1], self.conv_inter)\
                     *(-self.interpolate(perm[:,2:],perm[:,1:-1], self.diff_inter)/mu\
                     *(self.Domain.P[:,2:]-self.Domain.P[:,1:-1])/self.dx[:,1:-1])
-                flx[:,0]-=dt/hx[:,0]/(self.dx[:,0]/2)\
+                flex[:,0]-=dt/hx[:,0]/(self.dx[:,0]/2)\
                     *(self.Domain.X[:,0]+self.dx[:,0]/2)\
                     *self.interpolate(rho_spec[species[0]][:,1],rho_spec[species[0]][:,0], self.conv_inter)\
                     *(-self.interpolate(perm[:,1],perm[:,0], self.diff_inter)/mu\
@@ -379,30 +380,30 @@ class TwoDimSolver():
             
             # Planar domain flux in x
             else:
-                flx[:,1:]+=dt/hx[:,1:]\
+                flex[:,1:]+=dt/hx[:,1:]\
                     *self.interpolate(rho_spec[species[0]][:,1:],rho_spec[species[0]][:,:-1],self.conv_inter)\
                     *(-self.interpolate(perm[:,1:],perm[:,:-1],self.diff_inter)/mu\
                     *(self.Domain.P[:,1:]-self.Domain.P[:,:-1])/self.dx[:,:-1])
                     
                 # Right face
-                flx[:,:-1]-=dt/hx[:,:-1]\
+                flex[:,:-1]-=dt/hx[:,:-1]\
                     *self.interpolate(rho_spec[species[0]][:,1:],rho_spec[species[0]][:,:-1], self.conv_inter)\
                     *(-self.interpolate(perm[:,1:],perm[:,:-1], self.diff_inter)/mu\
                     *(self.Domain.P[:,1:]-self.Domain.P[:,:-1])/self.dx[:,:-1])
                     
             # South face
-            fly[1:,:]+=dt/hy[1:,:]\
+            fley[1:,:]+=dt/hy[1:,:]\
                 *self.interpolate(rho_spec[species[0]][1:,:],rho_spec[species[0]][:-1,:],self.conv_inter)\
                 *(-self.interpolate(perm[1:,:],perm[:-1,:],self.diff_inter)/mu\
                 *(self.Domain.P[1:,:]-self.Domain.P[:-1,:])/self.dy[:-1,:])
                 
             # North face
-            fly[:-1,:]-=dt/hy[:-1,:]\
+            fley[:-1,:]-=dt/hy[:-1,:]\
                 *self.interpolate(rho_spec[species[0]][1:,:], rho_spec[species[0]][:-1,:], self.conv_inter)\
                 *(-self.interpolate(perm[1:,:], perm[:-1,:], self.diff_inter)/mu\
                 *(self.Domain.P[1:,:]-self.Domain.P[:-1,:])/self.dy[:-1,:])
                 
-            self.Domain.rho_species[species[0]]+=flx+fly
+            self.Domain.rho_species[species[0]]+=flex+fley
             
             # Source terms
             dm0,dm1=self.get_source.Source_mass(deta, self.Domain.porosity, self.Domain.rho_0)
@@ -425,8 +426,8 @@ class TwoDimSolver():
         # Conservation of Energy
         ###################################################################
         # Heat diffusion
-        flex*=Cp*T_c
-        fley*=Cp*T_c
+        flex*=Cp*T_c*self.Domain.porosity
+        fley*=Cp*T_c*self.Domain.porosity
         # Axisymmetric domain flux in r
         if self.Domain.type=='Axisymmetric':
             #left faces
@@ -565,8 +566,8 @@ class TwoDimSolver():
             return 2, dt, ign
         if (np.amax(self.Domain.eta)>1.0) or (np.amin(self.Domain.eta)<-10**(-9)):
             return 3, dt, ign
-#        elif self.Domain.model=='Species' and ((min_Y<-10)\
-#                  or np.isnan(max_Y)):
+#        elif self.Domain.model=='Species' and ((min_Y<-100)\
+#                  or np.isnan(max_Y) or np.isinf(max_Y)):
 #            return 4, dt, ign
         else:
             return 0, dt, ign
