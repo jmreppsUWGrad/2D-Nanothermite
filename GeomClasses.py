@@ -252,10 +252,10 @@ class TwoDimDomain():
         if self.model=='Species':
             k_g=np.zeros_like(self.eta)
             # Changing porosity/permeability
-            self.porosity=self.porosity_0+\
-                (1-self.rho_species[self.species_keys[1]]/self.rho_0)*(1-self.porosity_0)
-            self.perm=self.porosity**3*self.part_diam**2\
-                /(self.kozeny*(1-self.porosity)**2)
+#            self.porosity=self.porosity_0+\
+#                (1-self.rho_species[self.species_keys[1]]/self.rho_0)*(1-self.porosity_0)
+#            self.perm=self.porosity**3*self.part_diam**2\
+#                /(self.kozeny*(1-self.porosity)**2)
             
             # Heat capacity of Solid phase
             rhoC=self.rho_species[self.species_keys[1]]*Cv
