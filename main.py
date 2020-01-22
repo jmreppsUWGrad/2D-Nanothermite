@@ -255,14 +255,6 @@ while nt<settings['total_time_steps'] and t<settings['total_time']:
         mpi.save_data(domain, Sources, Species, '{:f}'.format(t*1000))
         break
     
-    # Output data to numpy files
-    if (output_data_nt!=0 and nt%output_data_nt==0) or \
-        (output_data_t!=0 and (t>=output_data_t*t_inc and t-dt<output_data_t*t_inc)):
-        if rank==0:
-            print 'Saving data to numpy array files...'
-        mpi.save_data(domain, Sources, Species, '{:f}'.format(t*1000))
-        t_inc+=1
-        
     # Change boundary conditions if ignition occurs
     if ign==1 and ign_0==0:
         if domain.proc_top<0:
@@ -285,7 +277,19 @@ while nt<settings['total_time_steps'] and t<settings['total_time']:
             if (v_1-v_0)/dt>0.001:
                 v+=(v_1-v_0)/dt
                 N+=1
-            
+    
+    # Output data to numpy files
+    if (output_data_nt!=0 and nt%output_data_nt==0) or \
+        (output_data_t!=0 and (t>=output_data_t*t_inc and t-dt<output_data_t*t_inc)):
+        if rank==0:
+            print 'Saving data to numpy array files...'
+            try:
+                input_file.Write_single_line('Averaged wave speed at t=%f ms: %f m/s'%(t*1000, v/N))
+            except:
+                input_file.Write_single_line('Averaged wave speed at t=%f ms: 0 m/s'%(t*1000))
+        mpi.save_data(domain, Sources, Species, '{:f}'.format(t*1000))
+        t_inc+=1
+        
 if rank==0:
     time_end=time.time()
     input_file.Write_single_line('Final time step size: %f microseconds'%(dt*10**6))
