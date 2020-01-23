@@ -284,9 +284,9 @@ while nt<settings['total_time_steps'] and t<settings['total_time']:
         if rank==0:
             print 'Saving data to numpy array files...'
             try:
-                input_file.Write_single_line('Averaged wave speed at t=%f ms: %f m/s'%(t*1000, v/N))
+                input_file.Write_single_line('Wave speed [m/s] at t=%f ms: inst-%.2f, avg-%.2f'%(t*1000, (v_1-v_0)/dt, v/N))
             except:
-                input_file.Write_single_line('Averaged wave speed at t=%f ms: 0 m/s'%(t*1000))
+                input_file.Write_single_line('Wave speed [m/s] at t=%f ms: 0 m/s'%(t*1000))
         mpi.save_data(domain, Sources, Species, '{:f}'.format(t*1000))
         t_inc+=1
         
@@ -300,8 +300,8 @@ if rank==0:
     print 'Number of time steps completed: %i'%(nt)
     input_file.Write_single_line('Number of time steps completed: %i'%(nt))
     try:
-        print 'Average wave speed: %f m/s'%(v/N)
-        input_file.Write_single_line('Average wave speed: %f m/s'%(v/N))
+        print 'Average wave speed: %.2f m/s'%(v/N)
+        input_file.Write_single_line('Average wave speed: %.2f m/s'%(v/N))
         input_file.close()
     except:
         print 'Average wave speed: 0 m/s'
