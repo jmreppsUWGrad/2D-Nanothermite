@@ -10,7 +10,7 @@
 #	Times: Times in file names separated by commas OR ALL for all files
 ######################################################
 
-Directory:Tests\Axi\Stacy\5
+Directory:Tests\7
 Times:ALL
 #Times:0.366674,0.375012,0.383351,0.391671,0.400009
 
@@ -22,7 +22,7 @@ Times:ALL
 #	Phi_Plots: True OR None; output reaction rate contours
 #	Darcy_vel: True OR None; output darcy velocity contours (1 per direction)
 #	Time_Temp_Pos: Position in array to extract data for Post_timeEvolv.py script ONLY
-#	Variable: Variable to plot for Post_timeEvolv (Temperature, Pressure, eta)
+#	Variable: Variable to plot for Post_timeEvolv (Temperature, Pressure, eta, rho_g, rho_s)
 ######################################################
 
 x_min:0

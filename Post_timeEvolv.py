@@ -107,10 +107,11 @@ if type(times) is str:
 ##############################################################
 fig_size=(6, 6)
 cmap_choice=mtplt.cm.viridis
-y_label={'Temperature': 'T (K)', 'Pressure': 'P (Pa gage)',\
-         'eta': '$\eta$ (-)'}
+y_label={'Temperature': 'T ($K$)', 'Pressure': 'P ($Pa$ gage)',\
+         'eta': '$\eta$ (-)', 'rho_g': 'Density ($kg/m^3$)',\
+         'rho_s': 'Density ($kg/m^3$)'}
 var_name={'Temperature': 'T', 'Pressure': 'P',\
-         'eta': 'eta'}
+         'eta': 'eta', 'rho_g': 'rho_g', 'rho_s': 'rho_s'}
 ##############################################################
 #               Generate graphs
 ##############################################################
@@ -126,7 +127,7 @@ plt.ylabel(y_label[var])
 #plt.xlim([xmin,xmax])
 #plt.ylim([temp_min,temp_max])
 plt.legend()
-plt.title(var+' Evolution with Time at '+str(Phi_graphs))
+plt.title(var+' evolution with time at position '+str(Phi_graphs))
 fig.savefig(var+'_time.png',dpi=300)
 plt.close(fig)
 
