@@ -128,7 +128,7 @@ plt.ylabel(y_label[var])
 #plt.ylim([temp_min,temp_max])
 plt.legend()
 plt.title(var+' evolution with time at position '+str(Phi_graphs))
-fig.savefig(var+'_time.png',dpi=300)
+fig.savefig(var+'_time_'+str(Phi_graphs)+'.png',dpi=300)
 plt.close(fig)
 
 print '\nPost-processing complete'
