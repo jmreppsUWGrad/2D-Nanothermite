@@ -174,7 +174,7 @@ class TwoDimDomain():
     def create_var(self, Species):
         self.eta=np.zeros_like(self.E) # extent of reaction
         self.P=np.zeros_like(self.E) # pressure
-        self.T_guess=np.zeros_like(self.E)
+        self.T_guess=np.ones_like(self.E)
         self.porosity=np.ones_like(self.E)*self.porosity_0
         
         # Species
@@ -215,7 +215,10 @@ class TwoDimDomain():
         Cv=np.zeros_like(self.eta)
         Cp=np.zeros_like(self.eta)
         
-        # Heat capacity (rho*Cv) when species model active
+        ##########################################################################
+        # Specific heat of solid phase
+        ##########################################################################
+        
         if (type(self.Cv) is list) and (self.Cv[0]=='eta'):
             Cv=self.eta*float(self.Cv[2])+(1-self.eta)*float(self.Cv[1])
         # Solid phase (temperature dependent for given element)
@@ -230,7 +233,10 @@ class TwoDimDomain():
         else:
             Cv[:,:]=self.Cv
         
-        ############ Thermal conductivity of solid phase (either model)
+        ##########################################################################
+        # Thermal conductivity of solid phase (either model)
+        ##########################################################################
+        
         # Solid phase (eta dependent)
         if (type(self.k) is list) and (self.k[0]=='eta'):
             k=self.eta*float(self.k[2])+(1-self.eta)*float(self.k[1])
@@ -248,7 +254,10 @@ class TwoDimDomain():
         else:
             k[:,:]=self.k
         
-        ############ When species model is active
+        ##########################################################################
+        #  When species model is active
+        ##########################################################################
+        
         if self.model=='Species':
             k_g=np.zeros_like(self.eta)
             # Changing porosity/permeability
@@ -261,7 +270,10 @@ class TwoDimDomain():
             rhoC=self.rho_species[self.species_keys[1]]*Cv
 #            rhoC=self.rho*(1-self.porosity)*Cv # REPLICATE CASE 10 (CASE 10d,e)
             
-            # Heat capacity of Gas phase
+            ##########################################################################
+            #####  Heat capacity of Gas phase
+            ##########################################################################
+            
             if (type(self.Cv_g) is list) and (self.Cv_g[0]=='eta'):
                 Cv=self.eta*float(self.Cv_g[2])+(1-self.eta)*float(self.Cv_g[1])
             
@@ -272,32 +284,39 @@ class TwoDimDomain():
                     Cv=self.Cp_calc.get_Cv(np.ones_like(self.E)*float(self.Cv_g[2]), self.Cv_g[0])
                 # Temperature dependent
                 else:
-                    Cv=self.Cp_calc.get_Cv(T_guess, self.Cv_g[0])
+                    T_0=np.ones_like(self.eta)
+                    rhoc=rhoC.copy()
+                    T=np.ones_like(self.eta)*T_guess # Initial guess for temperature
+                    i=0
+                    while np.amax(np.abs(T_0-T)/T)>self.conv and i<self.max_iter:
+                        T_0=T.copy()
+                        Cv=self.Cp_calc.get_Cv(T, self.Cv_g[0])
+                        rhoc=rhoC+self.rho_species[self.species_keys[0]]*Cv
+                        T=self.E/rhoc
+                        i+=1
+                        if init:
+                            break
+                    if i>=self.max_iter:
+                        Cv=-10**9
+                        print('***** Unable to get converging temperature')
             
             # Gas phase (constant)
             else:
                 Cv[:,:]=self.Cv_g
-            rhoC+=self.rho_species[self.species_keys[0]]*Cv
             
             # Temperature calculation
+            rhoC+=self.rho_species[self.species_keys[0]]*Cv
             T=self.E/rhoC
             self.T_guess=T
-            # Iteratively solve temperature (temperature dependent properties)
-#            T_0=np.ones_like(self.eta)
-#            T=np.ones_like(self.eta)*T_guess # Initial guess for temperature
-#            i=0
-#            while np.amax(np.abs(T_0-T)/T)>self.conv and i<self.max_iter:
-#                T_0=T.copy()
-#                rhoC=(1-self.porosity)*self.rho_species[self.species_keys[1]]*Cv
-#                rhoC+=self.porosity*self.rho_species[self.species_keys[0]]*self.Cp_calc.get_Cv(T_guess, self.pore_gas)
-#                T=self.E/rhoC
-#                i+=1
-#                if init:
-#                    break            
+            
+            ##########################################################################
+            #####  Specific heat (Cp) of Gas phase
+            ##########################################################################
+            # eta dependent
             if (type(self.Cp_g) is list) and (self.Cp_g[0]=='eta'):
                 Cp=self.eta*float(self.Cp_g[2])+(1-self.eta)*float(self.Cp_g[1])
             
-            # (temperature dependent for given element)
+            # temperature dependent for given element
             elif (type(self.Cp_g) is list) and (self.Cp_g[1]=='Temp'):
                 # Constant temperature value
                 if len(self.Cp_g)>2:
@@ -306,11 +325,13 @@ class TwoDimDomain():
                 else:
                     Cp=self.Cp_calc.get_Cp(T_guess, self.Cp_g[0])
             
-            # Gas phase (constant)
+            # constant
             else:
                 Cp[:,:]=self.Cp_g
             
-            # Thermal conductivity of gas phase
+            ##########################################################################
+            ##### Thermal conductivity of gas phase
+            ##########################################################################
             # eta dependent
             if (type(self.k_g) is list) and (self.k_g[0]=='eta'):
                 k_g=self.eta*float(self.k_g[2])+(1-self.eta)*float(self.k_g[1])
@@ -328,33 +349,28 @@ class TwoDimDomain():
             else:
                 k_g[:,:]=self.k_g
             
-            # Thermal conductivity models
+            ##########################################################################
+            ##### Thermal conductivity models
+            ##########################################################################
+            
             if self.k_mode=='Parallel':
                 k=self.porosity*k_g+(1-self.porosity)*k
             elif self.k_mode=='Geometric':
                 k=k*(k_g/k)**(self.porosity)
             elif self.k_mode=='Series':
                 k=(self.porosity/k_g+(1-self.porosity)/k)**(-1)
-            
-        ############ Plain heat transfer model
+        
+        ##########################################################################
+        #  Plain heat transfer model
+        ##########################################################################
+        
         else:
             rho[:,:]=self.rho*(1-self.porosity)
             
             rhoC=rho*Cv
             T=self.E/rhoC
             self.T_guess=T
-            # Iteratively solve temperature (temperature dependent properties)
-#            T_0=np.ones_like(self.eta)
-#            T=np.ones_like(self.eta)*T_guess # Initial guess for temperature
-#            i=0
-#            while np.amax(np.abs(T_0-T)/T)>self.conv and i<self.max_iter:
-#                T_0=T.copy()
-#                rhoC=rho*Cv
-#                T=self.E/rhoC
-#                i+=1
-#                if init:
-#                    break 
-            
+        
         if init:
             return rhoC
         else:
