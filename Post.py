@@ -182,7 +182,7 @@ for time in times:
     T=np.load('T_'+time+'.npy', False)
     if st.find(sources['Source_Kim'],'True')>=0:
         eta=np.load('eta_'+time+'.npy', False)
-        Y_tot=0
+        Y_tot=np.zeros_like(eta)
     
     # Temperature contour
     fig=plt.figure(figsize=fig_size)
@@ -267,7 +267,7 @@ for time in times:
             plt.title('Density; $'+titles[i]+'$, t='+time+' ms');
             fig.savefig('rho_'+titles[i]+'_'+time+'.png',dpi=300)
             plt.close(fig)
-            Y_tot+=np.sum(Y_0)/np.size(Y_0)
+            Y_tot+=Y_0
     except:
         print 'Processed '+time
         continue
@@ -276,9 +276,10 @@ for time in times:
     P=np.load('P_'+time+'.npy', False)
     u=np.zeros_like(P)
     v=np.zeros_like(P)
-    por=settings['Porosity']+\
-        (1-Y_0/(float(settings['rho_IC'][1])*settings['Porosity']))\
-        *(1-settings['Porosity'])
+    por=np.ones_like(P)*settings['Porosity']
+#    por=settings['Porosity']+\
+#        (1-Y_0/(float(settings['rho_IC'][1])*settings['Porosity']))\
+#        *(1-settings['Porosity'])
     perm=por**3*settings['Carmen_diam']**2/(settings['Kozeny_const']*(1-por)**2)
     u[:,1:]=-interpolate(perm[:,1:], perm[:,:-1], settings['diff_interpolation'])\
         /settings['Darcy_mu']*(P[:,1:]-P[:,:-1])/(X[:,1:]-X[:,:-1])
@@ -326,7 +327,11 @@ for time in times:
         plt.close(fig)
     
     print 'Processed '+time
-    print '     Mass balance residual: %.1f'%(Y_tot)
+    print '     Mass balance residual: %.3f'%(\
+                          np.sum(Y_tot-(float(settings['rho_IC'][0])*settings['Porosity']+\
+                            float(settings['rho_IC'][1])*(1-settings['Porosity'])))/\
+                            (np.size(Y_tot)*(float(settings['rho_IC'][0])*settings['Porosity']+\
+                            float(settings['rho_IC'][1])*(1-settings['Porosity']))))
     if st.find(darcy, 'True')>=0:
         print '     Max velocity u: %.1f'%(np.amax(abs(u)))
         print '     Max velocity v: %.1f'%(np.amax(abs(v)))

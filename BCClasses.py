@@ -247,6 +247,18 @@ class BCs():
         
         efly[-1,:]=(P_0[-1,:]-P[-1,:])/(R*T[-1,:])
         
+        # Corner treatment
+        efly[0,0]=min(efly[0,0], eflx[0,0])
+        efly[0,-1]=min(efly[0,-1], eflx[0,-1])
+        efly[-1,0]=min(efly[-1,0], eflx[-1,0])
+        efly[-1,-1]=min(efly[-1,-1], eflx[-1,-1])
+        
+        eflx[0,0]=0
+        eflx[0,-1]=0
+        eflx[-1,0]=0
+        eflx[-1,-1]=0
+        
+        # Only permit mass to leave
         eflx[eflx>0]=0
         efly[efly>0]=0
         

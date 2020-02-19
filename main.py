@@ -188,6 +188,7 @@ if rank==0:
     
     # Write input file with settings
     input_file.input_writer_cond(settings, Sources, Species, BCs)
+    input_file.close()
     print '################################\n'
     
     print 'Saving data to numpy array files...'
@@ -245,32 +246,27 @@ while nt<settings['total_time_steps'] and t<settings['total_time']:
     
     if err>0:
         if rank==0:
+            input_file=open('Input_file.txt', 'a')
             print '#################### Solver aborted #######################'
             print '################### Error code %i'%(err)
             print 'Error codes: 1-time step, 2-Energy, 3-reaction progress, 4-Species balance'
             print 'Saving data to numpy array files...'
-            input_file.Write_single_line('#################### Solver aborted #######################')
-            input_file.Write_single_line('Time step %i, Time elapsed=%f, error code=%i;'%(nt,t,err))
-            input_file.Write_single_line('Error codes: 1-time step, 2-Energy, 3-reaction progress, 4-Species balance')
+            input_file.write('#################### Solver aborted #######################\n')
+            input_file.write('Time step %i, Time elapsed=%f, error code=%i;\n'%(nt,t,err))
+            input_file.write('Error codes: 1-time step, 2-Energy, 3-reaction progress, 4-Species balance\n')
+            input_file.close()
         mpi.save_data(domain, Sources, Species, '{:f}'.format(t*1000))
         break
     
-    # Output data to numpy files
-    if (output_data_nt!=0 and nt%output_data_nt==0) or \
-        (output_data_t!=0 and (t>=output_data_t*t_inc and t-dt<output_data_t*t_inc)):
-        if rank==0:
-            print 'Saving data to numpy array files...'
-        mpi.save_data(domain, Sources, Species, '{:f}'.format(t*1000))
-        t_inc+=1
-        
     # Change boundary conditions if ignition occurs
     if ign==1 and ign_0==0:
         if domain.proc_top<0:
             solver.BCs.BCs['bc_north_E']=BCs['bc_right_E']
         if rank==0:
-            input_file.fout.write('##bc_north_E_new:')
-            input_file.Write_single_line(str(BCs['bc_right_E']))
-            input_file.fout.write('\n')
+            input_file=open('Input_file.txt', 'a')
+            input_file.write('##bc_north_E_new:')
+            input_file.write(str(BCs['bc_right_E'])+'\n')
+            input_file.close()
             tign=t
         mpi.save_data(domain, Sources, Species, '{:f}'.format(t*1000))
         
@@ -285,22 +281,37 @@ while nt<settings['total_time_steps'] and t<settings['total_time']:
             if (v_1-v_0)/dt>0.001:
                 v+=(v_1-v_0)/dt
                 N+=1
-            
+    
+    # Output data to numpy files
+    if (output_data_nt!=0 and nt%output_data_nt==0) or \
+        (output_data_t!=0 and (t>=output_data_t*t_inc and t-dt<output_data_t*t_inc)):
+        if rank==0:
+            print 'Saving data to numpy array files...'
+            input_file=open('Input_file.txt', 'a')
+            try:
+                input_file.write('Wave speed [m/s] at t=%f ms: inst-%.2f, avg-%.2f\n'%(t*1000, (v_1-v_0)/dt, v/N))
+            except:
+                input_file.write('Wave speed [m/s] at t=%f ms: 0 m/s\n'%(t*1000))
+            input_file.close()
+        mpi.save_data(domain, Sources, Species, '{:f}'.format(t*1000))
+        t_inc+=1
+        
 if rank==0:
     time_end=time.time()
-    input_file.Write_single_line('Final time step size: %f microseconds'%(dt*10**6))
+    input_file=open('Input_file.txt', 'a')
+    input_file.write('Final time step size: %f microseconds\n'%(dt*10**6))
     print 'Ignition time: %f ms'%(tign*1000)
-    input_file.Write_single_line('Ignition time: %f ms'%(tign*1000))
+    input_file.write('Ignition time: %f ms\n'%(tign*1000))
     print 'Solver time per 1000 time steps: %f min'%((time_end-time_begin)/60.0*1000/nt)
-    input_file.Write_single_line('Solver time per 1000 time steps: %f min'%((time_end-time_begin)/60.0*1000/nt))
+    input_file.write('Solver time per 1000 time steps: %f min\n'%((time_end-time_begin)/60.0*1000/nt))
     print 'Number of time steps completed: %i'%(nt)
-    input_file.Write_single_line('Number of time steps completed: %i'%(nt))
+    input_file.write('Number of time steps completed: %i\n'%(nt))
     try:
-        print 'Average wave speed: %f m/s'%(v/N)
-        input_file.Write_single_line('Average wave speed: %f m/s'%(v/N))
+        print 'Average wave speed: %.2f m/s'%(v/N)
+        input_file.write('Average wave speed: %.2f m/s\n'%(v/N))
         input_file.close()
     except:
         print 'Average wave speed: 0 m/s'
-        input_file.Write_single_line('Average wave speed: 0 m/s')
+        input_file.write('Average wave speed: 0 m/s\n')
         input_file.close()
     print('Solver has finished its run')

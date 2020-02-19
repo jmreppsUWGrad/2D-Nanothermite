@@ -410,8 +410,9 @@ class TwoDimSolver():
             self.Domain.rho_species[species[0]]+=dm0*dt
             self.Domain.rho_species[species[1]]-=dm1*dt
                     
-            # Apply pressure BCs
-            flex,fley=self.BCs.P(self.Domain.P, self.Domain.R, T_c)
+            # Apply pressure BCs (use new pressure given flux and source terms)
+            flex,fley=self.BCs.P(self.Domain.rho_species[species[0]]/self.Domain.porosity*self.Domain.R*T_c,\
+                                 self.Domain.R, T_c)
             self.Domain.rho_species[species[0]]+=(flex+fley)*self.Domain.porosity
             
             max_Y=max(np.amax(self.Domain.rho_species[species[0]]),\
