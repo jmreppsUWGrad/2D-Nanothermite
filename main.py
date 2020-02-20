@@ -271,14 +271,14 @@ while nt<settings['total_time_steps'] and t<settings['total_time']:
         mpi.save_data(domain, Sources, Species, '{:f}'.format(t*1000))
         
     # Second point in calculating combustion propagation speed
-    if st.find(Sources['Source_Kim'],'True')>=0 and ign==1:
+    if st.find(Sources['Source_Kim'],'True')>=0 and ign==1 and ign_0==1:
         eta=mpi.compile_var(domain.eta, domain)
         if rank==0:
             if st.find(settings['Domain'], 'Axisymmetric')>=0:
                 v_1=np.sum(eta[:,0]*dy[:,0])
             else:
                 v_1=np.sum(eta[:,int(len(eta[0,:])/2)]*dy[:,int(len(eta[0,:])/2)])
-            if (v_1-v_0)/dt>0.001:
+            if (v_1-v_0)/dt>0.01:
                 v+=(v_1-v_0)/dt
                 N+=1
     
