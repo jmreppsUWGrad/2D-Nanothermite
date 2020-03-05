@@ -71,13 +71,18 @@ class Cp():
         
         Cp[T<933]=(a0+a1*T[T<933]+a2*T[T<933]**2+a3*T[T<933]**3+a4*T[T<933]**4)*1000/molar_mass
         
-        # Gas phase; use value near 2900 K
+        # Gas phase
+        a0=1.79440e+01
+        a1=2.79410e-03
+        a2=-9.47010e-07
+        a3=1.18900e-10
+        a4=-2.67100e-15
         if typ=='Cp':
-            Cp[T>2791]=771.0
+            Cp[T>2791]=(a0+a1*T[T>2791]+a2*T[T>2791]**2+a3*T[T>2791]**3+a4*T[T>2791]**4)*1000/molar_mass
         else:
-            Cp[T>2791]=771.0-8.314*1000/self.Al_mol_mass
+            Cp[T>2791]=(a0+a1*T[T>2791]+a2*T[T>2791]**2+a3*T[T>2791]**3+a4*T[T>2791]**4-8.314)*1000/molar_mass
         
-        # Liquid phase
+        #Liquid phase
         Cp[Cp==0]=1177.0
         
         return Cp
@@ -127,19 +132,25 @@ class Cp():
         Cp=np.zeros_like(T)
         # Solid phase
         # Coefficicents for polynomial fit
-        # Excel regression of JANAF data
-        a0=11.674
-        a1=0.075938
-        a2=-1.5457e-4
-        a3=1.5259e-7
-        a4=-5.1417e-11
+        # Excel regression of JANAF data				
+
+        a0=21.855
+        a1=8.53670e-03
+        a2=4.01790e-06
+        a3=-1.35100e-08
+        a4=7.73510e-12
         Cp[T<1358]=(a0+a1*T[T<1358]+a2*T[T<1358]**2+a3*T[T<1358]**3+a4*T[T<1358]**4)*1000/molar_mass
         
-        # Gas phase; use value near 2900 K
+        # Gas phase
+        a0=40.0730
+        a1=-2.76060e-02
+        a2=1.28100e-05
+        a3=-2.11460e-09
+        a4=1.19760e-13
         if typ=='Cp':
-            Cp[T>2843]=388.0
+            Cp[T>2843]=(a0+a1*T[T>2843]+a2*T[T>2843]**2+a3*T[T>2843]**3+a4*T[T>2843]**4)*1000/molar_mass
         else:
-            Cp[T>2843]=388.0-8.314*1000/self.Cu_mol_mass
+            Cp[T>2843]=(a0+a1*T[T>2843]+a2*T[T>2843]**2+a3*T[T>2843]**3+a4*T[T>2843]**4-8.314)*1000/molar_mass
         
         # Liquid phase
         Cp[Cp==0]=517.0
