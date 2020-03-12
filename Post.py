@@ -30,6 +30,8 @@ import string as st
 import matplotlib as mtplt
 from matplotlib import pyplot as plt
 from FileClasses import FileIn
+from GeomClasses import TwoDimDomain
+from Source_Comb import Source_terms
 
 # Interpolation function for Darcy u calculations
 def interpolate(k1, k2, func):
@@ -128,10 +130,10 @@ BCs={}
 input_file.Read_Input(settings, sources, Species, BCs)
 xmax=float(settings['Length'])*1000
 ymax=float(settings['Width'])*1000
-try:
-    settings['rho_IC']=st.split(settings['rho_IC'], ',')
-except:
-    settings['rho_IC']=float(settings['rho_IC'])
+#try:
+#    settings['rho_IC']=st.split(settings['rho_IC'], ',')
+#except:
+#    settings['rho_IC']=float(settings['rho_IC'])
 #while A0<0 or Ea<0 or source=='False':
 #    line=input_file.readline()
 #    if st.find(line, 'Domain')==0:
@@ -174,11 +176,30 @@ norm_eta=mtplt.colors.Normalize(vmin=0, vmax=1.0)
 fig_size=(6, 6)
 cmap_choice=mtplt.cm.viridis
 ##############################################################
-#               Generate graphs
+#               Post-processing
 ##############################################################
 X=np.load('X.npy', False)
 Y=np.load('Y.npy', False)
+# Open post-processing file
+fout=open('Post_processing.txt', 'w')
+fout.write('Post processing results:\n')
+fout.write(dir_files+'\n\n')
+# Initialize geometry and source objects
+geom=TwoDimDomain(settings, Species, settings['Domain'], 0)
+geom.mesh()
+geom.create_var(Species)
+dx,dy=np.meshgrid(geom.dx, geom.dy)
+hx,hy=geom.CV_dim()
+source=Source_terms(sources['Ea'],sources['A0'],sources['dH'],sources['gas_gen'])
+# Initialize variables
+rho_avg=0
+u_avg=0
+p_max=0
 for time in times:
+    fout.write('Time = '+str(time)+'\n')
+    ##############################################################
+    #               Generate graphs
+    ##############################################################
     T=np.load('T_'+time+'.npy', False)
     if st.find(sources['Source_Kim'],'True')>=0:
         eta=np.load('eta_'+time+'.npy', False)
@@ -253,11 +274,12 @@ for time in times:
             fig.savefig('Phi_1D_'+time+'.png',dpi=300)
             plt.close(fig)
     try:
+        Y_0=[]
             # Mass fraction contours
         for i in range(len(titles)):
-            Y_0=np.load('rho_'+titles[i]+'_'+time+'.npy', False)
+            Y_0.append(np.load('rho_'+titles[i]+'_'+time+'.npy', False))
             fig=plt.figure(figsize=fig_size)
-            plt.contourf(X*1000, Y*1000, Y_0, alpha=0.5, cmap=cmap_choice)#, vmin=0.0, vmax=1.0)  
+            plt.contourf(X*1000, Y*1000, Y_0[i], alpha=0.5, cmap=cmap_choice)#, vmin=0.0, vmax=1.0)  
             plt.colorbar()
             plt.xlabel('$x$ (mm)')
             plt.ylabel('$y$ (mm)')
@@ -267,13 +289,14 @@ for time in times:
             plt.title('Density; $'+titles[i]+'$, t='+time+' ms');
             fig.savefig('rho_'+titles[i]+'_'+time+'.png',dpi=300)
             plt.close(fig)
-            Y_tot+=Y_0
+            Y_tot+=Y_0[i]
     except:
         print 'Processed '+time
         continue
     
     # Darcy velocities and pressure contours
     P=np.load('P_'+time+'.npy', False)
+    p_max=max(np.amax(P),p_max)
     u=np.zeros_like(P)
     v=np.zeros_like(P)
     por=np.ones_like(P)*settings['Porosity']
@@ -327,15 +350,195 @@ for time in times:
         plt.close(fig)
     
     print 'Processed '+time
-    print '     Mass balance residual: %.3f'%(\
-                          np.sum(Y_tot-(float(settings['rho_IC'][0])*settings['Porosity']+\
-                            float(settings['rho_IC'][1])*(1-settings['Porosity'])))/\
-                            (np.size(Y_tot)*(float(settings['rho_IC'][0])*settings['Porosity']+\
-                            float(settings['rho_IC'][1])*(1-settings['Porosity']))))
+    fout.write('     Mass balance residual: %.3f'%(\
+                          np.sum(Y_tot-(float(st.split(settings['rho_IC'], ',')[0])*settings['Porosity']+\
+                            float(st.split(settings['rho_IC'], ',')[1])*(1-settings['Porosity'])))/\
+                            (np.size(Y_tot)*(float(st.split(settings['rho_IC'], ',')[0])*settings['Porosity']+\
+                            float(st.split(settings['rho_IC'], ',')[1])*(1-settings['Porosity']))))+'\n')
     if st.find(darcy, 'True')>=0:
-        print '     Max velocity u: %.1f'%(np.amax(abs(u)))
-        print '     Max velocity v: %.1f'%(np.amax(abs(v)))
-
+        fout.write('     Max velocity u: %.1f'%(np.amax(abs(u)))+'\n')
+        fout.write('     Max velocity v: %.1f'%(np.amax(abs(v)))+'\n')
+    
+    ##############################################################
+    #               Non-dimensional numbers
+    ##############################################################
+    # T is temp, P is press, Y_0 is rho_spec, eta is eta, settings dicts
+    # Update geometry object
+    geom.eta=eta
+    geom.T_guess=T
+    rhoC=geom.calcProp(T, True)
+    geom.E=rhoC*T
+    geom.rho_species['s']=Y_0[1]
+    geom.rho_species['g']=Y_0[0]
+    conv=np.zeros_like(X)
+    cond=np.zeros_like(X)
+    T2, k, rhoC, Cp=geom.calcProp(T)
+    
+    # Axisymmetric domain flux in r
+    if geom.type=='Axisymmetric':
+        
+        # Left face
+        cond[:,1:-1]   -= 1.0/hx[:,1:-1]/(X[:,1:-1])\
+                    *(X[:,1:-1]-dx[:,:-2]/2)\
+                    *interpolate(k[:,:-2],k[:,1:-1], settings['diff_interpolation'])\
+                    *(T[:,1:-1]-T[:,:-2])/dx[:,:-2]
+        cond[:,-1]   -= 1.0/hx[:,-1]/(X[:,-1]-dx[:,-1]/2)\
+                    *(X[:,-1]-dx[:,-1]/2)\
+                    *interpolate(k[:,-2],k[:,-1], settings['diff_interpolation'])\
+                    *(T[:,-1]-T[:,-2])/dx[:,-1]
+        conv[:,1:-1]+=1.0/hx[:,1:-1]/(X[:,1:-1])\
+            *(X[:,1:-1]-dx[:,:-2]/2)\
+            *interpolate(Y_0[0][:,1:-1],Y_0[0][:,:-2],settings['conv_interpolation'])\
+            *(-interpolate(perm[:,1:-1],perm[:,:-2], settings['diff_interpolation'])/geom.mu\
+            *(P[:,1:-1]-P[:,:-2])/dx[:,:-2])\
+            *interpolate(Cp[:,1:-1],Cp[:,:-2],settings['conv_interpolation'])\
+            *interpolate(T[:,1:-1],T[:,:-2],settings['conv_interpolation'])
+        conv[:,-1]+=1.0/hx[:,-1]/(X[:,-1]-dx[:,-1]/2)\
+            *(X[:,-1]-dx[:,-2]/2)\
+            *interpolate(Y_0[0][:,-1],Y_0[0][:,-2],settings['conv_interpolation'])\
+            *(-interpolate(perm[:,-1],perm[:,-2],settings['diff_interpolation'])/geom.mu\
+            *(P[:,-1]-P[:,-2])/dx[:,-2])\
+            *interpolate(Cp[:,-1],Cp[:,-2],settings['conv_interpolation'])\
+            *interpolate(T[:,-1],T[:,-2],settings['conv_interpolation'])
+        # Right face
+        cond[:,1:-1] += 1.0/hx[:,1:-1]/(X[:,1:-1])\
+                    *(X[:,1:-1]+dx[:,1:-1]/2)\
+                    *interpolate(k[:,1:-1],k[:,2:], settings['diff_interpolation'])\
+                    *(T[:,2:]-T[:,1:-1])/dx[:,1:-1]
+        cond[:,0] += 1.0/hx[:,0]/(dx[:,0]/2)\
+                    *(X[:,0]+dx[:,0]/2)\
+                    *interpolate(k[:,0],k[:,1], settings['diff_interpolation'])\
+                    *(T[:,1]-T[:,0])/dx[:,0]
+        conv[:,1:-1]-=1.0/hx[:,1:-1]/(X[:,1:-1])\
+            *(X[:,1:-1]+dx[:,1:-1]/2)\
+            *interpolate(Y_0[0][:,2:],Y_0[0][:,1:-1],settings['conv_interpolation'])\
+            *(-interpolate(perm[:,2:],perm[:,1:-1],settings['diff_interpolation'])/geom.mu\
+            *(P[:,2:]-P[:,1:-1])/dx[:,1:-1])\
+            *interpolate(Cp[:,2:],Cp[:,1:-1],settings['conv_interpolation'])\
+            *interpolate(T[:,2:],T[:,1:-1],settings['conv_interpolation'])
+        conv[:,0]-=1.0/hx[:,0]/(dx[:,0]/2)\
+            *(X[:,0]+dx[:,0]/2)\
+            *interpolate(Y_0[0][:,1],Y_0[0][:,0],settings['conv_interpolation'])\
+            *(-interpolate(perm[:,1],perm[:,0],settings['diff_interpolation'])/geom.mu\
+            *(P[:,1]-P[:,0])/dx[:,0])\
+            *interpolate(Cp[:,1],Cp[:,0],settings['conv_interpolation'])\
+            *interpolate(T[:,1],T[:,0],settings['conv_interpolation'])
+    # Planar domain flux in r
+    else:
+        # Left face
+        cond[:,1:]   -= 1.0/hx[:,1:]\
+                    *interpolate(k[:,:-1],k[:,1:], settings['diff_interpolation'])\
+                    *(T[:,1:]-T[:,:-1])/dx[:,:-1]
+        conv[:,1:]+=1.0/hx[:,1:]\
+            *interpolate(Y_0[0][:,1:],Y_0[0][:,:-1],settings['conv_interpolation'])\
+            *(-interpolate(perm[:,1:],perm[:,:-1],settings['diff_interpolation'])/geom.mu\
+            *(P[:,1:]-P[:,:-1])/dx[:,:-1])\
+            *interpolate(Cp[:,1:],Cp[:,:-1],settings['conv_interpolation'])\
+            *interpolate(T[:,1:],T[:,:-1],settings['conv_interpolation'])
+        # Right face
+        cond[:,:-1] += 1.0/hx[:,:-1]\
+                    *interpolate(k[:,:-1],k[:,1:], settings['diff_interpolation'])\
+                    *(T[:,1:]-T[:,:-1])/dx[:,:-1]
+        conv[:,:-1]-=1.0/hx[:,:-1]\
+            *interpolate(Y_0[0][:,1:],Y_0[0][:,:-1],settings['conv_interpolation'])\
+            *(-interpolate(perm[:,1:],perm[:,:-1],settings['diff_interpolation'])/geom.mu\
+            *(P[:,1:]-P[:,:-1])/dx[:,:-1])\
+            *interpolate(Cp[:,1:],Cp[:,:-1],settings['conv_interpolation'])\
+            *interpolate(T[:,1:],T[:,:-1],settings['conv_interpolation'])
+    
+    # South face
+    cond[1:,:]   -= 1.0/hy[1:,:]\
+                *interpolate(k[1:,:],k[:-1,:], settings['diff_interpolation'])\
+                *(T[1:,:]-T[:-1,:])/dy[:-1,:]
+    conv[1:,:]+=1.0/hy[1:,:]\
+        *interpolate(Y_0[0][1:,:],Y_0[0][:-1,:],settings['conv_interpolation'])\
+        *(-interpolate(perm[1:,:],perm[:-1,:],settings['diff_interpolation'])/geom.mu\
+        *(P[1:,:]-P[:-1,:])/dy[:-1,:])\
+        *interpolate(Cp[1:,:],Cp[:-1,:],settings['conv_interpolation'])\
+        *interpolate(T[1:,:],T[:-1,:],settings['conv_interpolation'])
+    # North face
+    cond[:-1,:]  += 1.0/hy[:-1,:]\
+                *interpolate(k[:-1,:],k[1:,:], settings['diff_interpolation'])\
+                *(T[1:,:]-T[:-1,:])/dy[:-1,:]
+    conv[:-1,:]-=1.0/hy[:-1,:]\
+        *interpolate(Y_0[0][1:,:],Y_0[0][:-1,:],settings['conv_interpolation'])\
+        *(-interpolate(perm[1:,:],perm[:-1,:],settings['diff_interpolation'])/geom.mu\
+        *(P[1:,:]-P[:-1,:])/dy[:-1,:])\
+        *interpolate(Cp[1:,:],Cp[:-1,:],settings['conv_interpolation'])\
+        *interpolate(T[1:,:],T[:-1,:],settings['conv_interpolation'])
+    
+    E_kim,deta=source.Source_Comb_Kim(geom.rho_0, T, eta, 0.0)
+    
+    # Dimensionless numbers
+#    L=settings['Carmen_diam']*settings['Porosity']/(1-settings['Porosity'])
+#    L=settings['Carmen_diam']*3 # Length scale
+#    Ar=source.Ea/source.R/T
+    
+    # Properties used for Pe and Da
+    rho_avg+=np.sum(Y_0[0])/np.size(Y_0[0])
+    u_avg+=np.sum(abs(v[1:,:]))/np.size(v[1:,:])
+#    rho_avg=max(np.amax(Y_0[0]),rho_avg)
+#    u_avg=max(np.amax(abs(v[1:,:])),u_avg)
+    
+    # Local quantities
+#    L=settings['Length']/settings['Nodes_x']
+#    Pe_x=abs(Y_0[0][:,:-1]*u[:,1:]*Cp[:,:-1]*L/k[:,:-1])
+#    L=settings['Width']/settings['Nodes_y']
+#    Pe_y=abs(Y_0[0][:-1,:]*v[1:,:]*Cp[:-1,:]*L/k[:-1,:])
+#
+#    L=settings['Carmen_diam']*3
+#    Re_x=abs(Y_0[0][:,:-1]*u[:,1:]*L/settings['Darcy_mu'])
+#    Re_y=abs(Y_0[0][:-1,:]*v[1:,:]*L/settings['Darcy_mu'])
+    
+    L=settings['Length']/settings['Nodes_x']
+    t_conv_x=abs(u[:,1:]/L/sources['A0'])
+#    t_conv_x=abs(u[:,1:]/L/deta[:,:-1])
+    L=settings['Width']/settings['Nodes_y']
+    t_conv_y=abs(v[1:,:]/L/sources['A0'])
+#    t_conv_y=abs(v[1:,:]/L/deta[:-1,:])
+    t_diff=abs(k/rhoC/(L)**2/sources['A0'])
+#    t_diff=abs(k/rhoC/(L)**2/deta)
+    
+    # Plot non-dimensional numbers
+#    num=[Pe_x,Pe_y,t_conv_x,t_conv_y,t_diff]
+#    titles_num=['Pe_x','Pe_y','t_conv_x','t_conv_y','t_diff']
+#    for i in range(len(num)):
+#        fig=plt.figure(figsize=fig_size)
+#        plt.contourf(X[:,:-1]*1000, Y[:,:-1]*1000, num[i], alpha=0.5, cmap=cmap_choice)#, vmin=270, vmax=2000
+#        plt.contourf(X[:-1,:]*1000, Y[:-1,:]*1000, num[i], alpha=0.5, cmap=cmap_choice)#, vmin=270, vmax=2000)  
+#        plt.colorbar()
+#        plt.xlabel('$x$ (mm)')
+#        plt.ylabel('$y$ (mm)')
+#    #    plt.clim(300, 10000)
+#        plt.xlim([xmin,xmax])
+#        plt.ylim([ymin,ymax])
+#        plt.title(titles_num[i]+' t='+time+' ms');
+#        fig.savefig(titles_num[i]+'_'+time+'.png',dpi=300)
+#        plt.close(fig)
+    
+    # Data to post-processing results file
+#    fout.write('     T error: '+str((np.amin(1-T2/T),np.amax(1-T2/T)))+'\n')
+#    fout.write('     Ea/R/T: '+str((np.amin(Ar),np.amax(Ar)))+'\n')
+#    fout.write('     Pe_x: '+str((np.amin(Pe_x),np.amax(Pe_x)))+'\n')
+#    fout.write('     Pe_y: '+str((np.amin(Pe_y),np.amax(Pe_y)))+'\n')
+##    fout.write('     Re_x: '+str((np.amin(Re_x),np.amax(Re_x)))+'\n')
+##    fout.write('     Re_y: '+str((np.amin(Re_y),np.amax(Re_y)))+'\n')
+#    fout.write('     t_conv_x: '+str((np.amin(t_conv_x),np.amax(t_conv_x)))+'\n')
+#    fout.write('     t_conv_y: '+str((np.amin(t_conv_y),np.amax(t_conv_y)))+'\n')
+#    fout.write('     t_diff: '+str((np.amin(t_diff),np.amax(t_diff)))+'\n')
+    
+#    fout.write('     |conv/cond|: '+str((np.amin(abs(conv/cond)),np.amax(abs(conv/cond))))+'\n')
+#    fout.write('     |heat gen/heat losses|: '+str((np.amin(abs(E_kim/(cond+conv))),np.amax(abs(E_kim/(cond+conv)))))+'\n')
+L=settings['Width']
+rho_avg/=len(times)
+u_avg/=len(times)
+#Cp=geom.Cp_calc.get_Cp(np.ones(3)*2844, )
+fout.write('Pe_y: %.4f\n'%(rho_avg*u_avg*np.amax(Cp)*L/k[0,0]))
+fout.write('Da_y: %.4f\n'%(L/u_avg/(1/sources['A0'])))
+fout.write('Max pressure: %f\n'%(p_max))
+##############################################################
+#               1D plots
+##############################################################
 if st.find(OneD_graphs,'True')>=0:
     print 'Creating 1D plots'
     fig=plt.figure(figsize=fig_size)
@@ -369,4 +572,5 @@ if st.find(OneD_graphs,'True')>=0:
         fig.savefig('Phi_1D.png',dpi=300)
         plt.close(fig)
 
+fout.close()
 print '\nPost-processing complete'
