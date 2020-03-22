@@ -127,6 +127,17 @@ sources={}
 Species={}
 BCs={}
 
+# Get ignition delay and burn rate
+t_ign,v_BR='0','0'
+while (type(t_ign) is str) or (type(v_BR) is str):
+    dat=input_file.fin.readline()
+    if st.find(dat, 'Average wave')>=0:
+        v_BR=float(st.split(st.split(dat, ':')[1], 'm')[0])
+    if st.find(dat, 'Ignition time')>=0:
+        t_ign=float(st.split(st.split(dat, ':')[1], 'm')[0])
+input_file.fin.seek(0)
+
+# Get settings
 input_file.Read_Input(settings, sources, Species, BCs)
 xmax=float(settings['Length'])*1000
 ymax=float(settings['Width'])*1000
@@ -532,10 +543,16 @@ for time in times:
 L=settings['Width']
 rho_avg/=len(times)
 u_avg/=len(times)
-#Cp=geom.Cp_calc.get_Cp(np.ones(3)*2844, )
+Cp=geom.Cp_calc.get_Cp(np.ones(3)*2844, geom.Cp_g[0])[0]
+fout.write('Max pressure: %.0f\n'%(p_max))
+fout.write('avg rho_g: %.4f\n'%(rho_avg))
+fout.write('avg Darcy v: %.4f\n'%(u_avg))
 fout.write('Pe_y: %.4f\n'%(rho_avg*u_avg*np.amax(Cp)*L/k[0,0]))
 fout.write('Da_y: %.4f\n'%(L/u_avg/(1/sources['A0'])))
-fout.write('Max pressure: %f\n'%(p_max))
+rho_avg=float(geom.rho[1])
+#L=settings['Carmen_diam']
+fout.write('avg Burn rate: %f\n'%(rho_avg*v_BR*L/geom.mu))
+fout.write('Ignition delay: %f\n'%(geom.mu*t_ign/rho_avg/L**2))
 ##############################################################
 #               1D plots
 ##############################################################
