@@ -1,0 +1,54 @@
+Post processing results:
+..\..\nano\1_base\5
+
+Time = 0.000000
+     Mass balance residual: 0.000
+Time = 0.025001
+     Mass balance residual: -0.000
+Time = 0.050001
+     Mass balance residual: -0.000
+Time = 0.063833
+     Mass balance residual: -0.000
+Time = 0.075000
+     Mass balance residual: -0.001
+Time = 0.100001
+     Mass balance residual: -0.003
+Time = 0.125002
+     Mass balance residual: -0.009
+Time = 0.150000
+     Mass balance residual: -0.020
+Time = 0.175001
+     Mass balance residual: -0.037
+Time = 0.200001
+     Mass balance residual: -0.051
+Time = 0.225001
+     Mass balance residual: -0.064
+Time = 0.250002
+     Mass balance residual: -0.079
+Time = 0.275002
+     Mass balance residual: -0.093
+Time = 0.300000
+     Mass balance residual: -0.107
+Time = 0.325001
+     Mass balance residual: -0.122
+Time = 0.350001
+     Mass balance residual: -0.137
+Time = 0.375002
+     Mass balance residual: -0.152
+Time = 0.400002
+     Mass balance residual: -0.167
+Time = 0.425001
+     Mass balance residual: -0.182
+Time = 0.450001
+     Mass balance residual: -0.197
+Time = 0.475002
+     Mass balance residual: -0.212
+Time = 0.500000
+     Mass balance residual: -0.230
+Max pressure: 45387999
+avg rho_g: 14.1304
+avg Darcy v: 1.4809
+Pe_y: 2.3910
+Da_y: 19812.9036
+avg Burn rate: 39543660.000000
+Ignition delay: 0.000003
