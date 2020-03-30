@@ -48,7 +48,7 @@ Time = 1.500010
 Max pressure: 2216767866
 avg rho_g: 239.1501
 avg Darcy v: 0.0641
-Pe_y: 1.7514
-Da_y: 457796.9158
-avg Burn rate: 12108330.000000
-Ignition delay: 0.000013
+Pe_y: 0.000000006801
+Da_y: 14188601036.269430
+Burn rate: 1910189.982729
+Ignition delay: 0.000080
