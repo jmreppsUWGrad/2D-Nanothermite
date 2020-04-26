@@ -47,13 +47,13 @@ Source_Kim:True
 Ea:48000.0
 A0:4890000.0
 dH:rho,2.78e6
-Ignition:10,15
+Ignition:10,25
 gas_gen:0.343
 
 Time advancement:
-Fo:0.01
-CFL:0.01
-dt:1e-08
+Fo:0.1
+CFL:0.1
+dt:None
 total_time_steps:None
 total_time:0.001
 Restart:None
@@ -64,14 +64,14 @@ Number_Data_Output:20
 Output_directory:nano\mesh\1um\2_1
 
 Boundary conditions:
-#bc_left_E:['F', 0.0, (0, 600)]
-bc_left_E:F,0.0,0,600
-#bc_right_E:['C', (5.0, 293.0), (0, 600)]
-bc_right_E:C,5.0,293.0,0,600
-#bc_south_E:['C', (5.0, 293.0), (0, 100)]
-bc_south_E:C,5.0,293.0,0,100
-#bc_north_E:['F', 400000000.0, (0, 20), 'C', (5.0, 293.0), (20, 100)]
-bc_north_E:F,400000000.0,0,20,C,5.0,293.0,20,100
+#bc_left_E:['F', 0.0, (0, 850)]
+bc_left_E:F,0.0,0,850
+#bc_right_E:['C', (5.0, 293.0), (0, 850)]
+bc_right_E:C,5.0,293.0,0,850
+#bc_south_E:['C', (5.0, 293.0), (0, 140)]
+bc_south_E:C,5.0,293.0,0,140
+#bc_north_E:['F', 400000000.0, (0, 28), 'C', (5.0, 293.0), (28, 140)]
+bc_north_E:F,400000000.0,0,28,C,5.0,293.0,28,140
 #bc_left_rad:None
 bc_left_rad:None
 #bc_right_rad:None
@@ -80,38 +80,38 @@ bc_right_rad:None
 bc_south_rad:None
 #bc_north_rad:None
 bc_north_rad:None
-#bc_left_P:['none', 0.0, (0, 600)]
-bc_left_P:none,0.0,0,600
-#bc_right_P:['P', 101319.0, (0, 600)]
-bc_right_P:P,101319.0,0,600
-#bc_north_P:['P', 101319.0, (0, 100)]
-bc_north_P:P,101319.0,0,100
-#bc_south_P:['P', 101319.0, (0, 100)]
-bc_south_P:P,101319.0,0,100
+#bc_left_P:['none', 0.0, (0, 850)]
+bc_left_P:none,0.0,0,850
+#bc_right_P:['P', 101319.0, (0, 850)]
+bc_right_P:P,101319.0,0,850
+#bc_north_P:['P', 101319.0, (0, 140)]
+bc_north_P:P,101319.0,0,140
+#bc_south_P:['P', 101319.0, (0, 140)]
+bc_south_P:P,101319.0,0,140
 
-Wave speed [m/s] at t=0.050005 ms: 0 m/s
-Wave speed [m/s] at t=0.100002 ms: 0 m/s
+Wave speed [m/s] at t=0.050013 ms: 0 m/s
+Wave speed [m/s] at t=0.100027 ms: 0 m/s
 Wave speed [m/s] at t=0.150007 ms: 0 m/s
-##bc_north_E_new:['C', (5.0, 293.0), (0, 600)]
-Wave speed [m/s] at t=0.200001 ms: inst-5.15, avg-4.66
-Wave speed [m/s] at t=0.250001 ms: inst-6.48, avg-5.64
-Wave speed [m/s] at t=0.300001 ms: inst-6.94, avg-6.14
-Wave speed [m/s] at t=0.350000 ms: inst-7.04, avg-6.44
-Wave speed [m/s] at t=0.400000 ms: inst-6.95, avg-6.59
-Wave speed [m/s] at t=0.450001 ms: inst-6.90, avg-6.66
-Wave speed [m/s] at t=0.500001 ms: inst-6.86, avg-6.70
-Wave speed [m/s] at t=0.550000 ms: inst-6.83, avg-6.72
-Wave speed [m/s] at t=0.600000 ms: inst-6.81, avg-6.73
-Wave speed [m/s] at t=0.650000 ms: inst-6.80, avg-6.74
-Wave speed [m/s] at t=0.700001 ms: inst-6.78, avg-6.75
-Wave speed [m/s] at t=0.750000 ms: inst-6.77, avg-6.75
-Wave speed [m/s] at t=0.800000 ms: inst-6.77, avg-6.75
-Wave speed [m/s] at t=0.850000 ms: inst-6.76, avg-6.75
-Wave speed [m/s] at t=0.900000 ms: inst-6.75, avg-6.75
-Wave speed [m/s] at t=0.950001 ms: inst-6.76, avg-6.75
-Wave speed [m/s] at t=1.000001 ms: inst-6.99, avg-6.76
-Final time step size: 0.000795 microseconds
-Ignition time: 0.178931 ms
-Solver time per 1000 time steps: 0.373463 min
-Number of time steps completed: 811259
-Average wave speed: 6.76 m/s
+##bc_north_E_new:['C', (5.0, 293.0), (0, 850)]
+Wave speed [m/s] at t=0.200000 ms: inst-6.10, avg-6.09
+Wave speed [m/s] at t=0.250001 ms: inst-6.76, avg-6.49
+Wave speed [m/s] at t=0.300000 ms: inst-6.93, avg-6.71
+Wave speed [m/s] at t=0.350001 ms: inst-6.79, avg-6.77
+Wave speed [m/s] at t=0.400001 ms: inst-6.61, avg-6.75
+Wave speed [m/s] at t=0.450001 ms: inst-6.40, avg-6.70
+Wave speed [m/s] at t=0.500001 ms: inst-5.94, avg-6.61
+Wave speed [m/s] at t=0.550001 ms: inst-6.36, avg-6.50
+Wave speed [m/s] at t=0.600000 ms: inst-6.87, avg-6.54
+Wave speed [m/s] at t=0.650001 ms: inst-6.82, avg-6.58
+Wave speed [m/s] at t=0.700001 ms: inst-6.79, avg-6.60
+Wave speed [m/s] at t=0.750001 ms: inst-6.77, avg-6.62
+Wave speed [m/s] at t=0.800001 ms: inst-6.77, avg-6.63
+Wave speed [m/s] at t=0.850000 ms: inst-6.77, avg-6.64
+Wave speed [m/s] at t=0.900001 ms: inst-6.78, avg-6.65
+Wave speed [m/s] at t=0.950000 ms: inst-6.98, avg-6.67
+Wave speed [m/s] at t=1.000000 ms: inst-8.28, avg-6.72
+Final time step size: 0.000830 microseconds
+Ignition time: 0.198507 ms
+Solver time per 1000 time steps: 0.421119 min
+Number of time steps completed: 813973
+Average wave speed: 6.72 m/s
