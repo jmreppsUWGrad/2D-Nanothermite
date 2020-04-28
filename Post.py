@@ -32,6 +32,7 @@ from matplotlib import pyplot as plt
 from FileClasses import FileIn
 from GeomClasses import TwoDimDomain
 from Source_Comb import Source_terms
+from myFigs import set_size
 
 # Interpolation function for Darcy u calculations
 def interpolate(k1, k2, func):
@@ -187,6 +188,29 @@ lvl_eta=np.linspace(0, 1, 11)
 lvl_temp=np.linspace(temp_min, temp_max, temp_pts)
 norm_eta=mtplt.colors.Normalize(vmin=0, vmax=1.0)
 fig_size=(6, 6)
+#width = 384
+#fig_size=set_size(width)
+nice_fonts = {
+        # Use LaTex to write all text
+#        "text.usetex": True,
+        "font.family": "serif",
+        # Use 10pt font in plots, to match 10pt font in document
+        "axes.labelsize": 11,
+        "font.size": 11,
+        # Make the legend/label fonts a little smaller
+        "legend.fontsize": 8,
+        "xtick.labelsize": 8,
+        "ytick.labelsize": 8,
+}
+x_axis_labels={
+        'Planar': '$x$ [mm]',
+        'Axisymmetric': '$r$ [mm]'
+        }
+y_axis_labels={
+        'Planar': '$y$ [mm]',
+        'Axisymmetric': '$z$ [mm]'
+        }
+mtplt.rcParams.update(nice_fonts)
 cmap_choice=mtplt.cm.viridis
 ##############################################################
 #               Post-processing
@@ -194,7 +218,7 @@ cmap_choice=mtplt.cm.viridis
 X=np.load('X.npy', False)
 Y=np.load('Y.npy', False)
 # Open post-processing file
-fout=open('Post_processing.txt', 'w')
+fout=open('Post_processing.txt', 'a')
 fout.write('Post processing results:\n')
 fout.write(dir_files+'\n\n')
 # Initialize geometry and source objects
@@ -225,8 +249,8 @@ for time in times:
         cb=plt.colorbar()
         cb.locator=mtplt.ticker.MaxNLocator(nbins=temp_pts)
         cb.update_ticks()
-        plt.xlabel('$x$ (mm)')
-        plt.ylabel('$y$ (mm)')
+        plt.xlabel(x_axis_labels[settings['Domain']])
+        plt.ylabel(y_axis_labels[settings['Domain']])
     #    plt.clim(300, 3000)
         plt.xlim([xmin,xmax])
         plt.ylim([ymin,ymax])
@@ -253,8 +277,8 @@ for time in times:
         cb=plt.colorbar()
         cb.locator=mtplt.ticker.MaxNLocator(nbins=eta_pts)
         cb.update_ticks()
-        plt.xlabel('$x$ (mm)')
-        plt.ylabel('$y$ (mm)')
+        plt.xlabel(x_axis_labels[settings['Domain']])
+        plt.ylabel(y_axis_labels[settings['Domain']])
     #    plt.clim(0.0, 1.0)
         plt.xlim([xmin,xmax])
         plt.ylim([ymin,ymax])
@@ -268,8 +292,8 @@ for time in times:
             fig=plt.figure(figsize=fig_size)
             plt.contourf(X*1000, Y*1000, phi, alpha=0.5, cmap=cmap_choice)#, vmin=0.0, vmax=1.0)  
             plt.colorbar(format='%.2e')
-            plt.xlabel('$x$ (mm)')
-            plt.ylabel('$y$ (mm)')
+            plt.xlabel(x_axis_labels[settings['Domain']])
+            plt.ylabel(y_axis_labels[settings['Domain']])
             plt.xlim([xmin,xmax])
             plt.ylim([ymin,ymax])
             plt.title('Reaction rate t='+time+' ms');
@@ -281,7 +305,7 @@ for time in times:
             fig=plt.figure(figsize=fig_size)
             plt.plot(Y[:,1]*1000, phi[:,int(len(T[0,:])/2)])
             plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
-            plt.xlabel('$y$ (mm)')
+            plt.xlabel(y_axis_labels[settings['Domain']])
             plt.ylabel('$d\eta/dt$ ($s^{-1}$)')
             plt.xlim([xmin,xmax])
             plt.title('Centreline Reaction rate t='+time+' ms')
@@ -296,8 +320,8 @@ for time in times:
                 fig=plt.figure(figsize=fig_size)
                 plt.contourf(X*1000, Y*1000, Y_0[i], alpha=0.5, cmap=cmap_choice)#, vmin=0.0, vmax=1.0)  
                 plt.colorbar()
-                plt.xlabel('$x$ (mm)')
-                plt.ylabel('$y$ (mm)')
+                plt.xlabel(x_axis_labels[settings['Domain']])
+                plt.ylabel(y_axis_labels[settings['Domain']])
             #    plt.clim(0.0, 1.0)
                 plt.xlim([xmin,xmax])
                 plt.ylim([ymin,ymax])
@@ -324,18 +348,21 @@ for time in times:
     v[1:,:]=-interpolate(perm[1:,:], perm[:-1,:], settings['diff_interpolation'])\
         /settings['Darcy_mu']*(P[1:,:]-P[:-1,:])/(Y[1:,:]-Y[:-1,:])
 #    pl=25
+#    P_plot=np.zeros_like(P)
+#    P_plot[:,1:]=P[:,1:]-P[:,:-1]# Pressure difference
+#    P_plot[1:,:]=P[1:,:]-P[:-1,:]
     if st.find(contours,'True')>=0:
         fig=plt.figure(figsize=fig_size)
     #    plt.quiver(X[::pl, ::pl]*1000, Y[::pl, ::pl]*1000, \
     #                  u[::pl, ::pl], v[::pl, ::pl])
         plt.contourf(X*1000, Y*1000, P, alpha=0.5, cmap=cmap_choice)#, vmin=270, vmax=2000)  
         plt.colorbar()
-        plt.xlabel('$x$ (mm)')
-        plt.ylabel('$y$ (mm)')
+        plt.xlabel(x_axis_labels[settings['Domain']])
+        plt.ylabel(y_axis_labels[settings['Domain']])
     #    plt.clim(300, 10000)
         plt.xlim([xmin,xmax])
         plt.ylim([ymin,ymax])
-        plt.title('Pressure t='+time+' ms');
+#        plt.title('Pressure t='+time+' ms');
         fig.savefig('P_'+time+'.png',dpi=300)
         plt.close(fig)
     
@@ -344,25 +371,28 @@ for time in times:
         fig=plt.figure(figsize=fig_size)
         plt.contourf(X*1000, Y*1000, u, alpha=0.5, cmap=cmap_choice)#, vmin=270, vmax=2000)  
         plt.colorbar()
-        plt.xlabel('$x$ (mm)')
-        plt.ylabel('$y$ (mm)')
+        plt.xlabel(x_axis_labels[settings['Domain']])
+        plt.ylabel(y_axis_labels[settings['Domain']])
     #    plt.clim(300, 10000)
         plt.xlim([xmin,xmax])
         plt.ylim([ymin,ymax])
-        plt.title('Darcy Velocity u t='+time+' ms');
+#        plt.title('Darcy Velocity u t='+time+' ms');
         fig.savefig('u_'+time+'.png',dpi=300)
         plt.close(fig)
         
+        lvl_v=np.linspace(-25, 25, temp_pts+1)
         fig=plt.figure(figsize=fig_size)
-        plt.contourf(X*1000, Y*1000, v, alpha=0.5, cmap=cmap_choice)#, vmin=270, vmax=2000)  
-        plt.colorbar()
-        plt.xlabel('$x$ (mm)')
-        plt.ylabel('$y$ (mm)')
+        plt.contourf(X*1000, Y*1000, v, alpha=0.5, cmap=cmap_choice, extend='both',levels=lvl_v)#, vmin=270, vmax=2000)  
+        cb=plt.colorbar()
+        cb.locator=mtplt.ticker.MaxNLocator(nbins=temp_pts)
+        cb.update_ticks()
+        plt.xlabel(x_axis_labels[settings['Domain']])
+        plt.ylabel(y_axis_labels[settings['Domain']])
     #    plt.clim(300, 10000)
         plt.xlim([xmin,xmax])
         plt.ylim([ymin,ymax])
-        plt.title('Darcy Velocity v t='+time+' ms');
-        fig.savefig('v_'+time+'.png',dpi=300)
+#        plt.title('Darcy Velocity v t='+time+' ms');
+        fig.savefig('v_'+time+'.pdf')
         plt.close(fig)
     
     print 'Processed '+time
@@ -587,7 +617,7 @@ if st.find(OneD_graphs,'True')>=0:
         T=np.load('T_'+time+'.npy', False)
         # 1D temperature profile at centreline
         plt.plot(Y[:,1]*1000, T[:,int(len(T[0,:])/2)], label='t='+time)
-    plt.xlabel('$y$ (mm)')
+    plt.xlabel(x_axis_labels[settings['Domain']])
     plt.ylabel('T (K)')
     plt.xlim([xmin,xmax])
     plt.ylim([temp_min,temp_max])
@@ -605,7 +635,7 @@ if st.find(OneD_graphs,'True')>=0:
             # 1D Reaction rate profile at centreline
             plt.plot(Y[:,1]*1000, phi[:,int(len(T[0,:])/2)], label='t='+time)
         plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
-        plt.xlabel('$y$ (mm)')
+        plt.xlabel(y_axis_labels[settings['Domain']])
         plt.ylabel('$d\eta/dt$ ($s^{-1}$)')
         plt.xlim([xmin,xmax])
         plt.legend()
