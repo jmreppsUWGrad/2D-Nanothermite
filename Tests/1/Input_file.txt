@@ -23,6 +23,7 @@ Cv_s:800.0
 rho_IC:5000.0
 Darcy_mu:1e-05
 Carmen_diam:4e-08
+Kozeny_const:72.0
 Porosity:0.6
 gas_constant:81.51
 diff_interpolation:Harmonic
@@ -46,9 +47,9 @@ gas_gen:0.343
 
 Time advancement:
 Fo:0.2
-CFL:None
+CFL:0.01
 dt:1.0
-total_time_steps:8000
+total_time_steps:16000
 total_time:None
 Restart:None
 Time_Scheme:Explicit
@@ -82,17 +83,9 @@ bc_right_P:grad,0.0,0,-1
 bc_north_P:grad,0.0,0,-1
 #bc_south_P:['grad', 0.0, (0, -1)]
 bc_south_P:grad,0.0,0,-1
-#bc_left_mass:['grad', 0.0, (0, -1)]
-bc_left_mass:grad,0.0,0,-1
-#bc_right_mass:['grad', 0.0, (0, -1)]
-bc_right_mass:grad,0.0,0,-1
-#bc_north_mass:['grad', 0.0, (0, -1)]
-bc_north_mass:grad,0.0,0,-1
-#bc_south_mass:['grad', 0.0, (0, -1)]
-bc_south_mass:grad,0.0,0,-1
 
-Final time step size: 322818.202911 microseconds
+Final time step size: 161409.101456 microseconds
 Ignition time: 0.000000 ms
-Solver time per 1000 time steps: 0.011456 min
-Number of time steps completed: 8000
+Solver time per 1000 time steps: 0.012725 min
+Number of time steps completed: 16000
 Average wave speed: 0 m/s

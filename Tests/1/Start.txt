@@ -66,6 +66,7 @@ k_model:Parallel
 Porosity:0.6
 Darcy_mu:1e-5
 Carmen_diam:40e-9
+Kozeny_const:72
 gas_constant:81.51
 diff_interpolation:Harmonic
 conv_interpolation:Linear
@@ -96,9 +97,9 @@ gas_gen:0.343
 ######################################################
 
 Fo:0.2
-CFL:None
+CFL:0.01
 dt:1.0
-total_time_steps:8000
+total_time_steps:16000
 total_time:None
 Time_Scheme:Explicit
 Restart:None
