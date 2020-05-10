@@ -386,6 +386,7 @@ for time in times:
         cb=plt.colorbar()
         cb.locator=mtplt.ticker.MaxNLocator(nbins=temp_pts)
         cb.update_ticks()
+        cb.set_label('$ms^{-1}$', rotation=90)
         plt.xlabel(x_axis_labels[settings['Domain']])
         plt.ylabel(y_axis_labels[settings['Domain']])
     #    plt.clim(300, 10000)
