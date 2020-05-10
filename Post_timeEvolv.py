@@ -31,6 +31,7 @@ import string as st
 import matplotlib as mtplt
 from matplotlib import pyplot as plt
 #from mpl_toolkits.mplot3d import Axes3D
+from myFigs import set_size
 
 plt.ioff()
 
@@ -105,11 +106,27 @@ if type(times) is str:
 ##############################################################
 #               Figure details
 ##############################################################
-fig_size=(6, 6)
+#fig_size=(6, 6)
+width = 384
+fig_size=set_size(width)
+figType='.pdf'
+nice_fonts = {
+        # Use LaTex to write all text
+#        "text.usetex": True,
+        "font.family": "serif",
+        # Use 10pt font in plots, to match 10pt font in document
+        "axes.labelsize": 11,
+        "font.size": 11,
+        # Make the legend/label fonts a little smaller
+        "legend.fontsize": 8,
+        "xtick.labelsize": 8,
+        "ytick.labelsize": 8,
+}
+mtplt.rcParams.update(nice_fonts)
 cmap_choice=mtplt.cm.viridis
-y_label={'Temperature': 'T ($K$)', 'Pressure': 'P ($Pa$ gage)',\
-         'eta': '$\eta$ (-)', 'rho_g': 'Density ($kg/m^3$)',\
-         'rho_s': 'Density ($kg/m^3$)'}
+y_label={'Temperature': 'T [$K$]', 'Pressure': 'P [$Pa$]',\
+         'eta': '$\eta$ [-]', 'rho_g': 'Density [$kg/m^3$]',\
+         'rho_s': 'Density [$kg/m^3$]'}
 var_name={'Temperature': 'T', 'Pressure': 'P',\
          'eta': 'eta', 'rho_g': 'rho_g', 'rho_s': 'rho_s'}
 ##############################################################
@@ -122,13 +139,13 @@ for time in times:
     T=np.load(var_name[var]+'_'+time+'.npy', False)
     # 1D temperature profile at centreline
     plt.plot(float(time), T[Phi_graphs], marker='o',color='black')
-plt.xlabel('$t$ (ms)')
+plt.xlabel('Time [ms]')
 plt.ylabel(y_label[var])
 #plt.xlim([xmin,xmax])
 #plt.ylim([temp_min,temp_max])
-plt.legend()
-plt.title(var+' evolution with time at position '+str(Phi_graphs))
-fig.savefig(var+'_time_'+str(Phi_graphs)+'.png',dpi=300)
+#plt.legend()
+#plt.title(var+' evolution with time at position '+str(Phi_graphs))
+fig.savefig(var+'_time_'+str(Phi_graphs)+figType,dpi=300)
 plt.close(fig)
 
 print '\nPost-processing complete'
