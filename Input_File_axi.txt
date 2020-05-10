@@ -162,3 +162,4 @@ bc_left_mass:grad,0,0,-1
 bc_right_mass:grad,0,0,-1
 bc_south_mass:grad,0,0,-1
 bc_north_mass:grad,0,0,-1
+total_time_steps:100

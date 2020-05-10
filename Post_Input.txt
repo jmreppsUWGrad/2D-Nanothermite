@@ -10,9 +10,10 @@
 #	Times: Times in file names separated by commas OR ALL for all files
 ######################################################
 
-Directory:Tests\7
+Directory:..\Nanothermite\Data\dc\1um\5
 Times:ALL
-#Times:0.366674,0.375012,0.383351,0.391671,0.400009
+#Times:1.000017,1.100015,1.200012
+#Times:0.225000,0.250000,0.275000
 
 ######################################################
 #			Plots
@@ -41,5 +42,5 @@ Phi_Plots:None
 Darcy_vel:None
 Contour_Plots:None
 
-Time_Temp_Pos:0,0
-Variable:Temperature
+Time_Temp_Pos:1117,112
+Variable:Pressure
