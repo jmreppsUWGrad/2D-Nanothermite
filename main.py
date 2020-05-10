@@ -263,6 +263,7 @@ while nt<settings['total_time_steps'] and t<settings['total_time']:
         if domain.proc_top<0:
             solver.BCs.BCs['bc_north_E']=BCs['bc_right_E']
         if rank==0:
+	    print 'Ignition occurred at t=%f ms'%(t*1000)
             input_file=open('Input_file.txt', 'a')
             input_file.write('##bc_north_E_new:')
             input_file.write(str(BCs['bc_right_E'])+'\n')
