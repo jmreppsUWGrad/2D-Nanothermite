@@ -106,9 +106,9 @@ if type(times) is str:
 ##############################################################
 #               Figure details
 ##############################################################
-#fig_size=(6, 6)
 width = 384
 fig_size=set_size(width)
+#fig_size=(6, 6)
 figType='.pdf'
 nice_fonts = {
         # Use LaTex to write all text
@@ -134,17 +134,29 @@ var_name={'Temperature': 'T', 'Pressure': 'P',\
 ##############################################################
 X=np.load('X.npy', False)
 Y=np.load('Y.npy', False)
-fig=plt.figure(figsize=fig_size)
+#fig=plt.figure(figsize=fig_size)
+fig,ax1=plt.subplots()
+ax1.set_xlabel('Time [ms]')
+ax1.set_ylabel(y_label[var], color='black')
+ax1.tick_params(axis='y', labelcolor='black')
+ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
+ax2.set_ylabel('T [$K$]', color='red')  # we already handled the x-label with ax1
+#ax2.ylim([-100,3000])
+ax2.tick_params(axis='y', labelcolor='red')
+
 for time in times:
     T=np.load(var_name[var]+'_'+time+'.npy', False)
+    T2=np.load('T_'+time+'.npy', False)
     # 1D temperature profile at centreline
-    plt.plot(float(time), T[Phi_graphs], marker='o',color='black')
-plt.xlabel('Time [ms]')
-plt.ylabel(y_label[var])
+    ax1.plot(float(time), T[Phi_graphs], marker='o',color='black')
+    ax2.plot(float(time), T2[Phi_graphs], marker='^',color='red')
+#plt.xlabel('Time [ms]')
+#plt.ylabel(y_label[var])
 #plt.xlim([xmin,xmax])
 #plt.ylim([temp_min,temp_max])
 #plt.legend()
 #plt.title(var+' evolution with time at position '+str(Phi_graphs))
+fig.tight_layout()  # otherwise the right y-label is slightly clipped
 fig.savefig(var+'_time_'+str(Phi_graphs)+figType,dpi=300)
 plt.close(fig)
 

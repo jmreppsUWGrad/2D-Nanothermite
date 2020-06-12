@@ -142,29 +142,11 @@ input_file.fin.seek(0)
 
 # Get settings
 input_file.Read_Input(settings, sources, Species, BCs)
-xmax=float(settings['Length'])*1000
-ymax=float(settings['Width'])*1000
-#try:
-#    settings['rho_IC']=st.split(settings['rho_IC'], ',')
-#except:
-#    settings['rho_IC']=float(settings['rho_IC'])
-#while A0<0 or Ea<0 or source=='False':
-#    line=input_file.readline()
-#    if st.find(line, 'Domain')==0:
-#        domain=st.split(st.split(line, ':')[1], '\n')[0]
-#    elif st.find(line, 'Ea')==0:
-#        Ea=float(st.split(line, ':')[1])
-#    elif st.find(line, 'A0')==0:
-#        A0=float(st.split(line, ':')[1])
-#    elif st.find(line, 'Source_Kim')==0:
-#        source=st.split(line, ':')[1]
-##    elif st.find(line, 'Species')==0:
-##        titles=st.split(st.split(st.split(line, ':')[1], '\n')[0], ',')
-#    elif st.find(line, 'Length')==0 and type(xmax) is str:
-#        xmax=float(st.split(line, ':')[1])*1000
-#    elif st.find(line, 'Width')==0 and type(ymax) is str:
-#        ymax=float(st.split(line, ':')[1])*1000
-#input_file.close()
+if type(xmax) is str:
+    xmax=float(settings['Length'])*1000
+if type(ymax) is str:
+    ymax=float(settings['Width'])*1000
+
 
 ##############################################################
 #               Times to process (if ALL is selected)
@@ -185,7 +167,7 @@ if type(times) is str:
 #               Figure details
 ##############################################################
 lvl_eta=np.linspace(0, 1, 11)
-lvl_temp=np.linspace(temp_min, temp_max, temp_pts)
+lvl_temp=np.linspace(temp_min, temp_max, temp_pts+1)
 norm_eta=mtplt.colors.Normalize(vmin=0, vmax=1.0)
 fig_size=(6, 6)
 #width = 384
@@ -245,17 +227,20 @@ for time in times:
     # Temperature contour
     if st.find(contours,'True')>=0:
         fig=plt.figure(figsize=fig_size)
-        plt.contourf(X*1000, Y*1000, T, alpha=0.5, cmap=cmap_choice, extend='both',levels=lvl_temp)#, vmin=270, vmax=2000)  
+        #fig=plt.figure(figsize=(6,3))
+        contour_obj=plt.contourf(X*1000, Y*1000, T, alpha=0.5, cmap=cmap_choice, extend='both',levels=lvl_temp)#, vmin=270, vmax=2000)  
         cb=plt.colorbar()
         cb.locator=mtplt.ticker.MaxNLocator(nbins=temp_pts)
         cb.update_ticks()
+#        plt.contour(contour_obj, colors='k')
         plt.xlabel(x_axis_labels[settings['Domain']])
         plt.ylabel(y_axis_labels[settings['Domain']])
     #    plt.clim(300, 3000)
         plt.xlim([xmin,xmax])
         plt.ylim([ymin,ymax])
+        #plt.tight_layout()
         plt.title('Temperature distribution t='+time+' ms');
-        fig.savefig('T_'+time+'.png',dpi=300)
+        fig.savefig('T_'+time+'.png')
         plt.close(fig)
     
     # 1D temperature profile at centreline
@@ -339,18 +324,12 @@ for time in times:
     u=np.zeros_like(P)
     v=np.zeros_like(P)
     por=np.ones_like(P)*settings['Porosity']
-#    por=settings['Porosity']+\
-#        (1-Y_0/(float(settings['rho_IC'][1])*settings['Porosity']))\
-#        *(1-settings['Porosity'])
     perm=por**3*settings['Carmen_diam']**2/(settings['Kozeny_const']*(1-por)**2)
     u[:,1:]=-interpolate(perm[:,1:], perm[:,:-1], settings['diff_interpolation'])\
         /settings['Darcy_mu']*(P[:,1:]-P[:,:-1])/(X[:,1:]-X[:,:-1])
     v[1:,:]=-interpolate(perm[1:,:], perm[:-1,:], settings['diff_interpolation'])\
         /settings['Darcy_mu']*(P[1:,:]-P[:-1,:])/(Y[1:,:]-Y[:-1,:])
 #    pl=25
-#    P_plot=np.zeros_like(P)
-#    P_plot[:,1:]=P[:,1:]-P[:,:-1]# Pressure difference
-#    P_plot[1:,:]=P[1:,:]-P[:-1,:]
     if st.find(contours,'True')>=0:
         fig=plt.figure(figsize=fig_size)
     #    plt.quiver(X[::pl, ::pl]*1000, Y[::pl, ::pl]*1000, \
@@ -362,7 +341,7 @@ for time in times:
     #    plt.clim(300, 10000)
         plt.xlim([xmin,xmax])
         plt.ylim([ymin,ymax])
-#        plt.title('Pressure t='+time+' ms');
+        plt.title('Pressure t='+time+' ms');
         fig.savefig('P_'+time+'.png',dpi=300)
         plt.close(fig)
     
@@ -380,10 +359,12 @@ for time in times:
         fig.savefig('u_'+time+'.png',dpi=300)
         plt.close(fig)
         
-        lvl_v=np.linspace(-25, 25, temp_pts+1)
+        lvl_v=np.linspace(-24, 24, temp_pts+1)
         fig=plt.figure(figsize=fig_size)
-        plt.contourf(X*1000, Y*1000, v, alpha=0.5, cmap=cmap_choice, extend='both',levels=lvl_v)#, vmin=270, vmax=2000)  
+        contour_obj=plt.contourf(X*1000, Y*1000, v, alpha=0.5, cmap=cmap_choice, extend='both',levels=lvl_v)#, vmin=270, vmax=2000)  
         cb=plt.colorbar()
+#        plt.contour(contour_obj, colors='k')
+#        plt.clabel(contour_obj)
         cb.locator=mtplt.ticker.MaxNLocator(nbins=temp_pts)
         cb.update_ticks()
         cb.set_label('$ms^{-1}$', rotation=90)
@@ -392,8 +373,9 @@ for time in times:
     #    plt.clim(300, 10000)
         plt.xlim([xmin,xmax])
         plt.ylim([ymin,ymax])
+        plt.tight_layout()
 #        plt.title('Darcy Velocity v t='+time+' ms');
-        fig.savefig('v_'+time+'.pdf')
+        fig.savefig('v_'+time+'.png')
         plt.close(fig)
     
     print 'Processed '+time
@@ -407,7 +389,7 @@ for time in times:
         fout.write('     Max velocity v: %.1f'%(np.amax(abs(v)))+'\n')
     
     ##############################################################
-    #               Non-dimensional numbers
+    #               Non-dimensional numbers (local)
     ##############################################################
     # T is temp, P is press, Y_0 is rho_spec, eta is eta, settings dicts
     # Update geometry object
@@ -421,111 +403,9 @@ for time in times:
     cond=np.zeros_like(X)
     T2, k, rhoC, Cp=geom.calcProp(T)
     
-    # Axisymmetric domain flux in r
-    if geom.type=='Axisymmetric':
-        
-        # Left face
-        cond[:,1:-1]   -= 1.0/hx[:,1:-1]/(X[:,1:-1])\
-                    *(X[:,1:-1]-dx[:,:-2]/2)\
-                    *interpolate(k[:,:-2],k[:,1:-1], settings['diff_interpolation'])\
-                    *(T[:,1:-1]-T[:,:-2])/dx[:,:-2]
-        cond[:,-1]   -= 1.0/hx[:,-1]/(X[:,-1]-dx[:,-1]/2)\
-                    *(X[:,-1]-dx[:,-1]/2)\
-                    *interpolate(k[:,-2],k[:,-1], settings['diff_interpolation'])\
-                    *(T[:,-1]-T[:,-2])/dx[:,-1]
-        conv[:,1:-1]+=1.0/hx[:,1:-1]/(X[:,1:-1])\
-            *(X[:,1:-1]-dx[:,:-2]/2)\
-            *interpolate(Y_0[0][:,1:-1],Y_0[0][:,:-2],settings['conv_interpolation'])\
-            *(-interpolate(perm[:,1:-1],perm[:,:-2], settings['diff_interpolation'])/geom.mu\
-            *(P[:,1:-1]-P[:,:-2])/dx[:,:-2])\
-            *interpolate(Cp[:,1:-1],Cp[:,:-2],settings['conv_interpolation'])\
-            *interpolate(T[:,1:-1],T[:,:-2],settings['conv_interpolation'])
-        conv[:,-1]+=1.0/hx[:,-1]/(X[:,-1]-dx[:,-1]/2)\
-            *(X[:,-1]-dx[:,-2]/2)\
-            *interpolate(Y_0[0][:,-1],Y_0[0][:,-2],settings['conv_interpolation'])\
-            *(-interpolate(perm[:,-1],perm[:,-2],settings['diff_interpolation'])/geom.mu\
-            *(P[:,-1]-P[:,-2])/dx[:,-2])\
-            *interpolate(Cp[:,-1],Cp[:,-2],settings['conv_interpolation'])\
-            *interpolate(T[:,-1],T[:,-2],settings['conv_interpolation'])
-        # Right face
-        cond[:,1:-1] += 1.0/hx[:,1:-1]/(X[:,1:-1])\
-                    *(X[:,1:-1]+dx[:,1:-1]/2)\
-                    *interpolate(k[:,1:-1],k[:,2:], settings['diff_interpolation'])\
-                    *(T[:,2:]-T[:,1:-1])/dx[:,1:-1]
-        cond[:,0] += 1.0/hx[:,0]/(dx[:,0]/2)\
-                    *(X[:,0]+dx[:,0]/2)\
-                    *interpolate(k[:,0],k[:,1], settings['diff_interpolation'])\
-                    *(T[:,1]-T[:,0])/dx[:,0]
-        conv[:,1:-1]-=1.0/hx[:,1:-1]/(X[:,1:-1])\
-            *(X[:,1:-1]+dx[:,1:-1]/2)\
-            *interpolate(Y_0[0][:,2:],Y_0[0][:,1:-1],settings['conv_interpolation'])\
-            *(-interpolate(perm[:,2:],perm[:,1:-1],settings['diff_interpolation'])/geom.mu\
-            *(P[:,2:]-P[:,1:-1])/dx[:,1:-1])\
-            *interpolate(Cp[:,2:],Cp[:,1:-1],settings['conv_interpolation'])\
-            *interpolate(T[:,2:],T[:,1:-1],settings['conv_interpolation'])
-        conv[:,0]-=1.0/hx[:,0]/(dx[:,0]/2)\
-            *(X[:,0]+dx[:,0]/2)\
-            *interpolate(Y_0[0][:,1],Y_0[0][:,0],settings['conv_interpolation'])\
-            *(-interpolate(perm[:,1],perm[:,0],settings['diff_interpolation'])/geom.mu\
-            *(P[:,1]-P[:,0])/dx[:,0])\
-            *interpolate(Cp[:,1],Cp[:,0],settings['conv_interpolation'])\
-            *interpolate(T[:,1],T[:,0],settings['conv_interpolation'])
-    # Planar domain flux in r
-    else:
-        # Left face
-        cond[:,1:]   -= 1.0/hx[:,1:]\
-                    *interpolate(k[:,:-1],k[:,1:], settings['diff_interpolation'])\
-                    *(T[:,1:]-T[:,:-1])/dx[:,:-1]
-        conv[:,1:]+=1.0/hx[:,1:]\
-            *interpolate(Y_0[0][:,1:],Y_0[0][:,:-1],settings['conv_interpolation'])\
-            *(-interpolate(perm[:,1:],perm[:,:-1],settings['diff_interpolation'])/geom.mu\
-            *(P[:,1:]-P[:,:-1])/dx[:,:-1])\
-            *interpolate(Cp[:,1:],Cp[:,:-1],settings['conv_interpolation'])\
-            *interpolate(T[:,1:],T[:,:-1],settings['conv_interpolation'])
-        # Right face
-        cond[:,:-1] += 1.0/hx[:,:-1]\
-                    *interpolate(k[:,:-1],k[:,1:], settings['diff_interpolation'])\
-                    *(T[:,1:]-T[:,:-1])/dx[:,:-1]
-        conv[:,:-1]-=1.0/hx[:,:-1]\
-            *interpolate(Y_0[0][:,1:],Y_0[0][:,:-1],settings['conv_interpolation'])\
-            *(-interpolate(perm[:,1:],perm[:,:-1],settings['diff_interpolation'])/geom.mu\
-            *(P[:,1:]-P[:,:-1])/dx[:,:-1])\
-            *interpolate(Cp[:,1:],Cp[:,:-1],settings['conv_interpolation'])\
-            *interpolate(T[:,1:],T[:,:-1],settings['conv_interpolation'])
-    
-    # South face
-    cond[1:,:]   -= 1.0/hy[1:,:]\
-                *interpolate(k[1:,:],k[:-1,:], settings['diff_interpolation'])\
-                *(T[1:,:]-T[:-1,:])/dy[:-1,:]
-    conv[1:,:]+=1.0/hy[1:,:]\
-        *interpolate(Y_0[0][1:,:],Y_0[0][:-1,:],settings['conv_interpolation'])\
-        *(-interpolate(perm[1:,:],perm[:-1,:],settings['diff_interpolation'])/geom.mu\
-        *(P[1:,:]-P[:-1,:])/dy[:-1,:])\
-        *interpolate(Cp[1:,:],Cp[:-1,:],settings['conv_interpolation'])\
-        *interpolate(T[1:,:],T[:-1,:],settings['conv_interpolation'])
-    # North face
-    cond[:-1,:]  += 1.0/hy[:-1,:]\
-                *interpolate(k[:-1,:],k[1:,:], settings['diff_interpolation'])\
-                *(T[1:,:]-T[:-1,:])/dy[:-1,:]
-    conv[:-1,:]-=1.0/hy[:-1,:]\
-        *interpolate(Y_0[0][1:,:],Y_0[0][:-1,:],settings['conv_interpolation'])\
-        *(-interpolate(perm[1:,:],perm[:-1,:],settings['diff_interpolation'])/geom.mu\
-        *(P[1:,:]-P[:-1,:])/dy[:-1,:])\
-        *interpolate(Cp[1:,:],Cp[:-1,:],settings['conv_interpolation'])\
-        *interpolate(T[1:,:],T[:-1,:],settings['conv_interpolation'])
-    
-    E_kim,deta=source.Source_Comb_Kim(geom.rho_0, T, eta, 0.0)
-    
-    # Dimensionless numbers
-#    L=settings['Carmen_diam']*settings['Porosity']/(1-settings['Porosity'])
-#    L=settings['Carmen_diam']*3 # Length scale
-#    Ar=source.Ea/source.R/T
-    
     # Properties used for Pe and Da
     rho_avg+=np.sum(Y_0[0])/np.size(Y_0[0])
     u_avg+=np.sum(abs(v[1:,:]))/np.size(v[1:,:])
-#    rho_avg=max(np.amax(Y_0[0]),rho_avg)
-#    u_avg=max(np.amax(abs(v[1:,:])),u_avg)
     
     # Local quantities
 #    L=settings['Length']/settings['Nodes_x']
@@ -545,37 +425,10 @@ for time in times:
 #    t_conv_y=abs(v[1:,:]/L/deta[:-1,:])
     t_diff=abs(k/rhoC/(L)**2/sources['A0'])
 #    t_diff=abs(k/rhoC/(L)**2/deta)
-    
-    # Plot non-dimensional numbers
-#    num=[Pe_x,Pe_y,t_conv_x,t_conv_y,t_diff]
-#    titles_num=['Pe_x','Pe_y','t_conv_x','t_conv_y','t_diff']
-#    for i in range(len(num)):
-#        fig=plt.figure(figsize=fig_size)
-#        plt.contourf(X[:,:-1]*1000, Y[:,:-1]*1000, num[i], alpha=0.5, cmap=cmap_choice)#, vmin=270, vmax=2000
-#        plt.contourf(X[:-1,:]*1000, Y[:-1,:]*1000, num[i], alpha=0.5, cmap=cmap_choice)#, vmin=270, vmax=2000)  
-#        plt.colorbar()
-#        plt.xlabel('$x$ (mm)')
-#        plt.ylabel('$y$ (mm)')
-#    #    plt.clim(300, 10000)
-#        plt.xlim([xmin,xmax])
-#        plt.ylim([ymin,ymax])
-#        plt.title(titles_num[i]+' t='+time+' ms');
-#        fig.savefig(titles_num[i]+'_'+time+'.png',dpi=300)
-#        plt.close(fig)
-    
-    # Data to post-processing results file
-#    fout.write('     T error: '+str((np.amin(1-T2/T),np.amax(1-T2/T)))+'\n')
-#    fout.write('     Ea/R/T: '+str((np.amin(Ar),np.amax(Ar)))+'\n')
-#    fout.write('     Pe_x: '+str((np.amin(Pe_x),np.amax(Pe_x)))+'\n')
-#    fout.write('     Pe_y: '+str((np.amin(Pe_y),np.amax(Pe_y)))+'\n')
-##    fout.write('     Re_x: '+str((np.amin(Re_x),np.amax(Re_x)))+'\n')
-##    fout.write('     Re_y: '+str((np.amin(Re_y),np.amax(Re_y)))+'\n')
-#    fout.write('     t_conv_x: '+str((np.amin(t_conv_x),np.amax(t_conv_x)))+'\n')
-#    fout.write('     t_conv_y: '+str((np.amin(t_conv_y),np.amax(t_conv_y)))+'\n')
-#    fout.write('     t_diff: '+str((np.amin(t_diff),np.amax(t_diff)))+'\n')
-    
-#    fout.write('     |conv/cond|: '+str((np.amin(abs(conv/cond)),np.amax(abs(conv/cond))))+'\n')
-#    fout.write('     |heat gen/heat losses|: '+str((np.amin(abs(E_kim/(cond+conv))),np.amax(abs(E_kim/(cond+conv)))))+'\n')
+      
+##############################################################
+#               Non-dimensional numbers (characteristic and averages)
+##############################################################
 rho_avg/=len(times)
 u_avg/=len(times)
 fout.write('Max pressure: %.0f\n'%(p_max))
@@ -594,9 +447,9 @@ rho_ref=101325/settings['gas_constant']/2844
 u_ref=geom.perm[0,0]/geom.mu*101325/L_ref
 #u_ref=v_BR
 #u_ref=u_avg
-
-#fout.write('Pe_y: %.12f\n'%(rho_ref*u_ref*Cp*L_ref/k[0,0]))
-fout.write('Pe_y: %.12f\n'%(rho_ref*u_ref*settings['gas_constant']*L_ref/k[0,0]))
+fout.write('u_ref: %.12f\n'%(u_ref))
+fout.write('Pe_y: %.12f\n'%(rho_ref*u_ref*Cp*L_ref/k[0,0]))
+#fout.write('Pe_y: %.12f\n'%(rho_ref*u_ref*settings['gas_constant']*L_ref/k[0,0]))
 
 fout.write('Da_y: %f\n'%(L_ref/u_ref/(1/sources['A0'])))
 #fout.write('Da_y: %f\n'%(L/v_BR/(1/sources['A0'])))
