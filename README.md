@@ -52,3 +52,8 @@ where:
 ### Post_timeEvolv.py
 - Temperature and one of pressure, densities or reaction progress evolution in time at one location
 - Uses same input file and command call as Post.py
+
+## Manual.pdf
+- Contains information about governing equations and research topic
+- Outlines options for each solver mode, property calculation methods and other customization options
+- Lower level details about functions and organization of each class
