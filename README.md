@@ -1,6 +1,6 @@
 # 2D Heat Conduction Code
 
-This repository contains the Python (2.7) code to solve the 2D Heat conduction equations with a new model for nano-thermite combustion.
+This repository contains the Python (2.7) code to solve the 2D Heat conduction equations with a new model for nano-thermite combustion. This code is being modified [here](https://github.com/jmreppsUWGrad/2D-Nanothermite---Python-3) to run on Python 3.14.
 
 ## Solver Details
 - Planar or axisymmetric geometries
